@@ -93,6 +93,33 @@ Deno.test("review fix: concurrent sends share one OAuth exchange; 5xx retried; u
   assertEquals((await new UnconfiguredPusher().send()).ok, false);
 });
 
+Deno.test("iOS APNs block mirrors the Android channel and tag", () => {
+  const gate = buildAlertMessage("tok", "f1", "e1", ev("GATE_CHANGE"), { dep: null, arr: null });
+  const gateAndroid = gate.android!.notification as Record<string, string>;
+  const gateHeaders = gate.apns!.headers as Record<string, string>;
+  const gateAps = (gate.apns!.payload as { aps: Record<string, unknown> }).aps;
+  assertEquals(gateHeaders["apns-collapse-id"], gateAndroid.tag);
+  assertEquals(gateHeaders["apns-push-type"], "alert");
+  assertEquals(gateHeaders["apns-priority"], "10");
+  assertEquals(gateAps["thread-id"], gateAndroid.tag);
+  assertEquals(gateAps["interruption-level"], "time-sensitive");
+  assertEquals(gateAps.category, "OPEN_FLIGHT");
+  assertEquals((gate.apns!.payload as Record<string, string>).flight_id, "f1");
+
+  const departed = buildAlertMessage("tok", "f1", "e2", ev("DEPARTED", { payload: { flight: "x", actDep: "2026-11-25T13:30:00Z" } }), { dep: null, arr: null });
+  const departedAps = (departed.apns!.payload as { aps: Record<string, string> }).aps;
+  assertEquals(departedAps["interruption-level"], "active");
+  assertEquals((departed.apns!.headers as Record<string, string>)["apns-collapse-id"], "f1:departed");
+
+  const sync = buildSyncMessage("tok", { id: "f1" } as unknown as FlightRow, true);
+  const syncHeaders = sync.apns!.headers as Record<string, string>;
+  assertEquals(sync.android!.notification, undefined);
+  assertEquals(syncHeaders["apns-push-type"], "background");
+  assertEquals(syncHeaders["apns-priority"], "5");
+  assertEquals(syncHeaders["apns-collapse-id"], "sync:f1");
+  assertEquals((sync.apns!.payload as { aps: Record<string, number> }).aps["content-available"], 1);
+});
+
 Deno.test("review fix: terminal change has its own notification tag; gate change shows terminal", () => {
   const t = buildAlertMessage("tok", "f1", "e", ev("TERMINAL_CHANGE", { oldValue: "1", newValue: "3", payload: { flight: "x", airport: "DEL" } }), { dep: null, arr: null });
   assertEquals((t.android!.notification as Record<string, string>).tag, "f1:terminal");
