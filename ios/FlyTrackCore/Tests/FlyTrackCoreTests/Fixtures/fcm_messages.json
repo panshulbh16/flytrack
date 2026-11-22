@@ -1,0 +1,24 @@
+{
+  "sync": {
+    "kind": "sync",
+    "flight_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    "flight": "{\"id\":\"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa\",\"c\":\"6E\",\"n\":\"2341\",\"d\":\"2026-11-25\",\"dep\":\"DEL\",\"arr\":\"BOM\",\"st\":\"boarding\",\"sd\":\"2026-11-25T12:55:00Z\",\"ed\":\"2026-11-25T13:35:00Z\",\"ad\":null,\"sa\":\"2026-11-25T15:10:00Z\",\"ea\":\"2026-11-25T15:50:00Z\",\"aa\":null,\"dt\":\"1\",\"dg\":\"31\",\"at\":\"2\",\"ag\":null,\"bb\":null,\"ac\":\"Airbus A321neo\",\"reg\":\"VT-ISR\",\"lat\":null,\"lon\":null,\"alt\":null,\"lu\":null,\"u\":\"2026-11-25T12:41:10.500Z\"}"
+  },
+  "alert": {
+    "kind": "alert",
+    "flight_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    "event_id": "42",
+    "event_type": "GATE_CHANGE",
+    "title": "Gate change: 6E 2341 → Gate 31 (T1)",
+    "body": "Was gate 29. DEL→BOM, departs 19:05."
+  },
+  "alertNotification": {
+    "title": "Gate change: 6E 2341 → Gate 31 (T1)",
+    "body": "Was gate 29. DEL→BOM, departs 19:05.",
+    "channel_id": "flight_critical",
+    "tag": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa:gate",
+    "notification_priority": "PRIORITY_MAX",
+    "default_sound": true,
+    "click_action": "OPEN_FLIGHT"
+  }
+}
