@@ -1,0 +1,1 @@
+id,user_id,flight_id,pnr,seat,cabin,source,notify_prefs,note,archived_at,created_at

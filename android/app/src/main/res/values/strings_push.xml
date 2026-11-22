@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="push_channel_critical_name">Gate, delay and cancellation</string>
+    <string name="push_channel_critical_description">Gate changes, baggage belt, delays, cancellations and boarding. Shown immediately, with sound.</string>
+    <string name="push_channel_updates_name">Flight updates</string>
+    <string name="push_channel_updates_description">Departure, landing and the first gate assignment.</string>
+
+    <string name="push_permission_title">Get gate changes on this phone</string>
+    <string name="push_permission_message">FlyTrack alerts you when the gate, belt or departure time changes. Android needs permission before it can show those alerts.</string>
+    <string name="push_permission_allow">Allow alerts</string>
+    <string name="push_permission_later">Not now</string>
+    <string name="push_permission_blocked_title">Alerts are blocked</string>
+    <string name="push_permission_blocked_message">Notifications for FlyTrack are turned off in system settings, so gate changes will not appear.</string>
+    <string name="push_permission_open_settings">Notification settings</string>
+</resources>

@@ -1,0 +1,7 @@
+<resources>
+    <!-- Only what XML needs (window background, notification accent). Compose colours live in ui/theme/Color.kt. -->
+    <color name="paper">#F6F5EF</color>
+    <color name="forest">#244735</color>
+    <color name="night">#182E25</color>
+    <color name="terracotta">#C86842</color>
+</resources>

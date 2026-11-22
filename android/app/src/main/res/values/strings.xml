@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Shared strings (app shell, shared components, time phrases). Feature strings live in their own
+  files: strings_flights.xml, strings_addflight.xml, strings_import.xml, strings_push.xml,
+  strings_settings.xml. Prefix feature string names with the feature (flights_…, addflight_…).
+-->
+<resources>
+    <string name="app_name">FlyTrack</string>
+
+    <!-- Common actions -->
+    <string name="action_back">Back</string>
+    <string name="action_close">Close</string>
+    <string name="action_retry">Try again</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_ok">OK</string>
+    <string name="action_save">Save</string>
+    <string name="action_done">Done</string>
+    <string name="action_add_flight">Add flight</string>
+    <string name="action_settings">Settings</string>
+
+    <!-- Shared state blocks -->
+    <string name="state_loading">Loading…</string>
+    <string name="state_offline_title">You\'re offline</string>
+    <string name="state_offline_message">Check your internet connection and try again.</string>
+    <string name="state_error_title">Something went wrong</string>
+    <string name="state_error_message">Please try again in a moment.</string>
+    <string name="state_not_configured_title">Backend not configured</string>
+    <string name="state_not_configured_message">This build has no server address. Add SUPABASE_URL and SUPABASE_ANON_KEY to android/local.properties and build again.</string>
+    <string name="state_not_configured_banner">Backend not configured. Flight data can\'t be loaded in this build.</string>
+
+    <!-- Relative days (calendar based) -->
+    <string name="relative_today">Today</string>
+    <string name="relative_tomorrow">Tomorrow</string>
+    <string name="relative_yesterday">Yesterday</string>
+    <plurals name="relative_in_days">
+        <item quantity="one">in %d day</item>
+        <item quantity="other">in %d days</item>
+    </plurals>
+    <plurals name="relative_days_ago">
+        <item quantity="one">%d day ago</item>
+        <item quantity="other">%d days ago</item>
+    </plurals>
+
+    <!-- Relative times (elapsed) -->
+    <string name="relative_now">now</string>
+    <plurals name="relative_in_minutes">
+        <item quantity="one">in %d min</item>
+        <item quantity="other">in %d min</item>
+    </plurals>
+    <plurals name="relative_minutes_ago">
+        <item quantity="one">%d min ago</item>
+        <item quantity="other">%d min ago</item>
+    </plurals>
+    <plurals name="relative_in_hours">
+        <item quantity="one">in %d hr</item>
+        <item quantity="other">in %d hr</item>
+    </plurals>
+    <plurals name="relative_hours_ago">
+        <item quantity="one">%d hr ago</item>
+        <item quantity="other">%d hr ago</item>
+    </plurals>
+    <!-- %s is a relative time such as "4 min ago" -->
+    <string name="updated_ago">Updated %s</string>
+    <string name="updated_just_now">Updated just now</string>
+
+    <!-- Durations: %1$d hours, %2$02d minutes -->
+    <string name="duration_hours_minutes" translatable="false">%1$dh %2$02dm</string>
+    <string name="duration_minutes" translatable="false">%1$dm</string>
+
+    <!-- Notification channels (ids are fixed by the backend: flight_critical / flight_updates) -->
+    <string name="fcm_default_channel_id" translatable="false">flight_updates</string>
+
+    </resources>

@@ -1,0 +1,79 @@
+package app.flytrack.core.model
+
+import kotlin.time.Instant
+
+/** `user_flights.cabin`. */
+enum class Cabin(val wire: String) {
+    ECONOMY("economy"),
+    PREMIUM_ECONOMY("premium_economy"),
+    BUSINESS("business"),
+    FIRST("first");
+
+    companion object {
+        fun fromWire(value: String?): Cabin? = entries.firstOrNull { it.wire == value }
+    }
+}
+
+/** `user_flights.source`: how the flight was added. */
+enum class TrackSource(val wire: String) {
+    MANUAL("manual"),
+    PDF("pdf"),
+    SHARE("share"),
+    SCREENSHOT("screenshot");
+
+    companion object {
+        fun fromWire(value: String?): TrackSource = entries.firstOrNull { it.wire == value } ?: MANUAL
+    }
+}
+
+/** One row of `public.user_flights`: the signed-in user tracks [flightId]. */
+data class TrackedFlight(
+    val id: String,
+    val userId: String,
+    val flightId: String,
+    val pnr: String?,
+    val seat: String?,
+    val cabin: Cabin?,
+    val source: TrackSource,
+    /** Only explicit entries are stored; `false` mutes that alert type, anything else means "notify". */
+    val notifyPrefs: Map<AlertType, Boolean>,
+    val note: String?,
+    val archivedAt: Instant?,
+    val createdAt: Instant?,
+) {
+    val isArchived: Boolean get() = archivedAt != null
+
+    /** Same rule as the server's fan-out: an alert is sent unless its pref is exactly `false`. */
+    fun notifies(type: AlertType): Boolean = notifyPrefs[type] != false
+}
+
+/** A tracked flight together with its flight data, as shown in the list and on the detail screen. */
+data class TrackedFlightDetails(
+    val tracking: TrackedFlight,
+    val flight: Flight,
+)
+
+/** Optional details the user can attach when tracking a flight (all validated by the repository). */
+data class TrackExtras(
+    val pnr: String? = null,
+    val seat: String? = null,
+    val cabin: Cabin? = null,
+    val source: TrackSource = TrackSource.MANUAL,
+    val note: String? = null,
+) {
+    companion object {
+        const val MAX_SEAT_LENGTH = 5
+        const val MAX_NOTE_LENGTH = 200
+    }
+}
+
+private val PNR_REGEX = Regex("^[A-Z0-9]{5,8}$")
+
+/**
+ * Upper-cases and strips spaces/dashes, then applies the database rule `^[A-Z0-9]{5,8}$`.
+ * Returns null when the text cannot be a PNR.
+ */
+fun normalizePnr(input: String?): String? {
+    val cleaned = input?.filterNot { it.isWhitespace() || it == '-' }?.uppercase().orEmpty()
+    return cleaned.takeIf { PNR_REGEX.matches(it) }
+}

@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Flights feature: the home list, the flight card and the flight detail screen. -->
+<resources>
+    <!-- List -->
+    <string name="flights_title">My flights</string>
+    <string name="flights_section_upcoming">Upcoming</string>
+    <string name="flights_section_past">Past</string>
+    <string name="flights_empty_title">No flights yet</string>
+    <string name="flights_empty_message">Add your flight number and FlyTrack will watch the gate, delays and baggage belt for you.</string>
+    <string name="flights_action_import_ticket">Import a ticket</string>
+    <string name="flights_action_open_details">Open flight details</string>
+    <!-- %s is a flight such as "6E 2341" -->
+    <string name="flights_action_more">More options for %s</string>
+    <string name="flights_action_archive">Archive</string>
+    <string name="flights_action_untrack">Stop tracking</string>
+    <string name="flights_action_restore">Restore flight</string>
+    <string name="flights_action_track">Track this flight</string>
+    <string name="flights_action_undo">Undo</string>
+
+    <!-- Snackbars -->
+    <string name="flights_message_archived">Flight archived</string>
+    <string name="flights_message_untracked">Stopped tracking this flight</string>
+    <string name="flights_message_offline">You\'re offline. Showing the last saved details.</string>
+    <string name="flights_message_refresh_failed">Couldn\'t refresh. Please try again in a moment.</string>
+    <string name="flights_message_action_failed">That didn\'t work. Please try again.</string>
+    <string name="flights_message_tracking_limit">You\'ve reached the number of flights your plan can track. Archive one first.</string>
+
+    <!-- Next-flight card: "NEXT TAKEOFF · IN 3 DAYS", "IN THE AIR · LANDS IN 35 MIN" -->
+    <string name="flights_next_takeoff">Next takeoff</string>
+    <string name="flights_next_in_the_air">In the air</string>
+    <!-- %s is a relative time such as "in 35 min" or "now" -->
+    <string name="flights_countdown_takes_off">Takes off %s</string>
+    <string name="flights_countdown_lands">Lands %s</string>
+
+    <!-- Building blocks -->
+    <string name="flights_joined" translatable="false">%1$s · %2$s</string>
+    <!-- Route: codes "DEL → BOM", cities "Delhi to Mumbai" -->
+    <string name="flights_route_codes" translatable="false">%1$s → %2$s</string>
+    <string name="flights_route_cities">%1$s to %2$s</string>
+    <string name="flights_departure">Departure</string>
+    <string name="flights_arrival">Arrival</string>
+    <plurals name="flights_amount_minutes">
+        <item quantity="one">%d min</item>
+        <item quantity="other">%d min</item>
+    </plurals>
+    <plurals name="flights_amount_hours">
+        <item quantity="one">%d hr</item>
+        <item quantity="other">%d hr</item>
+    </plurals>
+    <!-- %1$s hours ("1 hr"), %2$s minutes ("5 min") -->
+    <string name="flights_amount_hours_minutes">%1$s %2$s</string>
+
+    <!-- The status word, shown in italic serif -->
+    <string name="flights_word_schedule_only">Timetable only</string>
+    <string name="flights_word_scheduled">Scheduled</string>
+    <string name="flights_word_on_time">On time</string>
+    <string name="flights_word_delayed">Delayed</string>
+    <string name="flights_word_early">Early</string>
+    <string name="flights_word_check_in_open">Check-in open</string>
+    <string name="flights_word_boarding">Boarding</string>
+    <string name="flights_word_gate_closed">Gate closed</string>
+    <string name="flights_word_departed">Departed</string>
+    <string name="flights_word_in_the_air">In the air</string>
+    <string name="flights_word_landing_soon">Landing soon</string>
+    <string name="flights_word_landed">Landed</string>
+    <string name="flights_word_arrived">Arrived</string>
+    <string name="flights_word_cancelled">Cancelled</string>
+    <string name="flights_word_diverted">Diverted</string>
+
+    <!-- The plain-language sentence under the status word. %s is an amount such as "25 min" or "1 hr 5 min". -->
+    <string name="flights_line_schedule_only">No live updates yet. These are the timetable times.</string>
+    <string name="flights_line_no_changes">No changes announced</string>
+    <string name="flights_line_departure_on_time">Leaving on time</string>
+    <string name="flights_line_departure_late">Running %s late</string>
+    <string name="flights_line_departure_early">Leaving %s early</string>
+    <string name="flights_line_check_in_open">Check-in is open</string>
+    <string name="flights_line_boarding">Boarding now</string>
+    <!-- %s is a gate such as "42B" -->
+    <string name="flights_line_boarding_at_gate">Boarding now at gate %s</string>
+    <string name="flights_line_gate_closed">The gate has closed. About to leave.</string>
+    <!-- Appended to the three sentences above: "Check-in is open · running 25 min late" -->
+    <string name="flights_clause_late">running %s late</string>
+    <string name="flights_clause_early">leaving %s early</string>
+    <string name="flights_line_arriving_on_time">Arriving on time</string>
+    <string name="flights_line_arriving_late">Arriving %s late</string>
+    <string name="flights_line_arriving_early">Arriving %s early</string>
+    <string name="flights_line_took_off_late">Took off %s late</string>
+    <!-- %s is a city such as "Mumbai" -->
+    <string name="flights_line_on_the_way">On the way to %s</string>
+    <string name="flights_line_landed">Landed</string>
+    <string name="flights_line_landed_on_time">Landed on time</string>
+    <string name="flights_line_landed_late">Landed %s late</string>
+    <string name="flights_line_landed_early">Landed %s early</string>
+    <string name="flights_line_arrived">Arrived at the gate</string>
+    <string name="flights_line_arrived_on_time">Arrived on time</string>
+    <string name="flights_line_arrived_late">Arrived %s late</string>
+    <string name="flights_line_arrived_early">Arrived %s early</string>
+    <string name="flights_line_cancelled">Cancelled by the airline. Ask them about rebooking or a refund.</string>
+    <string name="flights_line_diverted">Diverted. It won\'t land at the planned airport.</string>
+    <string name="flights_line_diverted_landed">Diverted. It landed at a different airport.</string>
+
+    <!-- Times -->
+    <string name="flights_time_scheduled">Scheduled</string>
+    <string name="flights_time_estimated">Estimated</string>
+    <string name="flights_time_actual">Actual</string>
+    <string name="flights_time_departed">Departed</string>
+    <string name="flights_time_landed">Landed</string>
+    <string name="flights_time_unknown" translatable="false">--:--</string>
+    <!-- Next to an arrival time on a later (or earlier) calendar day: "+1" -->
+    <string name="flights_day_offset" translatable="false">%+d</string>
+    <!-- Spoken: "Departure DEL" -->
+    <string name="flights_time_heading">%1$s %2$s</string>
+    <!-- Spoken: "Departure DEL: 18:50, Estimated" -->
+    <string name="flights_cd_time">%1$s: %2$s, %3$s</string>
+    <string name="flights_cd_time_unknown">%s: time not known yet</string>
+    <string name="flights_cd_time_replaced">The timetable said %s</string>
+    <plurals name="flights_cd_days_later">
+        <item quantity="one">%d day after departure</item>
+        <item quantity="other">%d days after departure</item>
+    </plurals>
+    <plurals name="flights_cd_days_earlier">
+        <item quantity="one">%d day before departure</item>
+        <item quantity="other">%d days before departure</item>
+    </plurals>
+    <string name="flights_cd_joined">%1$s. %2$s</string>
+    <!-- Spoken: "Flight time 2h 15m" -->
+    <string name="flights_cd_duration">Flight time %s</string>
+    <!-- Spoken: "Gate: 42B" -->
+    <string name="flights_cd_labelled">%1$s: %2$s</string>
+    <string name="flights_cd_progress">About %1$d%% of the way from %2$s to %3$s</string>
+
+    <!-- Chips on the card -->
+    <string name="flights_chip_terminal">Terminal %s</string>
+    <string name="flights_chip_gate">Gate %s</string>
+    <string name="flights_chip_check_in">Check-in %s</string>
+    <string name="flights_chip_arrival_terminal">Arrival terminal %s</string>
+    <string name="flights_chip_arrival_gate">Arrival gate %s</string>
+    <string name="flights_chip_belt">Belt %s</string>
+    <!-- Marks a value that was announced or changed a moment ago -->
+    <string name="flights_chip_new">New</string>
+    <string name="flights_cd_chip_new">%s, just announced</string>
+
+    <!-- Detail screen -->
+    <string name="flights_detail_title">Flight</string>
+    <string name="flights_detail_not_found_title">Flight not available</string>
+    <string name="flights_detail_not_found_message">We couldn\'t load this flight. Check your connection and try again.</string>
+    <string name="flights_detail_times_local">Each time is local to its airport.</string>
+    <!-- %s is the airline\'s or provider\'s own wording -->
+    <string name="flights_detail_delay_reason">Reason given: %s</string>
+    <string name="flights_detail_progress">About %d%% of the way there</string>
+    <string name="flights_detail_flight_time">Flight time</string>
+    <string name="flights_detail_distance">Distance</string>
+    <string name="flights_detail_distance_km">%s km</string>
+    <!-- "Mumbai (BOM)" -->
+    <string name="flights_detail_airport" translatable="false">%1$s (%2$s)</string>
+    <string name="flights_label_terminal">Terminal</string>
+    <string name="flights_label_gate">Gate</string>
+    <string name="flights_label_check_in">Check-in desk</string>
+    <string name="flights_label_belt">Baggage belt</string>
+    <string name="flights_detail_not_announced">Not announced</string>
+    <string name="flights_detail_aircraft">Aircraft</string>
+    <string name="flights_detail_aircraft_type">Type</string>
+    <string name="flights_detail_aircraft_reg">Tail number</string>
+    <string name="flights_detail_aircraft_unknown">Not known yet</string>
+    <string name="flights_detail_archived">This flight is archived. It\'s hidden from your list and its alerts are off.</string>
+    <string name="flights_detail_not_tracked">You\'re not tracking this flight, so you won\'t get alerts for it.</string>
+    <string name="flights_untrack_confirm_title">Stop tracking this flight?</string>
+    <string name="flights_untrack_confirm_message">You won\'t get alerts for it any more, and the PNR and seat you saved for it are removed.</string>
+
+    <!-- "Where\'s my plane" (Pro) -->
+    <string name="flights_pro_badge">Pro</string>
+    <string name="flights_pro_title">Where\'s my plane?</string>
+    <string name="flights_pro_teaser">FlyTrack Pro is following the aircraft that will fly this route and has an early warning for this flight. Pro members see where that plane is and when this flight can really leave.</string>
+    <!-- %1$s flight such as "6E 2032", %2$s airport code such as "BLR" -->
+    <string name="flights_pro_inbound">Your plane is coming in as %1$s from %2$s.</string>
+    <string name="flights_pro_inbound_unknown">We\'re following the aircraft that will fly this route.</string>
+    <!-- %s is a clock time at the departure airport -->
+    <string name="flights_pro_inbound_lands">It should land here around %s.</string>
+    <string name="flights_pro_inbound_landed">It landed here at %s.</string>
+    <string name="flights_pro_on_time">It\'s on track, so this flight should be able to leave on time.</string>
+    <!-- %1$s amount such as "25 min", %2$s clock time -->
+    <string name="flights_pro_late_around">This flight will probably leave about %1$s late, around %2$s. The airline hasn\'t announced it yet.</string>
+    <string name="flights_pro_late">This flight will probably leave about %s late. The airline hasn\'t announced it yet.</string>
+
+    <!-- Your booking -->
+    <string name="flights_booking_title">Your booking</string>
+    <string name="flights_booking_edit">Edit PNR and seat</string>
+    <string name="flights_booking_pnr">PNR</string>
+    <string name="flights_booking_pnr_label">Booking reference (PNR)</string>
+    <string name="flights_booking_pnr_hint">Optional. On your ticket or booking e-mail.</string>
+    <string name="flights_booking_pnr_error">A PNR has 5 to 8 letters and digits.</string>
+    <string name="flights_booking_seat">Seat</string>
+    <string name="flights_booking_seat_hint">Optional. For example 14C.</string>
+    <plurals name="flights_booking_seat_error">
+        <item quantity="one">A seat has at most %d character, such as 14C.</item>
+        <item quantity="other">A seat has at most %d characters, such as 14C.</item>
+    </plurals>
+    <string name="flights_booking_cabin">Cabin</string>
+    <string name="flights_booking_not_added">Not added</string>
+    <string name="flights_cabin_economy">Economy</string>
+    <string name="flights_cabin_premium_economy">Premium economy</string>
+    <string name="flights_cabin_business">Business</string>
+    <string name="flights_cabin_first">First</string>
+
+    <!-- Alerts for this flight -->
+    <string name="flights_alerts_title">Alerts for this flight</string>
+    <string name="flights_alerts_state_on">On</string>
+    <string name="flights_alerts_state_off">Off</string>
+    <string name="flights_alerts_state_pro">Part of FlyTrack Pro</string>
+    <string name="flights_alert_delays">Delays and new times</string>
+    <string name="flights_alert_delays_description">When the departure time moves, or a delay gets shorter</string>
+    <string name="flights_alert_gate">Gate and terminal</string>
+    <string name="flights_alert_gate_description">When the gate is announced, or the gate or terminal changes</string>
+    <string name="flights_alert_boarding">Boarding</string>
+    <string name="flights_alert_boarding_description">When boarding starts</string>
+    <string name="flights_alert_takeoff_landing">Take-off and landing</string>
+    <string name="flights_alert_takeoff_landing_description">When the flight leaves and when it lands</string>
+    <string name="flights_alert_baggage">Baggage belt</string>
+    <string name="flights_alert_baggage_description">When the belt is announced or changes</string>
+    <string name="flights_alert_disruption">Cancellation or diversion</string>
+    <string name="flights_alert_disruption_description">When the flight is cancelled, put back on, or sent to another airport</string>
+    <string name="flights_alert_inbound">Incoming plane running late</string>
+    <string name="flights_alert_inbound_description">An early warning before the airline announces a delay</string>
+</resources>
