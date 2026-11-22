@@ -1,0 +1,11 @@
+// Committed defaults. Real values belong in Secrets.xcconfig, which is gitignored.
+// Create it with: cp Config/Secrets.xcconfig.example Config/Secrets.xcconfig
+FLYTRACK_BUNDLE_ID = app.heygate.flytrack
+DEVELOPMENT_TEAM = TEAMID
+SUPABASE_URL =
+SUPABASE_ANON_KEY =
+GOOGLE_IOS_CLIENT_ID =
+GOOGLE_WEB_CLIENT_ID =
+REVERSED_GOOGLE_CLIENT_ID = com.googleusercontent.apps.PLACEHOLDER
+
+#include? "Secrets.xcconfig"

@@ -6,6 +6,7 @@ Monorepo:
 |---|---|
 | `supabase/` | Postgres schema + Edge Functions (Deno/TypeScript): the only thing that ever calls the flight API |
 | `android/` | Kotlin + Compose app: flights, add-flight, push, settings, ticket import |
+| `ios/` | SwiftUI app (HeyGate). Pure logic is in `ios/FlyTrackCore`, which builds on Linux |
 | `docs/design-brief.md` | UI tokens matched to HeyTurbulence (Roamly) |
 | `scripts/` | airport import, SQL test runner |
 
@@ -52,7 +53,7 @@ Tune it in `CADENCE` in `_shared/schedule.ts`. The `provider_calls` table logs e
 
 You need Deno 2 and Postgres (for the SQL tests). For the full local stack you need the Supabase CLI and Docker.
 
-Unit and engine tests (53 tests; no network, no DB):
+Unit and engine tests (58 tests; no network, no DB):
 
 ```bash
 cd supabase/functions && deno test
@@ -168,6 +169,38 @@ cd android && ./gradlew :app:assembleDebug :app:testDebugUnitTest :app:lintDebug
 ```
 
 Ticket import reads a PDF or screenshot on the phone (PdfRenderer + ML Kit). Cloud reading is off until the user allows it, and then only the extracted text is sent to the `parse-ticket` function (`ANTHROPIC_API_KEY`). The file itself is never uploaded.
+
+## iOS app
+
+HeyGate is the SwiftUI app in `ios/`. It targets the iOS 27 SDK (Xcode 27.2) and deploys back to iOS 26, so the iOS 26.5 simulator can run it. Feature behaviour matches the Android app. The logic that can be tested without a Mac lives in `ios/FlyTrackCore` and has no UIKit or SwiftUI imports.
+
+```bash
+cd ios/FlyTrackCore && swift test
+```
+
+On a Mac with Xcode 27.2, install XcodeGen (`brew install xcodegen`). Fastlane is optional (`brew install fastlane`) and is only used to archive; it does not upload.
+
+```bash
+cd ios
+cp Config/Secrets.xcconfig.example Config/Secrets.xcconfig
+# Fill DEVELOPMENT_TEAM, the bundle id, Supabase URL and anon key, and the Google client ids.
+# Put GoogleService-Info.plist in ios/FlyTrack/ (gitignored). The app runs without it and shows "push not configured".
+xcodegen generate
+xcodebuild -project FlyTrack.xcodeproj -scheme FlyTrack \
+  -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.5' build
+xcodebuild -project FlyTrack.xcodeproj -scheme FlyTrack \
+  -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.5' test
+```
+
+Push stays on the existing FCM HTTP v1 sender. `notify.ts` now also sets an APNs block: `flight_critical` is `interruption-level: time-sensitive`, `flight_updates` is `active`, and the Android notification tag is both `apns-collapse-id` and `thread-id`. iOS devices register with `register_device(..., p_platform := 'ios')`. The five-argument call the Android app already makes still stores `platform = 'android'`.
+
+The archive lane does not upload:
+
+```bash
+cd ios && fastlane archive
+```
+
+Details, the files that were not compiled on Linux, and the TestFlight checklist are in `ios/ARCHITECTURE.md`.
 
 ## Going live with AeroDataBox
 

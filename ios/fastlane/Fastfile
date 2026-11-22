@@ -1,0 +1,15 @@
+# Archive only. This lane does not upload to App Store Connect or TestFlight.
+default_platform(:ios)
+
+platform :ios do
+  desc "Archive an App Store build of HeyGate. Does not upload."
+  lane :archive do
+    build_app(
+      project: "FlyTrack.xcodeproj",
+      scheme: "FlyTrack",
+      configuration: "Release",
+      export_method: "app-store",
+      skip_profile_detection: false
+    )
+  end
+end
