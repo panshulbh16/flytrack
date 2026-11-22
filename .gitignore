@@ -18,3 +18,5 @@ android/app/build/
 android/local.properties
 *.keystore
 *.jks
+android/.kotlin/
+
