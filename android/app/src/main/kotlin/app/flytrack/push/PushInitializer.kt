@@ -1,24 +1,28 @@
 package app.flytrack.push
 
+import app.flytrack.core.result.ActionResult
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import javax.inject.Inject
+import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Singleton
 
 /**
  * Everything push needs at process start: notification channels (`flight_critical`,
  * `flight_updates`, same ids as the backend) and registering the FCM token.
- * Called once from FlyTrackApp.onCreate on the main thread, so it must return quickly.
+ * Called once from FlyTrackApp.onCreate on the main thread, so [onAppStart] must return quickly.
  */
 interface PushInitializer {
-    fun onAppStart()
-}
+    val availability: StateFlow<PushAvailability>
 
-/** STUB (foundation): replaced by the push feature, which owns this package and this binding. */
-class NoOpPushInitializer @Inject constructor() : PushInitializer {
-    override fun onAppStart() = Unit
+    fun onAppStart()
+
+    /**
+     * Unregisters this phone's FCM token. Call it before [app.flytrack.data.repo.AuthRepository.signOut],
+     * while that user's session can still authorise the RPC.
+     */
+    suspend fun beforeSignOut(): ActionResult?
 }
 
 @Module
@@ -26,5 +30,9 @@ class NoOpPushInitializer @Inject constructor() : PushInitializer {
 abstract class PushModule {
     @Binds
     @Singleton
-    abstract fun bindPushInitializer(impl: NoOpPushInitializer): PushInitializer
+    abstract fun bindPushInitializer(impl: FirebasePushInitializer): PushInitializer
+
+    @Binds
+    @Singleton
+    abstract fun bindNotificationHealth(impl: AndroidNotificationHealthSource): NotificationHealthSource
 }

@@ -6,6 +6,21 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Android 13+: asked at runtime by the push feature before alerts can be shown. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Expedited sync work can be promoted to a short foreground service so the Room write finishes. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SHORT_SERVICE" />
+
+    <!-- Package visibility for the battery-saver screens on the phones that kill background apps. -->
+    <queries>
+        <package android:name="com.miui.securitycenter" />
+        <package android:name="com.vivo.permissionmanager" />
+        <package android:name="com.iqoo.secure" />
+        <package android:name="com.coloros.safecenter" />
+        <package android:name="com.oppo.safe" />
+        <package android:name="com.oneplus.security" />
+        <package android:name="com.oplus.securitypermission" />
+        <package android:name="com.samsung.android.lool" />
+    </queries>
 
     <!--
       MapLibre declares both location permissions for its "my location" layer. FlyTrack shows flights,

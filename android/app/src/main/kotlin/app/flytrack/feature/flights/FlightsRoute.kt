@@ -46,6 +46,7 @@ import app.flytrack.feature.flights.presentation.FlightCardUiModel
 import app.flytrack.feature.flights.ui.FlightCard
 import app.flytrack.feature.flights.ui.NextFlightCard
 import app.flytrack.feature.flights.ui.PreviewFlights
+import app.flytrack.push.NotificationPermissionPrompt
 import app.flytrack.ui.components.BackendNotConfiguredState
 import app.flytrack.ui.components.EmptyState
 import app.flytrack.ui.components.FlyTrackTopBar
@@ -80,6 +81,7 @@ fun FlightsRoute(
         onUntrack = viewModel::untrack,
         onUndo = viewModel::undo,
         onMessageShown = viewModel::messageShown,
+        topContent = { NotificationPermissionPrompt() },
     )
 }
 
@@ -96,6 +98,7 @@ fun FlightsScreen(
     onUntrack: (flightId: String) -> Unit,
     onUndo: (FlightsMessage) -> Unit,
     onMessageShown: (FlightsMessage) -> Unit,
+    topContent: @Composable () -> Unit = {},
 ) {
     val snackbars = remember { SnackbarHostState() }
     FlightsSnackbar(state.message, snackbars, onUndo, onMessageShown)
@@ -132,15 +135,18 @@ fun FlightsScreen(
             }
         },
     ) { padding ->
-        PullToRefreshBox(
+        Column(Modifier.fillMaxSize().padding(padding)) {
+            topContent()
+            PullToRefreshBox(
             isRefreshing = state.isRefreshing,
             onRefresh = onRefresh,
-            modifier = Modifier.fillMaxSize().padding(padding),
+            modifier = Modifier.fillMaxSize().weight(1f),
         ) {
             when {
                 state.isLoading -> LoadingState(modifier = Modifier.fillMaxSize())
                 state.isEmpty -> EmptyFlights(state.isBackendConfigured, onAddFlight, onImportTicket)
                 else -> FlightList(state, onOpenFlight, onArchive, onUntrack)
+            }
             }
         }
     }
