@@ -1,0 +1,21 @@
+{
+  "imports": {
+    "@std/assert": "jsr:@std/assert@1",
+    "@supabase/supabase-js": "npm:@supabase/supabase-js@2"
+  },
+  "compilerOptions": {
+    "strict": true
+  },
+  "lint": {
+    "rules": {
+      "exclude": [
+        "no-explicit-any",
+        "no-import-prefix"
+      ]
+    }
+  },
+  "fmt": {
+    "lineWidth": 120
+  },
+  "//": "Used by `deno test`/lint only. Supabase deploy ignores this file, so function code imports npm:/jsr: specifiers inline (except tests)."
+}

@@ -1,0 +1,23 @@
+# Supabase CLI config (only the parts we change; `supabase init` defaults apply otherwise).
+project_id = "flytrack"
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+# low-friction start: anonymous session, link Google/phone later
+enable_anonymous_sign_ins = true
+
+[auth.external.google]
+enabled = false # turn on in Step 3 with Android OAuth client id
+client_id = "env(GOOGLE_WEB_CLIENT_ID)"
+secret = "env(GOOGLE_WEB_CLIENT_SECRET)"
+skip_nonce_check = true
+
+[functions.search-flight]
+verify_jwt = true
+
+[functions.poll-flights]
+verify_jwt = false # protected by x-cron-secret instead (called from pg_cron)
+
+[functions.provider-webhook]
+verify_jwt = false # protected by ?token= secret (called by AeroDataBox)
