@@ -5,7 +5,7 @@ Monorepo:
 | Path | What |
 |---|---|
 | `supabase/` | Postgres schema + Edge Functions (Deno/TypeScript): the only thing that ever calls the flight API |
-| `android/` | Kotlin + Compose app (**Step 3**, not started yet) |
+| `android/` | Kotlin + Compose app: flights, add-flight, push, settings, ticket import |
 | `docs/design-brief.md` | UI tokens matched to HeyTurbulence (Roamly) |
 | `scripts/` | airport import, SQL test runner |
 
@@ -136,7 +136,7 @@ supabase secrets set --env-file supabase/functions/.env
 Deploy the functions:
 
 ```bash
-supabase functions deploy search-flight poll-flights provider-webhook
+supabase functions deploy search-flight poll-flights provider-webhook parse-ticket
 ```
 
 Then run this once in the SQL editor. It stores the cron secrets in Vault, not in code:
@@ -146,7 +146,28 @@ select vault.create_secret('https://<ref>.supabase.co', 'project_url');
 select vault.create_secret('<CRON_SECRET value>', 'cron_secret');
 ```
 
-Also enable Anonymous sign-ins in Auth settings. Google sign-in comes in Step 3, and phone OTP in v0.2 (that one needs DLT).
+Also enable Anonymous sign-ins in Auth settings. Phone OTP is v0.2 (that needs DLT). Google sign-in needs `GOOGLE_WEB_CLIENT_ID` in the app and the matching provider turned on in Auth.
+
+## Android app
+
+The app is a single module in `android/` (Kotlin, Jetpack Compose, Hilt, Room, supabase-kt). It reads `flight_view` through Room and never calls the flight provider itself.
+
+Local keys live in `android/local.properties` (gitignored), or in the environment for CI:
+
+```
+sdk.dir=/path/to/android-sdk
+SUPABASE_URL=https://<ref>.supabase.co
+SUPABASE_ANON_KEY=<anon key>
+GOOGLE_WEB_CLIENT_ID=<OAuth web client id>
+```
+
+Push also needs `android/app/google-services.json` from the Firebase project (gitignored). Without it the app still builds and runs; settings shows that push is not configured, and no Firebase call is made.
+
+```bash
+cd android && ./gradlew :app:assembleDebug :app:testDebugUnitTest :app:lintDebug
+```
+
+Ticket import reads a PDF or screenshot on the phone (PdfRenderer + ML Kit). Cloud reading is off until the user allows it, and then only the extracted text is sent to the `parse-ticket` function (`ANTHROPIC_API_KEY`). The file itself is never uploaded.
 
 ## Going live with AeroDataBox
 

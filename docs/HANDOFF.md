@@ -202,3 +202,29 @@ Dropped because of conflicts: Udaan, Gagan, Nabh, Vimana, Yatra, Aakash (too clo
 * **AeroDataBox unknowns.** Webhook subject name, credit pricing and units per call are unverified. Webhooks are off by default (`ADB_WEBHOOKS=false`).
 * **Supabase API keys.** Newer projects issue "publishable" and "secret" API keys. Check that `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` are present in the Edge runtime, or map them.
 * **Anonymous-account abuse.** It is limited by the per-user search limit. Consider Play Integrity or CAPTCHA later.
+
+## 8. Step 3 status (Android push, settings, ticket import)
+
+Written on the `step3-android` branch. The foundation, add-flight and flight list/detail from the earlier step are unchanged in contract except where this section says so.
+
+### Done
+
+* **Push.** Channels `flight_critical` (high, sound + vibration) and `flight_updates` (default) are created at process start. Foreground alerts are posted with the same channel and the same tag as `notify.ts`. Data-only `sync` messages are written by an expedited WorkManager worker (`FlightSyncWorker` → `applyServerSync`). `onNewToken` registers the token. The initializer re-registers when the signed-in user changes and exposes `PushAvailability.NotConfigured` when there is no `google-services.json`. Settings unregisters the token before `signOut`.
+* **Permission.** The flights screen asks for `POST_NOTIFICATIONS` once (Android 13+), remembers "asked" in `SettingsStore`, and shows a banner when notifications or a channel are blocked.
+* **Settings.** Anonymous vs Google-linked account, Credential Manager link (`GetGoogleIdOption` + `GOOGLE_WEB_CLIENT_ID`) with cancel / no credential / not configured, and "this Google account is already in use". Default alert-group toggles (applied when a flight is newly tracked), cloud ticket-parsing consent, notification health (permission, both channels, battery optimisation with Xiaomi/Vivo/Oppo/Realme/OnePlus/Samsung deep links and a system-settings fallback), app version.
+* **Ticket import.** Share sheet or in-app pick (OpenDocument / PickVisualMedia). PDF pages via PdfRenderer and images via ML Kit, off the main thread, page and bitmap caps, temp files deleted, file never uploaded. Pure parser covers IndiGo, Air India, Air India Express, Akasa, SpiceJet, two OTA layouts and OCR noise. Several flights are a choice. `onParsed` opens Add Flight with `prefillSource` so `user_flights.source` is `pdf`, `screenshot` or `share`. The Add Flight screen that was under Import is popped.
+* **`parse-ticket`.** User JWT, 20k character cap, 20 parses per user per day (`reserve_ticket_parse`), Anthropic Messages API, `claude-haiku-5-5` then `claude-sonnet-5-5`, no extended thinking, JSON checked with `parseFlightNumber`. The prompt says to extract flight data only and to ignore instructions in the ticket. `ANTHROPIC_API_KEY` is in `.env.example` and `config.toml`. Ticket text is not logged. Cloud reading runs only when the on-device parser found nothing and the user has consented.
+
+### Verified in this session
+
+* `./gradlew :app:testDebugUnitTest` — 431 tests, 0 failures.
+* `./gradlew :app:assembleDebug :app:lintDebug :app:assembleRelease` — success (R8 minify on).
+* `cd supabase/functions && deno test` — 57 passed (53 previous + 4 parse-ticket).
+* `deno check` on `poll-flights`, `search-flight`, `provider-webhook`, `parse-ticket`.
+* `scripts/test-sql.sh` — the existing suite plus `reserve_ticket_parse` (cap of 2 holds; a third call returns false).
+
+### Not run here
+
+* A device or emulator: notification posting, the permission dialog, Credential Manager, ML Kit/PdfRenderer, and OEM battery screens.
+* A Supabase project: `register_device`, `parse-ticket` against Anthropic, RLS on the new quota table.
+* A Firebase project: there is still no `google-services.json`, so token fetch and real FCM delivery are not exercised. The unconfigured path is what this checkout runs.

@@ -21,3 +21,7 @@ verify_jwt = false # protected by x-cron-secret instead (called from pg_cron)
 
 [functions.provider-webhook]
 verify_jwt = false # protected by ?token= secret (called by AeroDataBox)
+
+[functions.parse-ticket]
+verify_jwt = true
+# Secret ANTHROPIC_API_KEY (supabase secrets set, or supabase/functions/.env). Never log ticket text.

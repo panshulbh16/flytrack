@@ -108,11 +108,11 @@ app.flytrack
 │  ├─ components          shared composables
 │  └─ nav                 routes, FlyTrackNavHost, AppNavigator, LaunchRequest, openFlightIntent
 ├─ feature
-│  ├─ flights             FlightsRoute, FlightDetailRoute            (flights agent)   STUBS today
-│  ├─ addflight           AddFlightRoute                             (addflight agent) STUB today
-│  ├─ settings            SettingsRoute                              (push agent)      STUB today
-│  └─ importticket        ImportTicketRoute                          (importer agent)  STUB today
-└─ push                   FlyTrackMessagingService, PushInitializer + its Hilt binding (push agent) STUBS today
+│  ├─ flights             FlightsRoute, FlightDetailRoute
+│  ├─ addflight           AddFlightRoute
+│  ├─ settings            SettingsRoute (account, default alerts, notification health)
+│  └─ importticket        ImportTicketRoute (on-device parser, optional parse-ticket)
+└─ push                   FlyTrackMessagingService, FirebasePushInitializer, channels, sync worker
 ```
 
 Tests mirror the packages under `app/src/test/kotlin`. Shared test support is in
@@ -554,7 +554,12 @@ Routes (`Routes.kt`, `@Serializable`):
 
 ```kotlin
 data object Flights                                        // start destination
-data class AddFlight(val prefillFlight: String? = null, val prefillDate: String? = null, val prefillPnr: String? = null)
+data class AddFlight(
+    val prefillFlight: String? = null,
+    val prefillDate: String? = null,
+    val prefillPnr: String? = null,
+    val prefillSource: String? = null,   // TrackSource.wire: "pdf", "screenshot", "share"; null = typed by hand
+)
 data class FlightDetail(val flightId: String)
 data object Settings
 data object ImportTicket
@@ -570,13 +575,17 @@ NavHost calls them with named arguments, so keep the parameter names.
 
 // app.flytrack.feature.addflight
 @Composable fun AddFlightRoute(prefillFlight: String?, prefillDate: String?, prefillPnr: String?,
-                               onDone: (flightId: String?) -> Unit, onBack: () -> Unit)
+                               onDone: (flightId: String?) -> Unit, onBack: () -> Unit,
+                               prefillSource: String? = null)
 
 // app.flytrack.feature.settings
 @Composable fun SettingsRoute(onBack: () -> Unit)
 
 // app.flytrack.feature.importticket
-@Composable fun ImportTicketRoute(onParsed: (flight: String?, date: String?, pnr: String?) -> Unit, onBack: () -> Unit)
+@Composable fun ImportTicketRoute(
+    onParsed: (flight: String?, date: String?, pnr: String?, source: String?) -> Unit,
+    onBack: () -> Unit,
+)
 ```
 
 What the callbacks do:
@@ -587,7 +596,7 @@ What the callbacks do:
 | `onOpenFlight(id)` | opens `FlightDetail(id)` |
 | `onOpenSettings` | opens `Settings` |
 | `onDone(flightId)` | non-null: leaves the add/import screens and shows `FlightDetail(flightId)` above the list; null: back |
-| `onParsed(flight, date, pnr)` | replaces the import screen by `AddFlight(flight, date, pnr)`; `date` is ISO `yyyy-MM-dd` |
+| `onParsed(flight, date, pnr, source)` | pops ImportTicket and any AddFlight under it, then opens `AddFlight(flight, date, pnr, source)`; `date` is ISO `yyyy-MM-dd`; `source` is `pdf`, `screenshot` or `share` |
 | `onBack` | pops the back stack |
 
 Each entry point gets its ViewModel with `hiltViewModel()` and forwards state and lambdas to a
@@ -609,8 +618,8 @@ interface AppNavigator {
 val LocalAppNavigator: ProvidableCompositionLocal<AppNavigator>     // LocalAppNavigator.current
 ```
 
-Today there is **no** button that opens `ImportTicket` from inside the app (only a share does).
-The flights or addflight feature should add one with `LocalAppNavigator.current.openImportTicket()`.
+The flights list (top bar and empty state) and the add-flight screen open `ImportTicket` with
+`LocalAppNavigator.current.openImportTicket()`. A share intent does the same.
 
 ## 14. Intents and push
 
@@ -652,18 +661,24 @@ fun notificationTag(flightId: String, group: String): String    // "<flightId>:<
 * Real examples of both payloads, produced by the backend's `notify.ts`:
   `app/src/test/resources/fixtures/fcm_messages.json`.
 
-Push stubs to replace (`app.flytrack.push`):
+Push (`app.flytrack.push`), now real:
 
 ```kotlin
-interface PushInitializer { fun onAppStart() }   // called from FlyTrackApp.onCreate (main thread: return fast)
-class NoOpPushInitializer : PushInitializer      // stub
-abstract class PushModule                        // Hilt binding PushInitializer -> NoOpPushInitializer; rebind it
-class FlyTrackMessagingService : FirebaseMessagingService()   // stub; already declared in the manifest
+interface PushInitializer {
+    val availability: StateFlow<PushAvailability>   // Checking, NotConfigured, Ready
+    fun onAppStart()                                // channels, then token registration; returns immediately
+    suspend fun beforeSignOut(): ActionResult?      // unregister the token while the session is still valid
+}
 ```
 
+`PushModule` binds `FirebasePushInitializer`. `FlyTrackMessagingService` posts foreground alerts
+on the server's channel and tag, and enqueues expedited `FlightSyncWorker` for `sync` messages.
+`parseIncomingPush`, `alertChannelId`, `alertTagGroup` and `notificationIdFor` are pure and tested
+against `fcm_messages.json`.
+
 There is no `google-services.json` in the repository, so Firebase is not initialised in this
-build: guard every Firebase call (`FirebaseApp.getApps(context).isEmpty()`), otherwise
-`FirebaseMessaging.getInstance()` throws.
+build: every Firebase call is guarded with `FirebaseApp.getApps(context).isEmpty()`, and
+`availability` is `NotConfigured`. `FirebaseMessaging.getInstance()` is never called in that case.
 
 ## 15. Shared content (`app.flytrack.core.share`)
 
@@ -695,8 +710,7 @@ for each Uri's real type. `text` is `EXTRA_TEXT` (a shared e-mail or SMS body).
 
 Create your file with a plain `<resources>` root. Prefix every name with the feature
 (`flights_…`, `addflight_…`, `import_…`, `push_…`, `settings_…`) so names never collide. Use
-`<plurals>` for anything with a count. The `stub_*` strings belong to the placeholder screens and
-go away with them.
+`<plurals>` for anything with a count. The placeholder `stub_*` strings have been removed.
 
 ## 17. Manifest (already declared)
 
@@ -775,4 +789,8 @@ disable "Link Google account" then.
 * There is no connectivity listener: after an offline start, data refreshes on the next
   `refresh()` a screen triggers.
 * `flight_events` (the alert history of a flight) has no repository yet.
-* The release build (R8) is not exercised; only `assembleDebug` is.
+* `assembleRelease` (R8) and `lintDebug` pass in CI-style Gradle runs. Nothing here has been
+  installed on a device, so notification channels, Credential Manager, ML Kit and OEM battery
+  deep links are untested on hardware.
+* Default alert toggles in Settings apply to flights tracked afterwards. They do not rewrite
+  alerts on flights the user already changed.
