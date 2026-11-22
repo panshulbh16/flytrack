@@ -1,4 +1,5 @@
 <resources>
+    <!-- Window theme only: it paints the first frame before Compose draws FlyTrackTheme. -->
     <style name="Theme.FlyTrack" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">@color/paper</item>
         <item name="android:statusBarColor">@android:color/transparent</item>

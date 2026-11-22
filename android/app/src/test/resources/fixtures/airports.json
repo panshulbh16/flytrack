@@ -1,0 +1,22 @@
+[
+    {
+        "tz": "Asia/Kolkata",
+        "lat": 19.0887,
+        "lon": 72.8679,
+        "city": "Mumbai",
+        "iata": "BOM",
+        "icao": "VABB",
+        "name": "Chhatrapati Shivaji International Airport",
+        "country": "IN"
+    },
+    {
+        "tz": "Asia/Kolkata",
+        "lat": 28.5665,
+        "lon": 77.1031,
+        "city": "New Delhi",
+        "iata": "DEL",
+        "icao": "VIDP",
+        "name": "Indira Gandhi International Airport",
+        "country": "IN"
+    }
+]

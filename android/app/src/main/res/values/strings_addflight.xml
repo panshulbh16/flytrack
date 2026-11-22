@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Add-flight feature (app.flytrack.feature.addflight). Every name starts with addflight_. -->
+<resources>
+    <string name="addflight_title">Add flight</string>
+    <!-- Screen headline. %1$s is addflight_headline_key, shown in italics. -->
+    <string name="addflight_headline">Which flight are we %1$s?</string>
+    <string name="addflight_headline_key">tracking</string>
+
+    <!-- Flight number field -->
+    <string name="addflight_flight_label">Flight number</string>
+    <string name="addflight_flight_placeholder" translatable="false">6E 2341</string>
+    <string name="addflight_flight_hint">Airline code and number, as printed on your ticket: 6E 2341 or AI 101.</string>
+    <!-- %1$s is the tidied flight number, e.g. "AI 101" for the typed "ai101" -->
+    <string name="addflight_flight_valid">We\'ll look for %1$s.</string>
+    <string name="addflight_flight_error_required">Enter a flight number, like 6E 2341.</string>
+    <string name="addflight_flight_error_invalid">That doesn\'t read as a flight number. Use the two-character airline code and the number, like 6E 2341 or AI 101.</string>
+    <string name="addflight_flight_clear">Clear flight number</string>
+
+    <!-- Date -->
+    <string name="addflight_date_label">Departure date</string>
+    <string name="addflight_date_hint">The day the flight takes off, in local time at the departure airport.</string>
+    <string name="addflight_date_other">Other date</string>
+    <!-- Accessibility label of the calendar chip. %1$s is the chosen date or "Other date". -->
+    <string name="addflight_date_pick_description">%1$s, choose from calendar</string>
+    <string name="addflight_date_picker_title">Departure date</string>
+    <!-- %1$s and %2$s are the first and last date that can be searched -->
+    <string name="addflight_date_error">We can\'t search that date. Pick one from %1$s to %2$s.</string>
+
+    <!-- Optional booking details -->
+    <string name="addflight_details_label">On your ticket (optional)</string>
+    <string name="addflight_pnr_label">PNR</string>
+    <string name="addflight_pnr_hint">Booking reference</string>
+    <!-- %1$d and %2$d are the shortest and longest PNR length -->
+    <string name="addflight_pnr_error">A PNR has %1$d to %2$d letters and digits.</string>
+    <string name="addflight_seat_label">Seat</string>
+    <string name="addflight_seat_hint">Like 12A</string>
+    <string name="addflight_seat_error">Use a short seat code, like 12A.</string>
+
+    <!-- Actions -->
+    <string name="addflight_search">Search flight</string>
+    <!-- %1$s is the flight number -->
+    <string name="addflight_searching">Looking up %1$s…</string>
+    <string name="addflight_import">Import from a ticket</string>
+    <string name="addflight_import_hint">Have a PDF ticket or a screenshot? We can read the flight from it.</string>
+
+    <!-- Notes shown when the form was filled in from a ticket -->
+    <string name="addflight_prefill_ok">Filled in from your ticket. Check the details before you track.</string>
+    <string name="addflight_prefill_flight_unreadable">We couldn\'t read the flight number on your ticket. Type it as printed.</string>
+    <string name="addflight_prefill_date_unreadable">We couldn\'t read the date on your ticket. Pick the day the flight departs.</string>
+    <!-- %1$s is the date on the ticket, %2$s and %3$s the first and last searchable date -->
+    <string name="addflight_prefill_date_out_of_range">The date on your ticket (%1$s) is outside what we can search. Pick a date from %2$s to %3$s.</string>
+
+    <!-- Results -->
+    <!-- Caption above results and states: flight number · date -->
+    <string name="addflight_results_caption">%1$s · %2$s</string>
+    <!-- %1$s is addflight_results_headline_single_key, in italics -->
+    <string name="addflight_results_headline_single">Is this %1$s?</string>
+    <string name="addflight_results_headline_single_key">your flight</string>
+    <!-- %1$d is the number of legs, %2$s is addflight_results_headline_legs_key, in italics -->
+    <plurals name="addflight_results_headline_legs">
+        <item quantity="one">This flight has %1$d leg. Pick %2$s.</item>
+        <item quantity="other">This flight has %1$d legs. Pick %2$s.</item>
+    </plurals>
+    <string name="addflight_results_headline_legs_key">yours</string>
+    <string name="addflight_results_legs_hint">One flight number can cover several hops. Track the one you\'re on.</string>
+    <string name="addflight_results_times_note">Times are local to each airport.</string>
+
+    <!-- One leg. %1$s and %2$s are airport codes -->
+    <string name="addflight_leg_route" translatable="false">%1$s → %2$s</string>
+    <!-- Read aloud instead of the arrow. %1$s and %2$s are airport codes -->
+    <string name="addflight_leg_route_description">%1$s to %2$s</string>
+    <!-- %1$s and %2$s are city names -->
+    <string name="addflight_leg_cities">%1$s to %2$s</string>
+    <string name="addflight_leg_departs">Departs</string>
+    <string name="addflight_leg_arrives">Arrives</string>
+    <string name="addflight_leg_time_unknown">Not published yet</string>
+    <!-- Airline · flight number · duration -->
+    <string name="addflight_leg_meta_three" translatable="false">%1$s · %2$s · %3$s</string>
+    <string name="addflight_leg_meta_two" translatable="false">%1$s · %2$s</string>
+    <string name="addflight_leg_track">Track</string>
+    <!-- Accessibility label of Track. %1$s flight number, %2$s and %3$s cities -->
+    <string name="addflight_leg_track_description">Track %1$s from %2$s to %3$s</string>
+    <string name="addflight_leg_tracked">You\'re tracking this</string>
+    <string name="addflight_leg_open">Open</string>
+    <string name="addflight_leg_open_description">Open %1$s from %2$s to %3$s</string>
+
+    <!-- Plain-language status of a leg -->
+    <string name="addflight_status_scheduled">Scheduled</string>
+    <string name="addflight_status_on_time">On time</string>
+    <plurals name="addflight_status_late_minutes">
+        <item quantity="one">Running %d min late</item>
+        <item quantity="other">Running %d min late</item>
+    </plurals>
+    <!-- %1$d hours, %2$d minutes -->
+    <string name="addflight_status_late_hours_minutes">Running %1$d h %2$d min late</string>
+    <string name="addflight_status_boarding">Boarding</string>
+    <string name="addflight_status_in_air">In the air</string>
+    <string name="addflight_status_landed">Landed</string>
+    <string name="addflight_status_cancelled">Cancelled</string>
+    <string name="addflight_status_diverted">Diverted</string>
+    <string name="addflight_status_schedule_only">Timetable only, no live status yet</string>
+
+    <!-- Not found. %1$s flight number, %2$s date -->
+    <string name="addflight_not_found_title">No %1$s on %2$s</string>
+    <string name="addflight_not_found_message">Check the date first: it must be the day the flight takes off, in local time at the departure airport. A flight that leaves just after midnight belongs to the new day. Then check the airline code, for example 6E for IndiGo and AI for Air India.</string>
+    <string name="addflight_not_found_change_date">Change the date</string>
+
+    <!-- Daily search limit -->
+    <string name="addflight_rate_limited_title">Search limit reached</string>
+    <string name="addflight_rate_limited_message">You\'ve used all your flight searches for the last 24 hours. They come back as those hours pass, so try again a little later. Flights you already track keep updating.</string>
+    <string name="addflight_rate_limited_google_hint">Linking a Google account in Settings raises your daily limit.</string>
+    <string name="addflight_rate_limited_open_settings">Open Settings</string>
+
+    <!-- Provider error -->
+    <string name="addflight_provider_error_title">Flight data isn\'t answering</string>
+    <string name="addflight_provider_error_message">We couldn\'t reach our flight-data source just now. Nothing is wrong with your search: try again in a moment.</string>
+
+    <!-- The server rejected the search for a reason the app does not know -->
+    <string name="addflight_rejected_title">We couldn\'t run that search</string>
+    <string name="addflight_rejected_message">Check the flight number and the date, then try again.</string>
+
+    <!-- Problems when tracking a leg -->
+    <string name="addflight_limit_title">Tracking limit reached</string>
+    <!-- %1$d is the free limit (also the plural count), %2$d the Pro limit -->
+    <plurals name="addflight_limit_message_free">
+        <item quantity="one">You\'re already tracking %1$d flight, the most the free plan allows. Pro tracks up to %2$d. Archive or remove a flight you no longer need, then track this one.</item>
+        <item quantity="other">You\'re already tracking %1$d flights, the most the free plan allows. Pro tracks up to %2$d. Archive or remove a flight you no longer need, then track this one.</item>
+    </plurals>
+    <plurals name="addflight_limit_message_pro">
+        <item quantity="one">You\'re already tracking %1$d flight, the most Pro allows. Archive or remove a flight you no longer need, then track this one.</item>
+        <item quantity="other">You\'re already tracking %1$d flights, the most Pro allows. Archive or remove a flight you no longer need, then track this one.</item>
+    </plurals>
+    <string name="addflight_limit_action">Go to my flights</string>
+    <string name="addflight_track_offline">You\'re offline, so this flight wasn\'t added. Check your connection and tap Track again.</string>
+    <string name="addflight_track_gone">This flight is no longer available. Search again to get the latest details.</string>
+    <string name="addflight_track_gone_action">Search again</string>
+    <string name="addflight_track_invalid_details">Check the PNR and seat above, then try again.</string>
+    <string name="addflight_track_details_not_saved">We couldn\'t save the PNR and seat to this flight. Check your connection and try again, or clear them to open the flight as it is.</string>
+    <string name="addflight_track_failed">We couldn\'t add this flight. Please try again.</string>
+</resources>
