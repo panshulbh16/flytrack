@@ -18,6 +18,7 @@ import app.flytrack.data.repo.AuthRepository
 import app.flytrack.data.repo.FlightRepository
 import app.flytrack.data.repo.ProfileRepository
 import app.flytrack.data.repo.SessionState
+import app.flytrack.feature.settings.DefaultAlertPreferences
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -28,6 +29,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -49,6 +51,7 @@ class AddFlightViewModel @AssistedInject constructor(
     private val clock: Clock,
     homeTimeZone: HomeTimeZone,
     backendConfig: BackendConfig,
+    private val defaultAlerts: DefaultAlertPreferences = DefaultAlertPreferences.AllOn,
 ) : ViewModel() {
 
     @AssistedFactory
@@ -62,8 +65,8 @@ class AddFlightViewModel @AssistedInject constructor(
     private val _events = Channel<AddFlightEvent>(Channel.BUFFERED)
     val events: Flow<AddFlightEvent> = _events.receiveAsFlow()
 
-    // A ticket import can come from a share, a PDF or a screenshot; the route does not say which.
-    private val source = if (prefill.isEmpty) TrackSource.MANUAL else TrackSource.SHARE
+    // A prefill without a source is a share (the route did not say which). An empty form was typed.
+    private val source = prefill.source ?: if (prefill.isEmpty) TrackSource.MANUAL else TrackSource.SHARE
 
     private var searchJob: Job? = null
     private var trackedByFlightId: Map<String, TrackedFlight> = emptyMap()
@@ -204,7 +207,10 @@ class AddFlightViewModel @AssistedInject constructor(
         _uiState.update { it.copy(trackingFlightId = flightId, trackNotice = null) }
         viewModelScope.launch {
             when (val result = flights.track(flightId, extras)) {
-                is TrackResult.Tracked -> finish(flightId)
+                is TrackResult.Tracked -> {
+                    applyDefaultMutes(flightId)
+                    finish(flightId)
+                }
                 // The local list was stale. The flight is tracked, but the details typed here are not on it yet.
                 is TrackResult.AlreadyTracked -> saveDetailsAndFinish(result.tracking, extras)
                 is TrackResult.TrackingLimitReached -> trackFailed(flightId, limitReached())
@@ -255,6 +261,12 @@ class AddFlightViewModel @AssistedInject constructor(
             ActionResult.TrackingLimitReached, is ActionResult.Failed,
             -> trackFailed(flightId, TrackProblem.DetailsNotSaved)
         }
+    }
+
+    private suspend fun applyDefaultMutes(flightId: String) {
+        val muted = defaultAlerts.muted.first()
+        if (muted.isEmpty()) return
+        flights.updateNotifyPrefs(flightId, muted.associateWith { false })
     }
 
     private suspend fun finish(flightId: String) {

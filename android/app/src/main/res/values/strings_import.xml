@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="import_title">Import ticket</string>
+    <string name="import_intro">Choose a ticket PDF or a screenshot. FlyTrack reads it on this phone and only sends the text if you allow cloud reading.</string>
+    <string name="import_action_file">Choose a PDF or file</string>
+    <string name="import_action_image">Choose a screenshot</string>
+    <string name="import_reading">Reading the ticket…</string>
+    <string name="import_pnr">Booking reference %1$s</string>
+    <string name="import_choose">Which flight should we add?</string>
+    <string name="import_flight_row">%1$s, %2$s</string>
+    <string name="import_date_unknown">Date not found</string>
+    <string name="import_route">%1$s to %2$s</string>
+    <string name="import_action_use">Use this flight</string>
+    <string name="import_empty_title">No flight number found</string>
+    <string name="import_empty_message">The ticket text didn\'t contain a flight number we could read.</string>
+    <string name="import_cloud_title">Send the text to read it</string>
+    <string name="import_cloud_message">Only the words read from the ticket are sent, never the file. You can turn this off in Settings.</string>
+    <string name="import_action_cloud">Read in the cloud</string>
+    <string name="import_notice_truncated">Only the first part of the ticket was read.</string>
+    <string name="import_notice_cloud_failed">Cloud reading didn\'t work. You can type the flight number instead.</string>
+    <string name="import_notice_rate_limited">Too many tickets read today. Try again tomorrow, or type the flight number.</string>
+    <string name="import_notice_offline">You\'re offline, so the cloud reader can\'t run.</string>
+    <string name="import_notice_not_configured">Cloud reading isn\'t set up in this build.</string>
+    <string name="import_notice_nothing">Still no flight number. Type it on the next screen.</string>
+    <string name="import_action_type">Type the flight number</string>
+</resources>

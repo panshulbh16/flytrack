@@ -1,6 +1,7 @@
 package app.flytrack.feature.addflight
 
 import app.flytrack.core.model.Flight
+import app.flytrack.core.model.TrackSource
 import kotlinx.datetime.LocalDate
 
 /** Values handed over by the ticket importer (all optional, all untrusted OCR output). */
@@ -11,6 +12,8 @@ data class AddFlightPrefill(
     val date: String? = null,
     /** Booking reference. */
     val pnr: String? = null,
+    /** How the ticket arrived. Null keeps the old rule: a prefill is a share, an empty form is manual. */
+    val source: TrackSource? = null,
 ) {
     val isEmpty: Boolean get() = flight.isNullOrBlank() && date.isNullOrBlank() && pnr.isNullOrBlank()
 }

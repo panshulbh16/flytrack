@@ -70,11 +70,4 @@
     <!-- Notification channels (ids are fixed by the backend: flight_critical / flight_updates) -->
     <string name="fcm_default_channel_id" translatable="false">flight_updates</string>
 
-    <!-- Placeholder screens. Each feature replaces its own stub and stops using these. -->
-    <string name="stub_flights_title">My flights</string>
-    <string name="stub_add_flight_title">Add flight</string>
-    <string name="stub_flight_detail_title">Flight</string>
-    <string name="stub_settings_title">Settings</string>
-    <string name="stub_import_title">Import ticket</string>
-    <string name="stub_message">This screen is being built.</string>
-</resources>
+    </resources>

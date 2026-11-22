@@ -516,6 +516,33 @@ class AddFlightViewModelTest {
     }
 
     @Test
+    fun `a pdf import is stored as pdf and default mutes are applied`() = runTest {
+        fake.searchResult = SearchResult.Found(listOf(delBom))
+        val defaults = object : app.flytrack.feature.settings.DefaultAlertPreferences {
+            override val muted = kotlinx.coroutines.flow.flowOf(setOf(app.flytrack.core.model.AlertType.DEPARTED))
+            override suspend fun setMuted(types: Set<app.flytrack.core.model.AlertType>, muted: Boolean) = Unit
+        }
+        val vm = AddFlightViewModel(
+            prefill = AddFlightPrefill("6E 2341", "2026-11-25", null, source = TrackSource.PDF),
+            flights = flights,
+            auth = auth,
+            profiles = profiles,
+            clock = clock,
+            homeTimeZone = HomeTimeZone { "Asia/Kolkata" },
+            backendConfig = app.flytrack.data.remote.BackendConfig("https://example.supabase.co", "anon-key", "web"),
+            defaultAlerts = defaults,
+        )
+
+        vm.onTrack(delBom.id)
+
+        assertEquals(TrackSource.PDF, fake.trackCalls.single().second.source)
+        assertEquals(
+            mapOf(app.flytrack.core.model.AlertType.DEPARTED to false),
+            fake.tracked.value.single().tracking.notifyPrefs,
+        )
+    }
+
+    @Test
     fun `a double tap on track sends one request`() = runTest {
         flights.trackGate = CompletableDeferred()
         val vm = viewModelWithResults(delBom, bomGoi)

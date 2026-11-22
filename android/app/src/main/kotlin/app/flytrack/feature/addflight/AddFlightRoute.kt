@@ -35,6 +35,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import app.flytrack.R
+import app.flytrack.core.model.TrackSource
 import app.flytrack.ui.components.FlyTrackTopBar
 import app.flytrack.ui.components.HairlineDivider
 import app.flytrack.ui.nav.LocalAppNavigator
@@ -57,8 +58,14 @@ fun AddFlightRoute(
     prefillPnr: String?,
     onDone: (flightId: String?) -> Unit,
     onBack: () -> Unit,
+    prefillSource: String? = null,
 ) {
-    val prefill = AddFlightPrefill(flight = prefillFlight, date = prefillDate, pnr = prefillPnr)
+    val prefill = AddFlightPrefill(
+        flight = prefillFlight,
+        date = prefillDate,
+        pnr = prefillPnr,
+        source = prefillSource?.let { raw -> TrackSource.entries.firstOrNull { it.wire == raw } },
+    )
     val viewModel = hiltViewModel<AddFlightViewModel, AddFlightViewModel.Factory>(
         creationCallback = { factory -> factory.create(prefill) },
     )

@@ -45,12 +45,14 @@ class NavControllerNavigator(private val navController: NavHostController) : App
         }
     }
 
-    /** The importer found flight details: replace the import screen by the pre-filled add-flight screen. */
-    fun openAddFlightFromImport(flight: String?, date: String?, pnr: String?) {
-        navController.navigate(AddFlight(flight, date, pnr)) {
-            popUpTo<ImportTicket> { inclusive = true }
-            launchSingleTop = true
-        }
+    /**
+     * The importer found flight details. Drop the import screen and, when import was opened from
+     * add-flight, that add-flight entry too, so Back returns to the flight list.
+     */
+    fun openAddFlightFromImport(flight: String?, date: String?, pnr: String?, source: String?) {
+        val removedAdd = navController.popBackStack<AddFlight>(inclusive = true)
+        if (!removedAdd) navController.popBackStack<ImportTicket>(inclusive = true)
+        navController.navigate(AddFlight(flight, date, pnr, source)) { launchSingleTop = true }
     }
 }
 
@@ -79,6 +81,7 @@ fun FlyTrackNavHost(
                     prefillFlight = route.prefillFlight,
                     prefillDate = route.prefillDate,
                     prefillPnr = route.prefillPnr,
+                    prefillSource = route.prefillSource,
                     onDone = { flightId -> if (flightId != null) navigator.openFlightFromAdd(flightId) else navigator.back() },
                     onBack = { navigator.back() },
                 )
@@ -94,7 +97,7 @@ fun FlyTrackNavHost(
             }
             composable<ImportTicket> {
                 ImportTicketRoute(
-                    onParsed = { flight, date, pnr -> navigator.openAddFlightFromImport(flight, date, pnr) },
+                    onParsed = { flight, date, pnr, source -> navigator.openAddFlightFromImport(flight, date, pnr, source) },
                     onBack = { navigator.back() },
                 )
             }
