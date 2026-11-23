@@ -1,0 +1,155 @@
+name: FlyTrack
+options:
+  bundleIdPrefix: app.heygate
+  deploymentTarget:
+    iOS: "26.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+  developmentLanguage: en
+  xcodeVersion: "27.2"
+  projectFormat: xcode27_0
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+    TARGETED_DEVICE_FAMILY: "1"
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: $(DEVELOPMENT_TEAM)
+    SWIFT_EMIT_LOC_STRINGS: YES
+configs:
+  Debug: debug
+  Release: release
+configFiles:
+  Debug: Config/Shared.xcconfig
+  Release: Config/Shared.xcconfig
+packages:
+  FlyTrackCore:
+    path: FlyTrackCore
+  Supabase:
+    url: https://github.com/supabase/supabase-swift
+    exactVersion: 2.55.7
+  Firebase:
+    url: https://github.com/firebase/firebase-ios-sdk
+    exactVersion: 13.2.0
+  GoogleSignIn:
+    url: https://github.com/google/GoogleSignIn-iOS
+    exactVersion: 10.1.0
+targets:
+  FlyTrack:
+    type: application
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: FlyTrack
+        excludes:
+          - FlyTrack.entitlements
+          - Info.plist
+    dependencies:
+      - package: FlyTrackCore
+        product: FlyTrackCore
+      - package: Supabase
+        product: Supabase
+      - package: Firebase
+        product: FirebaseCore
+      - package: Firebase
+        product: FirebaseMessaging
+      - package: GoogleSignIn
+        product: GoogleSignIn
+      - target: ShareExtension
+        embed: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(FLYTRACK_BUNDLE_ID)
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: HeyGate
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        CODE_SIGN_ENTITLEMENTS: FlyTrack/FlyTrack.entitlements
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+    info:
+      path: FlyTrack/Info.plist
+      properties:
+        CFBundleDisplayName: HeyGate
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        ITSAppUsesNonExemptEncryption: false
+        UIBackgroundModes:
+          - remote-notification
+        UIAppFonts:
+          - InstrumentSerif-Regular.ttf
+          - InstrumentSerif-Italic.ttf
+          - DMSans.ttf
+          - DMSans-Italic.ttf
+        CFBundleURLTypes:
+          - CFBundleURLName: app.heygate.flytrack
+            CFBundleURLSchemes:
+              - heygate
+          - CFBundleURLName: google-sign-in
+            CFBundleURLSchemes:
+              - $(REVERSED_GOOGLE_CLIENT_ID)
+        SupabaseURL: $(SUPABASE_URL)
+        SupabaseAnonKey: $(SUPABASE_ANON_KEY)
+        GoogleIOSClientID: $(GOOGLE_IOS_CLIENT_ID)
+        GoogleWebClientID: $(GOOGLE_WEB_CLIENT_ID)
+        UILaunchScreen:
+          UIColorName: LaunchBackground
+    entitlements:
+      path: FlyTrack/FlyTrack.entitlements
+      properties:
+        com.apple.developer.usernotifications.time-sensitive: true
+        com.apple.security.application-groups:
+          - group.app.heygate.flytrack
+  ShareExtension:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: ShareExtension
+        excludes:
+          - Share.entitlements
+          - Info.plist
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(FLYTRACK_BUNDLE_ID).share
+        PRODUCT_MODULE_NAME: ShareExtension
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        GENERATE_INFOPLIST_FILE: YES
+        CODE_SIGN_ENTITLEMENTS: ShareExtension/Share.entitlements
+        SKIP_INSTALL: YES
+    info:
+      path: ShareExtension/Info.plist
+      properties:
+        CFBundleDisplayName: HeyGate
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: ShareExtension.ShareViewController
+          NSExtensionAttributes:
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsFileWithMaxCount: 4
+              NSExtensionActivationSupportsImageWithMaxCount: 4
+              NSExtensionActivationSupportsText: true
+    entitlements:
+      path: ShareExtension/Share.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.app.heygate.flytrack
+schemes:
+  FlyTrack:
+    build:
+      targets:
+        FlyTrack: all
+        ShareExtension: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - package: FlyTrackCore/FlyTrackCoreTests
+    archive:
+      config: Release

@@ -122,6 +122,54 @@ export interface FcmMessage {
   token: string;
   data?: Record<string, string>; // FCM data values must be strings
   android?: Record<string, unknown>;
+  /** APNs config. FCM applies this only when the token belongs to an iOS app; Android ignores it. */
+  apns?: Record<string, unknown>;
+}
+
+/**
+ * APNs collapse ids are at most 64 bytes. A flight UUID plus a short group stays under that.
+ * The same string is the thread id, so a newer alert replaces the previous one instead of stacking.
+ */
+function apnsCollapseId(value: string): string {
+  return new TextEncoder().encode(value).length <= 64 ? value : value.slice(-64);
+}
+
+/** flight_critical → time-sensitive (breaks through Focus). flight_updates → a normal active alert. */
+function apnsAlert(title: string, body: string, tag: string, critical: boolean, extra: Record<string, string>): Record<string, unknown> {
+  const collapse = apnsCollapseId(tag);
+  return {
+    headers: {
+      "apns-push-type": "alert",
+      "apns-priority": "10",
+      "apns-collapse-id": collapse,
+    },
+    payload: {
+      aps: {
+        alert: { title, body },
+        sound: "default",
+        "thread-id": collapse,
+        "interruption-level": critical ? "time-sensitive" : "active",
+        category: "OPEN_FLIGHT",
+      },
+      ...extra,
+    },
+  };
+}
+
+/** Data-only sync. Priority 5 is what Apple accepts for a background content-available push. */
+function apnsSync(collapse: string, extra: Record<string, string>): Record<string, unknown> {
+  const id = apnsCollapseId(collapse);
+  return {
+    headers: {
+      "apns-push-type": "background",
+      "apns-priority": "5",
+      "apns-collapse-id": id,
+    },
+    payload: {
+      aps: { "content-available": 1 },
+      ...extra,
+    },
+  };
 }
 
 /**
@@ -133,9 +181,11 @@ export interface FcmMessage {
 export function buildAlertMessage(token: string, flightId: string, eventId: string, e: FlightEvent, tz: Tz): FcmMessage {
   const { title, body } = renderEvent(e, tz);
   const critical = CRITICAL.includes(e.type);
+  const tag = `${flightId}:${tagGroup(e.type)}`;
+  const data = { kind: "alert", flight_id: flightId, event_id: eventId, event_type: e.type, title, body };
   return {
     token,
-    data: { kind: "alert", flight_id: flightId, event_id: eventId, event_type: e.type, title, body },
+    data,
     android: {
       priority: "HIGH",
       ttl: `${TTL_SECONDS[e.type] ?? 6 * 3600}s`,
@@ -143,12 +193,13 @@ export function buildAlertMessage(token: string, flightId: string, eventId: stri
         title,
         body,
         channel_id: critical ? CHANNEL_CRITICAL : CHANNEL_UPDATES,
-        tag: `${flightId}:${tagGroup(e.type)}`,
+        tag,
         notification_priority: critical ? "PRIORITY_MAX" : "PRIORITY_DEFAULT",
         default_sound: true,
         click_action: "OPEN_FLIGHT", // app's intent-filter action
       },
     },
+    apns: apnsAlert(title, body, tag, critical, data),
   };
 }
 
@@ -166,14 +217,17 @@ export function compactFlight(r: FlightRow): Record<string, unknown> {
 
 export function buildSyncMessage(token: string, row: FlightRow, nearFlight: boolean): FcmMessage {
   const flight = JSON.stringify(compactFlight(row));
+  const data = { kind: "sync", flight_id: row.id, flight };
   return {
     token,
-    data: { kind: "sync", flight_id: row.id, flight },
+    data,
     android: {
       // HIGH only when the live notification is on screen (user-visible update); NORMAL otherwise
       priority: nearFlight ? "HIGH" : "NORMAL",
       ttl: "3600s",
       collapse_key: `sync:${row.id}`, // only the latest state is delivered if the phone was offline
     },
+    // Background push (priority 5). A priority-10 content-available message is throttled or dropped by APNs.
+    apns: apnsSync(`sync:${row.id}`, { kind: "sync", flight_id: row.id }),
   };
 }

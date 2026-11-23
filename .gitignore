@@ -19,4 +19,17 @@ android/local.properties
 *.keystore
 *.jks
 android/.kotlin/
+# ios (Step 4)
+ios/Config/Secrets.xcconfig
+ios/**/GoogleService-Info.plist
+ios/FlyTrack.xcodeproj
+ios/**/xcuserdata/
+ios/**/DerivedData/
+ios/FlyTrackCore/.build/
+ios/fastlane/report.xml
+ios/fastlane/test_output/
+*.mobileprovision
+*.p12
+*.cer
+*.certSigningRequest
 

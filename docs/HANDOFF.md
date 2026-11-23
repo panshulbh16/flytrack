@@ -228,3 +228,30 @@ Written on the `step3-android` branch. The foundation, add-flight and flight lis
 * A device or emulator: notification posting, the permission dialog, Credential Manager, ML Kit/PdfRenderer, and OEM battery screens.
 * A Supabase project: `register_device`, `parse-ticket` against Anthropic, RLS on the new quota table.
 * A Firebase project: there is still no `google-services.json`, so token fetch and real FCM delivery are not exercised. The unconfigured path is what this checkout runs.
+
+## 9. Step 4 status (iOS)
+
+Written on `cursor/step4-ios-6e83`. The Android app was not modified. The backend gained one migration and an APNs block on the existing FCM messages.
+
+### Done
+
+* **`ios/FlyTrackCore`.** Models, flight-number parser, ticket parser (IndiGo, Air India, Air India Express, Akasa, SpiceJet, MakeMyTrip, EaseMyTrip, OCR noise), airport-local time formatting, push mapping, and the add-flight / list / detail / settings / import state machines behind protocols. No UIKit or SwiftUI. `swift test` on Linux: 52 tests.
+* **SwiftUI app.** SwiftData is the local cache. supabase-swift 2.55.7 does anonymous sign-in, Google ID-token linking, PostgREST and `search-flight` / `parse-ticket`. Share extension plus a document importer. PDFKit and Vision stay on device. Deployment target iOS 26.0, built for the iOS 27 SDK in Xcode 27.2. XcodeGen `ios/project.yml` generates the project. Scheme `FlyTrack`.
+* **Push.** FCM via the Firebase iOS SDK, so the sender stays `fcm.ts`. `notify.ts` adds `apns-collapse-id`, `thread-id`, and `interruption-level` (`time-sensitive` for `flight_critical`, `active` for `flight_updates`). Sync is a priority-5 background push. Missing `GoogleService-Info.plist` leaves push in the not-configured state and never calls Firebase.
+* **`devices.platform`.** Migration `20261122000004_ios_devices.sql` allows `ios`. `p_platform` defaults to `android`, so the existing Android `register_device` call is unchanged.
+
+### Verified in this session
+
+* `cd ios/FlyTrackCore && swift test` — 52 tests, 0 failures (Swift 6.4.3, Linux).
+* `cd supabase/functions && deno test` — 58 passed (57 previous + the APNs mirror test).
+* `deno check` on the function entrypoints.
+* `scripts/test-sql.sh` — existing suite plus `30_ios_devices.sql` (five-arg call stays android, ios platform is stored, a mute survives refresh, `web` is rejected).
+
+### Not compiled here
+
+The app target and the share extension. They import SwiftUI, SwiftData, PDFKit, Vision, UserNotifications, Firebase and Google Sign-In. The file list is in `ios/ARCHITECTURE.md`. The owner builds them on the Mac with the commands in that file and in the README.
+
+### Not run here
+
+* Xcode, the iOS 26.5 simulator, and any device.
+* A Firebase iOS app, an APNs key, or a TestFlight upload. Nothing was uploaded.
