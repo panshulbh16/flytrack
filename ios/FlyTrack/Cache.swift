@@ -54,7 +54,7 @@ enum LocalCache {
         guard let payload = record(CachedFlightRecord.self, id: id, in: context)?.payload,
               let data = payload.data(using: .utf8),
               let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
-        return flight(from: object)
+        return FlyTrackCore.flight(from: object)
     }
 
     @MainActor

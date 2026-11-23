@@ -1,6 +1,7 @@
 import FlyTrackCore
 import Foundation
 import PDFKit
+import Supabase
 import SwiftUI
 import UIKit
 import UserNotifications
@@ -118,6 +119,8 @@ final class LivePush: PushControlling {
 }
 
 /// Holds the APNs/FCM callbacks. Firebase is never messaged unless GoogleService-Info.plist is in the bundle.
+/// Delegate methods stay nonisolated; they hop to the main actor before touching the callbacks.
+@MainActor
 final class PushBridge: NSObject, UNUserNotificationCenterDelegate {
     static let shared = PushBridge()
     var onData: (([String: String]) -> Void)?
@@ -125,23 +128,22 @@ final class PushBridge: NSObject, UNUserNotificationCenterDelegate {
     var onToken: ((String) -> Void)?
     var pendingUnregister: String?
 
-    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
+    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
         [.banner, .list, .sound]
     }
 
-    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
+    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
         let info = response.notification.request.content.userInfo
-        if let id = info[PushContract.keyFlightId] as? String, isFlightUUID(id) {
-            onFlight?(id)
-        }
+        guard let id = info[PushContract.keyFlightId] as? String, isFlightUUID(id) else { return }
+        await MainActor.run { PushBridge.shared.onFlight?(id) }
     }
 }
 
 #if canImport(FirebaseMessaging)
 extension PushBridge: MessagingDelegate {
-    func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
+    nonisolated func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
         guard let fcmToken else { return }
-        onToken?(fcmToken)
+        Task { @MainActor in PushBridge.shared.onToken?(fcmToken) }
     }
 }
 #endif
@@ -253,7 +255,7 @@ enum GoogleLinker {
         #endif
     }
 
-    enum GoogleFailure { case cancelled, missingCredential, notConfigured, failed }
+    enum GoogleFailure: Error { case cancelled, missingCredential, notConfigured, failed }
 }
 
 @MainActor
