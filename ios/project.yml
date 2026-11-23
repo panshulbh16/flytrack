@@ -43,6 +43,7 @@ targets:
       - path: FlyTrack
         excludes:
           - FlyTrack.entitlements
+          - Info.plist
     dependencies:
       - package: FlyTrackCore
         product: FlyTrackCore
@@ -69,8 +70,11 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
     info:
+      path: FlyTrack/Info.plist
       properties:
         CFBundleDisplayName: HeyGate
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         ITSAppUsesNonExemptEncryption: false
         UIBackgroundModes:
           - remote-notification
@@ -94,10 +98,10 @@ targets:
           UIColorName: LaunchBackground
     entitlements:
       path: FlyTrack/FlyTrack.entitlements
-    scheme:
-      gatherCoverageData: false
-      testTargets:
-        - package: FlyTrackCore/FlyTrackCoreTests
+      properties:
+        com.apple.developer.usernotifications.time-sensitive: true
+        com.apple.security.application-groups:
+          - group.app.heygate.flytrack
   ShareExtension:
     type: app-extension
     platform: iOS
@@ -106,6 +110,7 @@ targets:
       - path: ShareExtension
         excludes:
           - Share.entitlements
+          - Info.plist
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: $(FLYTRACK_BUNDLE_ID).share
@@ -116,8 +121,11 @@ targets:
         CODE_SIGN_ENTITLEMENTS: ShareExtension/Share.entitlements
         SKIP_INSTALL: YES
     info:
+      path: ShareExtension/Info.plist
       properties:
         CFBundleDisplayName: HeyGate
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSExtension:
           NSExtensionPointIdentifier: com.apple.share-services
           NSExtensionPrincipalClass: ShareExtension.ShareViewController
@@ -128,6 +136,9 @@ targets:
               NSExtensionActivationSupportsText: true
     entitlements:
       path: ShareExtension/Share.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.app.heygate.flytrack
 schemes:
   FlyTrack:
     build:

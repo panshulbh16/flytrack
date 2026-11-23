@@ -80,6 +80,9 @@ final class LivePush: PushControlling {
     func currentToken() async -> String? {
         guard AppConfig.pushPlistPresent, FirebaseApp.app() != nil else { return nil }
         #if canImport(FirebaseMessaging)
+        // Firebase 13 deprecates token(completion:) in favour of installation-id registration.
+        // Installation-id mode is off unless FirebaseMessagingInstallationIdEnabled is set, and
+        // the backend still addresses FCM registration tokens, so this is the call that returns one.
         return await withCheckedContinuation { continuation in
             Messaging.messaging().token { token, _ in continuation.resume(returning: token) }
         }
@@ -234,7 +237,7 @@ enum GoogleLinker {
         guard let presenter = topController() else { return .failure(.failed) }
         return await withCheckedContinuation { continuation in
             GIDSignIn.sharedInstance.signIn(withPresenting: presenter) { result, error in
-                if let error = error as NSError?, error.code == -5 {
+                if let error, (error as NSError).code == GIDSignInError.Code.canceled.rawValue {
                     continuation.resume(returning: .failure(.cancelled))
                     return
                 }

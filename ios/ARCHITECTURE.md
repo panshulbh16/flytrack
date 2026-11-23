@@ -94,7 +94,9 @@ cd ios
 xcodegen generate
 ```
 
-That writes `ios/FlyTrack.xcodeproj`. Scheme name: `FlyTrack`.
+That writes `ios/FlyTrack.xcodeproj`. XcodeGen 2.48 writes each target's `Info.plist` and entitlements from `project.yml` (`info.path` and `entitlements.path` are required). Scheme name: `FlyTrack`.
+
+iPhone 17 is installed for both the 26.5 and 27.2 runtimes, so the `OS=26.5` suffix is what selects the older simulator.
 
 Build and test on the iOS 26.5 simulator. iPhone 17 shipped with iOS 26, so that runtime has it. The `OS=26.5` suffix selects that runtime rather than the iOS 27.2 one.
 
