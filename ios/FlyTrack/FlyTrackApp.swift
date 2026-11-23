@@ -41,6 +41,12 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         guard AppConfig.pushPlistPresent else { return }
         #if canImport(FirebaseMessaging)
         Messaging.messaging().apnsToken = deviceToken
+        // Firebase declines the launch-time token request until the APNs token is set and does not
+        // retry by itself, so a phone with no cached FCM token would never register. Ask again now.
+        Messaging.messaging().token { token, _ in
+            guard let token else { return }
+            Task { @MainActor in PushBridge.shared.onToken?(token) }
+        }
         #endif
     }
 
