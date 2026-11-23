@@ -4,10 +4,10 @@ Set up on 23 Nov 2026.
 
 | | |
 |---|---|
-| Project | `flytrack`, ref `awajstlvcxwmwfclyben` |
-| Region | `ap-northeast-2` (Seoul). Mumbai (`ap-south-1`) would be closer to Indian users; to move, recreate the project before launch. |
-| URL | `https://awajstlvcxwmwfclyben.supabase.co` |
-| Dashboard | https://supabase.com/dashboard/project/awajstlvcxwmwfclyben |
+| Project | `Flytrack`, ref `ovilmvrxgqdaapafqqix` |
+| Region | `ap-southeast-1` (Singapore). This replaced the first project in Seoul; Singapore is closer to India. Mumbai (`ap-south-1`) would be closer still. |
+| URL | `https://ovilmvrxgqdaapafqqix.supabase.co` |
+| Dashboard | https://supabase.com/dashboard/project/ovilmvrxgqdaapafqqix |
 
 ## What is deployed
 
@@ -21,7 +21,7 @@ Set up on 23 Nov 2026.
 ## Verified on the live project
 
 - Anonymous sign-up → `search-flight` (`6E 2345`) → insert into `user_flights` → read `flight_view`.
-- `pg_cron` → `pg_net` → `poll-flights` returned `200 {"polled":1,"errors":0}` and scheduled the next poll 90 minutes later.
+- `pg_cron` → `pg_net` → `poll-flights` returned `200 {"polled":1,"errors":0}` (725 ms) and scheduled the next poll 90 minutes later.
 - `parse-ticket` returns `503 not_configured` until `ANTHROPIC_API_KEY` is set.
 
 ## To go live (in this order)
@@ -39,7 +39,7 @@ Set up on 23 Nov 2026.
 Secrets are set under Dashboard → Edge Functions → Secrets, or with:
 
 ```bash
-supabase secrets set --project-ref awajstlvcxwmwfclyben NAME=value
+supabase secrets set --project-ref ovilmvrxgqdaapafqqix NAME=value
 ```
 
 ## App configuration (never committed)
@@ -47,7 +47,7 @@ supabase secrets set --project-ref awajstlvcxwmwfclyben NAME=value
 Android, `android/local.properties`:
 
 ```properties
-SUPABASE_URL=https://awajstlvcxwmwfclyben.supabase.co
+SUPABASE_URL=https://ovilmvrxgqdaapafqqix.supabase.co
 SUPABASE_ANON_KEY=<anon key from Dashboard → Settings → API Keys>
 GOOGLE_WEB_CLIENT_ID=
 ```
@@ -57,6 +57,6 @@ iOS: the same two values in `ios/Config/Secrets.xcconfig`.
 ## Redeploy
 
 ```bash
-supabase db push --project-ref awajstlvcxwmwfclyben
-supabase functions deploy --project-ref awajstlvcxwmwfclyben
+supabase db push --project-ref ovilmvrxgqdaapafqqix
+supabase functions deploy --project-ref ovilmvrxgqdaapafqqix
 ```
