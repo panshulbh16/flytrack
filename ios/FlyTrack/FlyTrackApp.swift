@@ -9,9 +9,13 @@ import FirebaseMessaging
 struct FlyTrackApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var delegate
     @State private var shell: AppShell
+    /// Kept for the app's lifetime. A ModelContext does not retain its container, and a fetch on a
+    /// context whose container was released crashes.
+    private let container: ModelContainer
 
     init() {
         let container = try! ModelContainer(for: CachedFlightRecord.self, CachedTrackingRecord.self, CachedProfileRecord.self)
+        self.container = container
         let shell = AppShell(context: container.mainContext)
         _shell = State(initialValue: shell)
         delegate.shell = shell
