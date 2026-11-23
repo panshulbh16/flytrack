@@ -99,6 +99,7 @@ targets:
     entitlements:
       path: FlyTrack/FlyTrack.entitlements
       properties:
+        aps-environment: development
         com.apple.developer.usernotifications.time-sensitive: true
         com.apple.security.application-groups:
           - group.app.heygate.flytrack
