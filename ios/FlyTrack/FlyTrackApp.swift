@@ -121,6 +121,7 @@ final class AppShell: ObservableObject {
             _ = await flights.refresh()
             _ = await profiles.refresh()
         }
+        await FlightLiveActivities.resume(client: stack.client, push: push, flights: flights)
         if let shared = ShareInbox.consume() {
             self.shared.offer(shared)
             path.append(Route.importTicket)
@@ -145,6 +146,7 @@ final class AppShell: ObservableObject {
 
     func handlePush(_ data: [String: String]) async {
         await push.handle(data: data)
+        await FlightLiveActivities.endFinished(flights: flights)
         session = await auth.session()
     }
 }
