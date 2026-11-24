@@ -57,15 +57,21 @@ final class LiveHealth: NotificationHealthSource {
 @MainActor
 final class LivePush: PushControlling {
     private let flights: FlightRepository
-    init(flights: FlightRepository) { self.flights = flights }
+    private let client: SupabaseClient?
+    init(flights: FlightRepository, client: SupabaseClient?) {
+        self.flights = flights
+        self.client = client
+    }
 
     func availability() async -> PushAvailability {
         AppConfig.pushPlistPresent ? .ready : .notConfigured
     }
 
+    /// Takes this phone off the signed-in account while that session still works, as Android does.
+    /// AppShell registers the token again for whichever account signs in next.
     func beforeSignOut() async {
         guard AppConfig.pushPlistPresent, let token = await currentToken() else { return }
-        PushBridge.shared.pendingUnregister = token
+        await DeviceRegistrar.unregister(token: token, client: client)
     }
 
     func start() {
@@ -126,7 +132,6 @@ final class PushBridge: NSObject, UNUserNotificationCenterDelegate {
     var onData: (([String: String]) -> Void)?
     var onFlight: ((String) -> Void)?
     var onToken: ((String) -> Void)?
-    var pendingUnregister: String?
 
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
         [.banner, .list, .sound]
@@ -190,10 +195,6 @@ enum TestAlert {
         }
         guard let client else { return String(localized: "Backend not configured.") }
         guard let token = await push.currentToken() else { return notRegistered }
-        // Signing out or into another account leaves this phone's device row on the old account until the
-        // next cold launch, and the backend only sends to the caller's own devices. Re-register first (an
-        // upsert on the token) so the test reaches this phone and real alerts follow the current account.
-        await DeviceRegistrar.register(token: token, client: client)
         do {
             let response: TestAlertResponse = try await client.functions.invoke(
                 "send-test-push",
