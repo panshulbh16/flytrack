@@ -2,19 +2,19 @@ import FlyTrackCore
 import SwiftUI
 import UIKit
 
-/// "Aubergine and platinum" from docs/design-brief.md. Every token resolves per appearance (light, dark).
+/// "Midnight navy and platinum" from docs/design-brief.md. Every token resolves per appearance (light, dark).
 enum FlyColor {
     /// Screen background. Also the text colour on `primary` fills.
-    static let paper = adaptive(0xF7F1E8, 0x1C1220)
+    static let paper = adaptive(0xF4F2ED, 0x0E1625)
     /// List rows and cards.
-    static let paperRaised = adaptive(0xFFFBF4, 0x271A2B)
-    static let ink = adaptive(0x3A1D38, 0xF3EBDD)
-    static let muted = adaptive(0x6B5468, 0xBFAEBB)
-    /// App tint: plum in light, platinum in dark.
-    static let primary = adaptive(0x4B2347, 0xD3D7DE)
+    static let paperRaised = adaptive(0xFDFBF8, 0x152032)
+    static let ink = adaptive(0x172849, 0xEFECE5)
+    static let muted = adaptive(0x4F5D76, 0xAAB4C6)
+    /// App tint: navy in light, platinum in dark.
+    static let primary = adaptive(0x1B335F, 0xD3D7DE)
     /// Platinum dark enough for 11 pt text on paper (6.1:1).
     static let accent = adaptive(0x555B66, 0xD3D7DE)
-    /// Decorative platinum for rings and rules. Never text: 1.9:1 on paper in light.
+    /// Decorative platinum for rings and rules. Never text: 1.8:1 on paper in light.
     static let accentLine = adaptive(0xB4B9C2, 0x9AA0AA)
     static let onTime = adaptive(0x2E6A4C, 0x8FCBA8)
     static let delayed = adaptive(0x8A5512, 0xE7BE7A)

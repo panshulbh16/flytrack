@@ -1,8 +1,8 @@
 <resources>
     <!-- Only what XML needs (window background, notification accent). Compose colours live in ui/theme/Color.kt. -->
-    <color name="paper">#F7F1E8</color>
-    <color name="night">#1C1220</color>
-    <color name="plum">#4B2347</color>
+    <color name="paper">#F4F2ED</color>
+    <color name="night">#0E1625</color>
+    <color name="navy">#1B335F</color>
     <!-- Launcher icon background only. It keeps the old green until the icon artwork is redrawn for the new palette. -->
     <color name="forest">#244735</color>
 </resources>

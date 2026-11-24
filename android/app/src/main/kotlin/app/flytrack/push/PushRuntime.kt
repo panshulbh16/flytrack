@@ -63,7 +63,7 @@ class SystemFlightNotifier @Inject constructor(
         )
         val notification = Notification.Builder(context, alert.channelId)
             .setSmallIcon(R.drawable.ic_notification)
-            .setColor(context.getColor(R.color.plum))
+            .setColor(context.getColor(R.color.navy))
             .setContentTitle(alert.title)
             .setContentText(alert.body)
             .setStyle(Notification.BigTextStyle().bigText(alert.body))
