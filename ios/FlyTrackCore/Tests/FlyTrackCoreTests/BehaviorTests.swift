@@ -245,6 +245,22 @@ final class ViewModelTests: XCTestCase {
         XCTAssertEqual(model.state.pendingGoogleToken, "token")
     }
 
+    func testOnlySignOutTakesThePhoneOffTheAccount() async {
+        let auth = FakeAuth()
+        auth.linkResult = .googleAccountInUse
+        let push = FakePush()
+        let model = SettingsModel(
+            auth: auth, profiles: FakeProfiles(), settings: MemorySettings(), alerts: MemoryAlerts(),
+            health: FakeHealth(), push: push, clock: SystemClock(), googleConfigured: true, versionName: "0.1.0"
+        )
+        XCTAssertTrue(model.beginGoogleLink())
+        await model.linkGoogle(idToken: "token")
+        await model.signInWithPendingGoogle()
+        XCTAssertEqual(push.beforeSignOutCalls, 0)
+        await model.signOut()
+        XCTAssertEqual(push.beforeSignOutCalls, 1)
+    }
+
     func testImportChoosesAmongFlightsAndSkipsCloudWhenLocalSucceeds() async {
         let cloud = FakeCloud()
         let model = ImportTicketModel(
@@ -352,8 +368,9 @@ final class FakeHealth: NotificationHealthSource {
 
 @MainActor
 final class FakePush: PushControlling {
+    var beforeSignOutCalls = 0
     func availability() async -> PushAvailability { .notConfigured }
-    func beforeSignOut() async {}
+    func beforeSignOut() async { beforeSignOutCalls += 1 }
 }
 
 @MainActor

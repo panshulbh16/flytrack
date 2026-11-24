@@ -446,7 +446,8 @@ public final class SettingsModel {
         guard let token = state.pendingGoogleToken else { return }
         state.linking = true
         publish()
-        await push.beforeSignOut()
+        // No push.beforeSignOut() here: if the switch fails, the phone must stay on this account. If it
+        // succeeds, AppShell sees the new user id and register_device moves the device row.
         let result = await auth.signInWithGoogle(idToken: token, nonce: nil)
         state.linking = false
         state.pendingGoogleToken = nil

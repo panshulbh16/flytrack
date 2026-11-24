@@ -1,6 +1,6 @@
 import { assert, assertEquals } from "@std/assert";
 import { FcmPusher } from "../_shared/fcm.ts";
-import { buildAlertMessage, buildSyncMessage, renderEvent } from "../_shared/notify.ts";
+import { buildAlertMessage, buildSyncMessage, buildTestMessage, renderEvent } from "../_shared/notify.ts";
 import type { FlightEvent, FlightRow } from "../_shared/types.ts";
 
 async function testServiceAccount() {
@@ -118,6 +118,23 @@ Deno.test("iOS APNs block mirrors the Android channel and tag", () => {
   assertEquals(syncHeaders["apns-priority"], "5");
   assertEquals(syncHeaders["apns-collapse-id"], "sync:f1");
   assertEquals((sync.apns!.payload as { aps: Record<string, number> }).aps["content-available"], 1);
+});
+
+Deno.test("test alert rides the critical path on both platforms and carries no flight", () => {
+  const m = buildTestMessage("tok");
+  const android = m.android!.notification as Record<string, string>;
+  const headers = m.apns!.headers as Record<string, string>;
+  const payload = m.apns!.payload as { aps: Record<string, unknown> } & Record<string, unknown>;
+  assertEquals(m.token, "tok");
+  assertEquals(m.data?.kind, "test");
+  assertEquals(m.data?.flight_id, undefined);
+  assertEquals(m.android!.priority, "HIGH");
+  assertEquals(android.channel_id, "flight_critical");
+  assertEquals(headers["apns-push-type"], "alert");
+  assertEquals(headers["apns-priority"], "10");
+  assertEquals(payload.aps["interruption-level"], "time-sensitive");
+  assertEquals(payload.kind, "test");
+  assertEquals(payload.flight_id, undefined);
 });
 
 Deno.test("review fix: terminal change has its own notification tag; gate change shows terminal", () => {

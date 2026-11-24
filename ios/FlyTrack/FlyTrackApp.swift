@@ -9,9 +9,13 @@ import FirebaseMessaging
 struct FlyTrackApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var delegate
     @State private var shell: AppShell
+    /// Kept for the app's lifetime. A ModelContext does not retain its container, and a fetch on a
+    /// context whose container was released crashes.
+    private let container: ModelContainer
 
     init() {
         let container = try! ModelContainer(for: CachedFlightRecord.self, CachedTrackingRecord.self, CachedProfileRecord.self)
+        self.container = container
         let shell = AppShell(context: container.mainContext)
         _shell = State(initialValue: shell)
         delegate.shell = shell
@@ -37,6 +41,12 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         guard AppConfig.pushPlistPresent else { return }
         #if canImport(FirebaseMessaging)
         Messaging.messaging().apnsToken = deviceToken
+        // Firebase declines the launch-time token request until the APNs token is set and does not
+        // retry by itself, so a phone with no cached FCM token would never register. Ask again now.
+        Messaging.messaging().token { token, _ in
+            guard let token else { return }
+            Task { @MainActor in PushBridge.shared.onToken?(token) }
+        }
         #endif
     }
 
@@ -84,11 +94,27 @@ final class AppShell: ObservableObject {
         flights = LiveFlightRepository(stack: stack)
         profiles = LiveProfileRepository(stack: stack)
         settings = DeviceSettings()
-        push = LivePush(flights: flights)
+        push = LivePush(flights: flights, client: stack.client)
         cloud = LiveCloudParser(stack: stack, auth: auth)
         extractor = OnDeviceExtractor()
         PushBridge.shared.onToken = { token in
             Task { @MainActor in await DeviceRegistrar.register(token: token, client: stack.client) }
+        }
+        if let client = stack.client {
+            // Signing out or into another account changes the user. Register this phone for the new one,
+            // as Android does when its session's user id changes. bootstrap() handles the launch.
+            let push = push
+            Task {
+                var lastUser = client.auth.currentSession?.user.id
+                for await (_, session) in client.auth.authStateChanges {
+                    guard let user = session?.user.id else { lastUser = nil; continue }
+                    guard user != lastUser else { continue }
+                    lastUser = user
+                    if let token = await push.currentToken() {
+                        await DeviceRegistrar.register(token: token, client: client)
+                    }
+                }
+            }
         }
         PushBridge.shared.onData = { data in
             Task { @MainActor in await self.handlePush(data) }
@@ -100,10 +126,6 @@ final class AppShell: ObservableObject {
         _ = await auth.ensureSignedIn()
         session = await auth.session()
         push.start()
-        if let token = PushBridge.shared.pendingUnregister {
-            await DeviceRegistrar.unregister(token: token, client: stack.client)
-            PushBridge.shared.pendingUnregister = nil
-        }
         if let token = await push.currentToken() {
             await DeviceRegistrar.register(token: token, client: stack.client)
         }

@@ -53,7 +53,7 @@ Tune it in `CADENCE` in `_shared/schedule.ts`. The `provider_calls` table logs e
 
 You need Deno 2 and Postgres (for the SQL tests). For the full local stack you need the Supabase CLI and Docker.
 
-Unit and engine tests (58 tests; no network, no DB):
+Unit and engine tests (59 tests; no network, no DB):
 
 ```bash
 cd supabase/functions && deno test
@@ -137,7 +137,7 @@ supabase secrets set --env-file supabase/functions/.env
 Deploy the functions:
 
 ```bash
-supabase functions deploy search-flight poll-flights provider-webhook parse-ticket
+supabase functions deploy search-flight poll-flights provider-webhook parse-ticket send-test-push
 ```
 
 Then run this once in the SQL editor. It stores the cron secrets in Vault, not in code:

@@ -152,8 +152,8 @@ class SettingsViewModel @Inject constructor(
         val token = pendingToken.value ?: return
         viewModelScope.launch {
             linking.value = true
-            // Signing in switches user, so this phone must leave the anonymous account first.
-            push.beforeSignOut()
+            // No push.beforeSignOut() here: if the switch fails, the phone must stay on this account. If it
+            // succeeds, the push initializer sees the new user id and register_device moves the device row.
             finishLink(auth.signInWithGoogle(token).toMessage(SettingsMessage.Linked), token = null)
         }
     }
