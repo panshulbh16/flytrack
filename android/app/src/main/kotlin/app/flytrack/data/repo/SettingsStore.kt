@@ -29,9 +29,15 @@ interface SettingsStore {
     /** The FCM token and user id last accepted by `register_device`; null before the first registration. */
     val lastDeviceRegistration: Flow<DeviceRegistration?>
     suspend fun setLastDeviceRegistration(registration: DeviceRegistration?)
+
+    /** Light, dark, or follow the phone (the default). */
+    val appearance: Flow<Appearance>
+    suspend fun setAppearance(appearance: Appearance)
 }
 
 data class DeviceRegistration(val fcmToken: String, val userId: String)
+
+enum class Appearance { SYSTEM, LIGHT, DARK }
 
 class DataStoreSettingsStore @Inject constructor(
     private val dataStore: DataStore<Preferences>,
@@ -74,7 +80,17 @@ class DataStoreSettingsStore @Inject constructor(
         }
     }
 
+    // An unknown stored name (from a future version) falls back to following the phone.
+    override val appearance: Flow<Appearance> = preferences.map { prefs ->
+        Appearance.entries.firstOrNull { it.name == prefs[APPEARANCE] } ?: Appearance.SYSTEM
+    }.distinctUntilChanged()
+
+    override suspend fun setAppearance(appearance: Appearance) {
+        dataStore.edit { it[APPEARANCE] = appearance.name }
+    }
+
     private companion object {
+        val APPEARANCE = stringPreferencesKey("appearance")
         val CLOUD_TICKET_CONSENT = booleanPreferencesKey("cloud_ticket_parsing_consent")
         val NOTIFICATION_PERMISSION_ASKED = booleanPreferencesKey("notification_permission_asked")
         val FCM_TOKEN = stringPreferencesKey("last_registered_fcm_token")

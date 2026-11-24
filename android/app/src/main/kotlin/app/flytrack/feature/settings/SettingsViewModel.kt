@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import app.flytrack.core.model.AlertType
 import app.flytrack.core.result.AuthResult
 import app.flytrack.data.remote.BackendConfig
+import app.flytrack.data.repo.Appearance
 import app.flytrack.data.repo.AuthRepository
 import app.flytrack.data.repo.ProfileRepository
 import app.flytrack.data.repo.SessionState
@@ -176,6 +177,13 @@ class SettingsViewModel @Inject constructor(
 
     fun setCloudConsent(granted: Boolean) {
         viewModelScope.launch { settings.setCloudTicketParsingConsent(granted) }
+    }
+
+    val appearance: StateFlow<Appearance> =
+        settings.appearance.stateIn(viewModelScope, SharingStarted.Eagerly, Appearance.SYSTEM)
+
+    fun setAppearance(appearance: Appearance) {
+        viewModelScope.launch { settings.setAppearance(appearance) }
     }
 
     fun messageShown() {

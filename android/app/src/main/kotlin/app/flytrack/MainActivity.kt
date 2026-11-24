@@ -1,11 +1,14 @@
 package app.flytrack
 
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +20,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -25,13 +29,16 @@ import androidx.core.content.IntentCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import app.flytrack.core.push.PushContract
+import app.flytrack.data.repo.Appearance
 import app.flytrack.data.repo.SessionState
+import app.flytrack.data.repo.SettingsStore
 import app.flytrack.ui.components.BackendNotConfiguredBanner
 import app.flytrack.ui.nav.FlyTrackNavHost
 import app.flytrack.ui.nav.IncomingIntent
 import app.flytrack.ui.nav.NavControllerNavigator
 import app.flytrack.ui.theme.FlyTrackTheme
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 /** The single activity: hosts the NavHost and turns incoming intents (push taps, shares) into navigation. */
 @AndroidEntryPoint
@@ -39,16 +46,38 @@ class MainActivity : ComponentActivity() {
 
     private val viewModel: MainViewModel by viewModels()
 
+    @Inject lateinit var settings: SettingsStore
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         // Only a fresh start handles the launch intent; after rotation it was already handled.
         if (savedInstanceState == null) viewModel.onIntent(intent.toIncomingIntent())
         setContent {
-            FlyTrackTheme {
+            val appearance by settings.appearance.collectAsStateWithLifecycle(initialValue = Appearance.SYSTEM)
+            val darkTheme = when (appearance) {
+                Appearance.SYSTEM -> isSystemInDarkTheme()
+                Appearance.LIGHT -> false
+                Appearance.DARK -> true
+            }
+            // System bar icons follow the app's appearance choice, not the phone's.
+            DisposableEffect(darkTheme) {
+                enableEdgeToEdge(
+                    statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT) { darkTheme },
+                    navigationBarStyle = SystemBarStyle.auto(LIGHT_NAV_SCRIM, DARK_NAV_SCRIM) { darkTheme },
+                )
+                onDispose {}
+            }
+            FlyTrackTheme(darkTheme = darkTheme) {
                 FlyTrackShell(viewModel)
             }
         }
+    }
+
+    private companion object {
+        // The same scrims androidx's enableEdgeToEdge() uses by default for 3-button navigation.
+        val LIGHT_NAV_SCRIM = Color.argb(0xe6, 0xFF, 0xFF, 0xFF)
+        val DARK_NAV_SCRIM = Color.argb(0x80, 0x1b, 0x1b, 0x1b)
     }
 
     override fun onNewIntent(intent: Intent) {

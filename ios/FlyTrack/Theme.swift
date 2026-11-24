@@ -2,7 +2,7 @@ import FlyTrackCore
 import SwiftUI
 import UIKit
 
-/// "Aubergine and champagne" from docs/design-brief.md. Every token resolves per appearance (light, dark).
+/// "Aubergine and platinum" from docs/design-brief.md. Every token resolves per appearance (light, dark).
 enum FlyColor {
     /// Screen background. Also the text colour on `primary` fills.
     static let paper = adaptive(0xF7F1E8, 0x1C1220)
@@ -10,12 +10,12 @@ enum FlyColor {
     static let paperRaised = adaptive(0xFFFBF4, 0x271A2B)
     static let ink = adaptive(0x3A1D38, 0xF3EBDD)
     static let muted = adaptive(0x6B5468, 0xBFAEBB)
-    /// App tint: plum in light, champagne gold in dark.
-    static let primary = adaptive(0x4B2347, 0xD9BC85)
-    /// Gold dark enough for 11 pt text on paper (5.3:1).
-    static let gold = adaptive(0x7E5F22, 0xD9BC85)
-    /// Decorative gold for rings and rules. Never text: 2.1:1 on paper in light.
-    static let goldLeaf = adaptive(0xC4A26A, 0xB89C68)
+    /// App tint: plum in light, platinum in dark.
+    static let primary = adaptive(0x4B2347, 0xD3D7DE)
+    /// Platinum dark enough for 11 pt text on paper (6.1:1).
+    static let accent = adaptive(0x555B66, 0xD3D7DE)
+    /// Decorative platinum for rings and rules. Never text: 1.9:1 on paper in light.
+    static let accentLine = adaptive(0xB4B9C2, 0x9AA0AA)
     static let onTime = adaptive(0x2E6A4C, 0x8FCBA8)
     static let delayed = adaptive(0x8A5512, 0xE7BE7A)
     static let cancelled = adaptive(0x9E2B3B, 0xF0A2A9)
@@ -25,7 +25,7 @@ enum FlyColor {
         case .onTime: return onTime
         case .delayed: return delayed
         case .cancelled: return cancelled
-        case .active: return gold
+        case .active: return accent
         case .estimated: return muted
         }
     }
@@ -35,6 +35,21 @@ enum FlyColor {
             UIColor(red: CGFloat(hex >> 16 & 0xFF) / 255, green: CGFloat(hex >> 8 & 0xFF) / 255, blue: CGFloat(hex & 0xFF) / 255, alpha: 1)
         }
         return Color(UIColor { $0.userInterfaceStyle == .dark ? rgb(dark) : rgb(light) })
+    }
+}
+
+/// The appearance picked in Settings, stored in UserDefaults. `system` follows the phone.
+enum Appearance: String, CaseIterable {
+    case system, light, dark
+
+    static let storageKey = "appearance"
+
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system: nil
+        case .light: .light
+        case .dark: .dark
+        }
     }
 }
 

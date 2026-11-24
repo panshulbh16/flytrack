@@ -8,23 +8,23 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import app.flytrack.core.model.FlightStatusTone
 
-// "Aubergine and champagne" from docs/design-brief.md: plum ink on warm ivory, champagne gold accents.
-// Dark is plum-black with gold as the action colour. Contrast ratios are in the brief.
+// "Aubergine and platinum" from docs/design-brief.md: plum ink on warm ivory, platinum accents.
+// Dark is plum-black with platinum as the action colour. Contrast ratios are in the brief.
 
 internal val LightColors: ColorScheme = lightColorScheme(
     primary = Color(0xFF4B2347),
     onPrimary = Color(0xFFF7F1E8),
     primaryContainer = Color(0xFFEFE1EA),
     onPrimaryContainer = Color(0xFF3A1D38),
-    inversePrimary = Color(0xFFD9BC85),
+    inversePrimary = Color(0xFFD3D7DE),
     secondary = Color(0xFF6B5468),
     onSecondary = Color(0xFFFFFFFF),
     secondaryContainer = Color(0xFFEEE4E6),
     onSecondaryContainer = Color(0xFF3A1D38),
-    tertiary = Color(0xFF7E5F22),
-    onTertiary = Color(0xFFFFFBF4),
-    tertiaryContainer = Color(0xFFF3E7CF),
-    onTertiaryContainer = Color(0xFF5C4416),
+    tertiary = Color(0xFF555B66),
+    onTertiary = Color(0xFFFFFFFF),
+    tertiaryContainer = Color(0xFFE6E8EC),
+    onTertiaryContainer = Color(0xFF3A3F48),
     error = Color(0xFF9E2B3B),
     onError = Color(0xFFFFFFFF),
     errorContainer = Color(0xFFF6DFE2),
@@ -51,19 +51,19 @@ internal val LightColors: ColorScheme = lightColorScheme(
 )
 
 internal val DarkColors: ColorScheme = darkColorScheme(
-    primary = Color(0xFFD9BC85),
+    primary = Color(0xFFD3D7DE),
     onPrimary = Color(0xFF1C1220),
     primaryContainer = Color(0xFF4B2347),
-    onPrimaryContainer = Color(0xFFF3E7CF),
+    onPrimaryContainer = Color(0xFFF3EBDD),
     inversePrimary = Color(0xFF4B2347),
     secondary = Color(0xFFBFAEBB),
     onSecondary = Color(0xFF2A1A2C),
     secondaryContainer = Color(0xFF3D2C40),
     onSecondaryContainer = Color(0xFFEFE6E9),
-    tertiary = Color(0xFFE3C995),
-    onTertiary = Color(0xFF2A1A0A),
-    tertiaryContainer = Color(0xFF4A3A1E),
-    onTertiaryContainer = Color(0xFFF3E7CF),
+    tertiary = Color(0xFFDDE0E6),
+    onTertiary = Color(0xFF1C1F24),
+    tertiaryContainer = Color(0xFF3A3E46),
+    onTertiaryContainer = Color(0xFFE6E8EC),
     error = Color(0xFFF0A2A9),
     onError = Color(0xFF4A1219),
     errorContainer = Color(0xFF6B2430),
@@ -74,7 +74,7 @@ internal val DarkColors: ColorScheme = darkColorScheme(
     onSurface = Color(0xFFF3EBDD),
     surfaceVariant = Color(0xFF3D2C40),
     onSurfaceVariant = Color(0xFFBFAEBB),
-    surfaceTint = Color(0xFFD9BC85),
+    surfaceTint = Color(0xFFD3D7DE),
     inverseSurface = Color(0xFFF3EBDD),
     inverseOnSurface = Color(0xFF3A1D38),
     outline = Color(0xFF7A6679),
@@ -129,7 +129,7 @@ internal val LightStatusColors = FlightStatusColors(
     onTime = StatusColor(content = Color(0xFF2E6A4C), container = Color(0xFFE3EFE7), onContainer = Color(0xFF1F4D36)),
     delayed = StatusColor(content = Color(0xFF8A5512), container = Color(0xFFF5E6CF), onContainer = Color(0xFF6A400B)),
     cancelled = StatusColor(content = Color(0xFF9E2B3B), container = Color(0xFFF6DFE2), onContainer = Color(0xFF741E2A)),
-    active = StatusColor(content = Color(0xFF7E5F22), container = Color(0xFFF3E7CF), onContainer = Color(0xFF5C4416)),
+    active = StatusColor(content = Color(0xFF555B66), container = Color(0xFFE6E8EC), onContainer = Color(0xFF3A3F48)),
     estimated = StatusColor(
         content = Color(0xFF6B5468),
         container = Color.Transparent,
@@ -142,7 +142,7 @@ internal val DarkStatusColors = FlightStatusColors(
     onTime = StatusColor(content = Color(0xFF8FCBA8), container = Color(0xFF22402F), onContainer = Color(0xFFD6EEDF)),
     delayed = StatusColor(content = Color(0xFFE7BE7A), container = Color(0xFF45321A), onContainer = Color(0xFFF5E6CF)),
     cancelled = StatusColor(content = Color(0xFFF0A2A9), container = Color(0xFF4A2128), onContainer = Color(0xFFF8D9DC)),
-    active = StatusColor(content = Color(0xFFD9BC85), container = Color(0xFF45361C), onContainer = Color(0xFFF3E7CF)),
+    active = StatusColor(content = Color(0xFFD3D7DE), container = Color(0xFF3A3E46), onContainer = Color(0xFFEEF0F3)),
     estimated = StatusColor(
         content = Color(0xFFBFAEBB),
         container = Color.Transparent,
@@ -154,10 +154,10 @@ internal val DarkStatusColors = FlightStatusColors(
 internal val LocalFlightStatusColors = staticCompositionLocalOf { LightStatusColors }
 
 /**
- * Champagne gold for small accent TEXT (uppercase captions). Decorative champagne (#C4A26A) is
- * 2.1:1 on ivory, so light uses antique gold (5.3:1); dark uses champagne (9.9:1 on plum-black).
+ * Platinum for small accent TEXT (uppercase captions). Decorative platinum (#B4B9C2) is 1.9:1 on
+ * ivory, so light uses dark platinum (6.1:1); dark uses light platinum (12.6:1 on plum-black).
  */
-internal val LightAccentText = Color(0xFF7E5F22)
-internal val DarkAccentText = Color(0xFFD9BC85)
+internal val LightAccentText = Color(0xFF555B66)
+internal val DarkAccentText = Color(0xFFD3D7DE)
 
 internal val LocalAccentText = staticCompositionLocalOf { LightAccentText }

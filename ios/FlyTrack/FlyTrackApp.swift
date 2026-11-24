@@ -152,6 +152,7 @@ enum Route: Hashable {
 
 struct RootView: View {
     @ObservedObject var shell: AppShell
+    @AppStorage(Appearance.storageKey) private var appearance = Appearance.system
 
     var body: some View {
         NavigationStack(path: $shell.path) {
@@ -170,6 +171,7 @@ struct RootView: View {
                 }
         }
         .tint(FlyColor.primary)
+        .preferredColorScheme(appearance.colorScheme)
         .task { await shell.bootstrap() }
     }
 }

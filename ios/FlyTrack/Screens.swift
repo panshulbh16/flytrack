@@ -290,6 +290,7 @@ struct DetailScreen: View {
 struct SettingsScreen: View {
     @ObservedObject var shell: AppShell
     @State private var store: SettingsStoreBox?
+    @AppStorage(Appearance.storageKey) private var appearance = Appearance.system
 
     var body: some View {
         PaperScreen {
@@ -309,6 +310,16 @@ struct SettingsScreen: View {
                         }
                         if let message = store.state.message { Text(settingsMessage(message)) }
                         Button(String(localized: "Sign out")) { Task { await store.signOut() } }.hitTarget()
+                    }
+                    .listRowBackground(FlyColor.paperRaised)
+                    Section(String(localized: "Appearance")) {
+                        Picker(String(localized: "Appearance"), selection: $appearance) {
+                            Text(String(localized: "System")).tag(Appearance.system)
+                            Text(String(localized: "Light")).tag(Appearance.light)
+                            Text(String(localized: "Dark")).tag(Appearance.dark)
+                        }
+                        .pickerStyle(.segmented)
+                        .labelsHidden()
                     }
                     .listRowBackground(FlyColor.paperRaised)
                     Section(String(localized: "Alerts for flights you add next")) {
@@ -461,7 +472,7 @@ private struct NextCard: View {
                 Text(String(localized: "Next takeoff").uppercased())
                     .font(FlyFont.sans(11, weight: .medium, relativeTo: .caption2))
                     .tracking(1.2)
-                    .foregroundStyle(FlyColor.gold)
+                    .foregroundStyle(FlyColor.accent)
                 Text(next.card.designator).font(FlyFont.sans(17, weight: .medium, relativeTo: .headline))
                 Text("\(next.card.depCode) → \(next.card.arrCode)").font(FlyFont.numeral(28))
                 Text(countdownText(next.countdown)).font(FlyFont.serifItalic(20, relativeTo: .title3))
@@ -482,7 +493,7 @@ private struct FlightRow: View {
             HStack(spacing: 12) {
                 Image(systemName: "airplane")
                     .frame(width: 44, height: 44)
-                    .overlay(Circle().stroke(FlyColor.goldLeaf, lineWidth: 1))
+                    .overlay(Circle().stroke(FlyColor.accentLine, lineWidth: 1))
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("\(card.depCode) → \(card.arrCode)").font(FlyFont.sans(17, weight: .medium, relativeTo: .headline))
