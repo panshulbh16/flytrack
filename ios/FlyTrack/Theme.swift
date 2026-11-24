@@ -57,10 +57,13 @@ struct PaperScreen<Content: View>: View {
     @Environment(\.colorScheme) private var scheme
     @ViewBuilder var content: () -> Content
 
+    // The paper is a real view, not a background on `content`: a screen whose content is empty while it loads
+    // (Add flight) otherwise renders nothing and never runs its `.task`. Same fix as PR #6.
     var body: some View {
-        content()
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .background(scheme == .dark ? FlyColor.night : FlyColor.paper)
-            .foregroundStyle(scheme == .dark ? FlyColor.nightInk : FlyColor.ink)
+        ZStack(alignment: .top) {
+            (scheme == .dark ? FlyColor.night : FlyColor.paper).ignoresSafeArea()
+            content()
+        }
+        .foregroundStyle(scheme == .dark ? FlyColor.nightInk : FlyColor.ink)
     }
 }
