@@ -113,6 +113,19 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun `switching to a google account in use keeps the device on this account`() = runTest {
+        settings.setLastDeviceRegistration(DeviceRegistration("token-a", TestData.USER_ID))
+        val vm = viewModel()
+        auth.nextResult = AuthResult.GoogleAccountInUse
+        vm.onGoogleAttempt(GoogleSignInAttempt.Token("other-token"))
+
+        auth.nextResult = AuthResult.Failed("network")
+        vm.signInWithPendingGoogle()
+        assertEquals(SettingsMessage.Failed, vm.uiState.value.message)
+        assertEquals(emptyList<String>(), devices.unregisteredTokens)
+    }
+
+    @Test
     fun `an alert group mute is stored and a locked pro group is not`() = runTest {
         val alerts = MemoryAlerts()
         val vm = SettingsViewModel(
