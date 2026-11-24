@@ -89,6 +89,9 @@ struct FlightsScreen: View {
                 .buttonStyle(.borderedProminent)
                 .foregroundStyle(FlyColor.paper)
                 .hitTarget()
+            Button(String(localized: "Scan boarding pass")) { shell.path.append(Route.scanBoardingPass) }
+                .buttonStyle(.bordered)
+                .hitTarget()
         }
         .padding(24)
     }
@@ -144,6 +147,10 @@ struct AddFlightScreen: View {
             if !prefill.isEmpty == false {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(String(localized: "Import a ticket")) { shell.path.append(Route.importTicket) }.hitTarget()
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(String(localized: "Scan boarding pass"), systemImage: "barcode.viewfinder") { shell.path.append(Route.scanBoardingPass) }
+                        .hitTarget()
                 }
             }
         }

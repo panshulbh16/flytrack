@@ -23,4 +23,8 @@
     <string name="import_notice_not_configured">Cloud reading isn\'t set up in this build.</string>
     <string name="import_notice_nothing">Still no flight number. Type it on the next screen.</string>
     <string name="import_action_type">Type the flight number</string>
+    <string name="scan_action">Scan boarding pass</string>
+    <string name="scan_not_a_boarding_pass">That barcode is not a boarding pass.</string>
+    <string name="scan_unavailable">The barcode scanner isn\'t available right now. Try importing the ticket instead.</string>
+    <string name="scan_choose_flight">This boarding pass has several flights. Choose one.</string>
 </resources>

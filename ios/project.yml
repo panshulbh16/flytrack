@@ -79,6 +79,7 @@ targets:
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         ITSAppUsesNonExemptEncryption: false
+        NSCameraUsageDescription: HeyGate reads the barcode on your boarding pass to add the flight.
         UIBackgroundModes:
           - remote-notification
         NSSupportsLiveActivities: true

@@ -14,6 +14,8 @@ data class AddFlightPrefill(
     val pnr: String? = null,
     /** How the ticket arrived. Null keeps the old rule: a prefill is a share, an empty form is manual. */
     val source: TrackSource? = null,
+    /** Seat from a boarding pass. */
+    val seat: String? = null,
 ) {
     val isEmpty: Boolean get() = flight.isNullOrBlank() && date.isNullOrBlank() && pnr.isNullOrBlank()
 }

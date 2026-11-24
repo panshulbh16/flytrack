@@ -97,11 +97,12 @@
           Ticket import. PdfRenderer and reading shared/picked files need no permission (content Uris).
           The ML Kit Latin text recogniser is bundled in the APK (com.google.mlkit:text-recognition), so
           OCR works offline from the first start; this entry only matters if it is ever swapped for
-          the Play-services (downloaded) model.
+          the Play-services (downloaded) model. barcode_ui: Play services fetches the code scanner
+          (Scan boarding pass) at install instead of on the first tap.
         -->
         <meta-data
             android:name="com.google.mlkit.vision.DEPENDENCIES"
-            android:value="ocr" />
+            android:value="ocr,barcode_ui" />
 
         <!-- WorkManager is initialised on demand by FlyTrackApp (Configuration.Provider) with the Hilt worker factory. -->
         <provider

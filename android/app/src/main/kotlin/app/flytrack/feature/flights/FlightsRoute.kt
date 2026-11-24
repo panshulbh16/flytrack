@@ -46,6 +46,7 @@ import app.flytrack.feature.flights.presentation.FlightCardUiModel
 import app.flytrack.feature.flights.ui.FlightCard
 import app.flytrack.feature.flights.ui.NextFlightCard
 import app.flytrack.feature.flights.ui.PreviewFlights
+import app.flytrack.feature.importticket.ScanBoardingPassButton
 import app.flytrack.push.NotificationPermissionPrompt
 import app.flytrack.ui.components.BackendNotConfiguredState
 import app.flytrack.ui.components.EmptyState
@@ -203,6 +204,7 @@ private fun EmptyFlights(isBackendConfigured: Boolean, onAddFlight: () -> Unit, 
                 onClick = onImportTicket,
                 icon = painterResource(R.drawable.ic_ticket),
             )
+            ScanBoardingPassButton()
             Spacer(Modifier.height(40.dp))
         } else {
             BackendNotConfiguredState()

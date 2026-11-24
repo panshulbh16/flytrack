@@ -49,10 +49,10 @@ class NavControllerNavigator(private val navController: NavHostController) : App
      * The importer found flight details. Drop the import screen and, when import was opened from
      * add-flight, that add-flight entry too, so Back returns to the flight list.
      */
-    fun openAddFlightFromImport(flight: String?, date: String?, pnr: String?, source: String?) {
+    override fun openAddFlightFromImport(flight: String?, date: String?, pnr: String?, source: String?, seat: String?) {
         val removedAdd = navController.popBackStack<AddFlight>(inclusive = true)
         if (!removedAdd) navController.popBackStack<ImportTicket>(inclusive = true)
-        navController.navigate(AddFlight(flight, date, pnr, source)) { launchSingleTop = true }
+        navController.navigate(AddFlight(flight, date, pnr, source, seat)) { launchSingleTop = true }
     }
 }
 
@@ -82,6 +82,7 @@ fun FlyTrackNavHost(
                     prefillDate = route.prefillDate,
                     prefillPnr = route.prefillPnr,
                     prefillSource = route.prefillSource,
+                    prefillSeat = route.prefillSeat,
                     onDone = { flightId -> if (flightId != null) navigator.openFlightFromAdd(flightId) else navigator.back() },
                     onBack = { navigator.back() },
                 )

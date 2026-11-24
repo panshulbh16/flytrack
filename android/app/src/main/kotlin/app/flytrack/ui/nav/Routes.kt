@@ -21,6 +21,8 @@ data class AddFlight(
     val prefillPnr: String? = null,
     /** [app.flytrack.core.model.TrackSource.wire]: pdf, screenshot, share, or null when typed by hand. */
     val prefillSource: String? = null,
+    /** Seat from a boarding pass, e.g. "12A". */
+    val prefillSeat: String? = null,
 )
 
 /** Detail of one flight; [flightId] is `flights.id` (what FCM sends as `flight_id`). */

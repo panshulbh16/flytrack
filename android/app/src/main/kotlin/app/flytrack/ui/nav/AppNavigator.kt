@@ -15,6 +15,9 @@ interface AppNavigator {
     fun openFlight(flightId: String)
     fun openAddFlight(prefillFlight: String? = null, prefillDate: String? = null, prefillPnr: String? = null)
     fun openImportTicket()
+
+    /** A ticket or boarding pass was read: open add-flight filled in, replacing the screen that read it. */
+    fun openAddFlightFromImport(flight: String?, date: String?, pnr: String?, source: String?, seat: String? = null)
     fun openSettings()
     fun back()
 }
@@ -23,6 +26,7 @@ private object NoOpNavigator : AppNavigator {
     override fun openFlight(flightId: String) = Unit
     override fun openAddFlight(prefillFlight: String?, prefillDate: String?, prefillPnr: String?) = Unit
     override fun openImportTicket() = Unit
+    override fun openAddFlightFromImport(flight: String?, date: String?, pnr: String?, source: String?, seat: String?) = Unit
     override fun openSettings() = Unit
     override fun back() = Unit
 }
