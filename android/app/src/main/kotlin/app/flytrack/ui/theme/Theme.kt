@@ -20,7 +20,7 @@ internal val FlyTrackShapes = Shapes(
 )
 
 /**
- * The app theme. Light (paper) is the primary look; dark is the brief's "Night" palette.
+ * The app theme. Light (ivory) is the primary look; dark is plum-black with champagne-gold actions.
  * Dynamic colour is deliberately not used: the brand palette is the identity.
  */
 @Composable
@@ -52,7 +52,7 @@ object FlyTrackTheme {
     val type: FlyTrackExtraType
         @Composable @ReadOnlyComposable get() = LocalFlyTrackExtraType.current
 
-    /** Terracotta that is legible as small text in both themes. */
+    /** Champagne gold that is legible as small text in both themes. */
     val accentText: Color
         @Composable @ReadOnlyComposable get() = LocalAccentText.current
 }

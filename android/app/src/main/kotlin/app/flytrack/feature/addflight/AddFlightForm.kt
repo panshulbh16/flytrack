@@ -208,7 +208,7 @@ private fun FlightNumberField(
             Text(
                 text = stringResource(R.string.addflight_flight_placeholder),
                 style = FlyTrackTheme.type.numeralSmall,
-                color = MaterialTheme.colorScheme.outline,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         },
         trailingIcon = if (state.flightInput.isNotEmpty() && enabled) {

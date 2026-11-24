@@ -169,7 +169,7 @@ struct RootView: View {
                     }
                 }
         }
-        .tint(FlyColor.ink)
+        .tint(FlyColor.primary)
         .task { await shell.bootstrap() }
     }
 }
