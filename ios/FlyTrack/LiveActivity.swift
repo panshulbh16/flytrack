@@ -37,6 +37,12 @@ enum FlightLiveActivities {
         await activity(flightId)?.end(nil, dismissalPolicy: .immediate)
     }
 
+    /// Sign-out deletes this phone's devices row and, by cascade, its live_activities rows, so the backend could no
+    /// longer update or end these. The wiped cache also stops endFinished from finding their flights.
+    static func stopAll() async {
+        for activity in FlightActivity.activities { await activity.end(nil, dismissalPolicy: .immediate) }
+    }
+
     /// Activities outlive the app process, so every launch picks the running ones up again.
     static func resume(client: SupabaseClient?, push: LivePush, flights: FlightRepository) async {
         for activity in FlightActivity.activities { follow(activity, client: client, push: push) }

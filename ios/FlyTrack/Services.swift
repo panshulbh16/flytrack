@@ -70,6 +70,7 @@ final class LivePush: PushControlling {
     /// Takes this phone off the signed-in account while that session still works, as Android does.
     /// AppShell registers the token again for whichever account signs in next.
     func beforeSignOut() async {
+        await FlightLiveActivities.stopAll()
         guard AppConfig.pushPlistPresent, let token = await currentToken() else { return }
         await DeviceRegistrar.unregister(token: token, client: client)
     }
