@@ -267,6 +267,8 @@ struct DetailScreen: View {
                                     await store?.untrack()
                                 }
                             }
+                            // PaperScreen's ink foreground would otherwise hide the destructive red.
+                            .foregroundStyle(FlyColor.cancelled)
                             .hitTarget()
                         }
                     }
