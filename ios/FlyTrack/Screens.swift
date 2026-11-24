@@ -196,6 +196,7 @@ struct DetailScreen: View {
     @ObservedObject var shell: AppShell
     let flightId: String
     @State private var store: DetailStore?
+    @State private var live: Bool? // nil = Live Activity not offered for this flight
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -238,9 +239,20 @@ struct DetailScreen: View {
                             .disabled(toggle.locked)
                             .hitTarget()
                         }
+                        if detail.trackingState == .tracked, let live {
+                            Button(live ? String(localized: "Remove from Lock Screen") : String(localized: "Show on Lock Screen")) {
+                                Task { await toggleLive(live) }
+                            }
+                            .hitTarget()
+                        }
                         if detail.trackingState == .tracked {
-                            Button(String(localized: "Stop tracking"), role: .destructive) { Task { await store?.untrack() } }
-                                .hitTarget()
+                            Button(String(localized: "Stop tracking"), role: .destructive) {
+                                Task {
+                                    await FlightLiveActivities.stop(flightId)
+                                    await store?.untrack()
+                                }
+                            }
+                            .hitTarget()
                         }
                     }
                     .padding(20)
@@ -256,8 +268,18 @@ struct DetailScreen: View {
         .task {
             if store == nil { store = DetailStore(model: FlightDetailScreenModel(flightId: flightId, flights: shell.flights, profiles: shell.profiles, clock: shell.clock)) }
             await store?.load()
+            live = await FlightLiveActivities.offer(flightId, flights: shell.flights)
         }
         .onChange(of: store?.state.isClosed) { _, closed in if closed == true { dismiss() } }
+    }
+
+    private func toggleLive(_ running: Bool) async {
+        if running {
+            await FlightLiveActivities.stop(flightId)
+            live = false
+        } else if let flight = await shell.flights.flight(id: flightId) {
+            live = FlightLiveActivities.start(flight, client: shell.stack.client, push: shell.push)
+        }
     }
 
     private func endpoint(_ title: String, _ end: EndpointModel) -> some View {

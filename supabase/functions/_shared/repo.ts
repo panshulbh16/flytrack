@@ -16,8 +16,17 @@ export interface PushLogRow {
   eventId: string | null;
   deviceId: string;
   userId: string;
-  kind: "alert" | "sync" | "test";
+  kind: "alert" | "sync" | "test" | "live_activity";
   result: PushResult;
+}
+
+/** One iOS Live Activity following a flight on one phone (table live_activities). */
+export interface LiveActivityTarget {
+  id: string;
+  user_id: string;
+  device_id: string;
+  fcm_token: string;
+  activity_token: string;
 }
 
 /** Storage abstraction: SupabaseRepo in production, MemoryRepo in tests/simulator. */
@@ -39,6 +48,8 @@ export interface Repo {
   getDependentsOfInbound(inboundFlightId: string): Promise<FlightRow[]>;
   logPushes(rows: PushLogRow[]): Promise<void>;
   deleteDeviceByToken(token: string): Promise<void>;
+  getLiveActivities(flightId: string): Promise<LiveActivityTarget[]>;
+  deleteLiveActivities(ids: string[]): Promise<void>;
   airportTz(iata: string): Promise<string | null>;
   logProviderCall(c: ProviderCallLog): Promise<void>;
   countUserProviderCalls(userId: string, sinceIso: string): Promise<number>;
@@ -72,6 +83,7 @@ export class MemoryRepo implements Repo {
   history: { flightId: string; source: string; changed: TrackedField[]; at: string }[] = [];
   events: (FlightEvent & { id: string; flightId: string; at: string; pushed: boolean })[] = [];
   pushes: PushLogRow[] = [];
+  liveActivities: (LiveActivityTarget & { flightId: string })[] = [];
   providerCalls: (ProviderCallLog & { at: string })[] = [];
   trackers = new Map<string, MemTracker[]>(); // flightId -> trackers
   tz: Record<string, string> = {};
@@ -195,6 +207,15 @@ export class MemoryRepo implements Repo {
     for (const list of this.trackers.values()) {
       for (const t of list) t.devices = t.devices.filter((d) => d.token !== token);
     }
+    return Promise.resolve();
+  }
+
+  getLiveActivities(flightId: string): Promise<LiveActivityTarget[]> {
+    return Promise.resolve(this.liveActivities.filter((a) => a.flightId === flightId).map(({ flightId: _, ...a }) => a));
+  }
+
+  deleteLiveActivities(ids: string[]) {
+    this.liveActivities = this.liveActivities.filter((a) => !ids.includes(a.id));
     return Promise.resolve();
   }
 

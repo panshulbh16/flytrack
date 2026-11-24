@@ -261,3 +261,68 @@ export function buildSyncMessage(token: string, row: FlightRow, nearFlight: bool
     apns: apnsSync(`sync:${row.id}`, { kind: "sync", flight_id: row.id }),
   };
 }
+
+// ---- iOS Live Activity ------------------------------------------------------------------------
+
+const IOS_BUNDLE_ID = "app.heygate.flytrack";
+/** Seconds between 1970-01-01 and 2001-01-01, the epoch of Swift's Date. */
+const APPLE_EPOCH_OFFSET_S = 978_307_200;
+/** How long an ended activity stays on the lock screen: long enough to walk to the belt. */
+const LIVE_ACTIVITY_LINGER_S = 3600;
+
+/** ActivityKit decodes content-state with JSONDecoder's default Date strategy: seconds since 2001-01-01. */
+function appleDate(iso: string | null | undefined): number | null {
+  const ms = iso ? Date.parse(iso) : NaN;
+  return Number.isNaN(ms) ? null : ms / 1000 - APPLE_EPOCH_OFFSET_S;
+}
+
+/** Nothing left to wait for: landed with the belt known, or cancelled. The app uses the same rule. */
+export function liveActivityDone(r: FlightRow): boolean {
+  return r.status === "cancelled" || ((r.status === "landed" || r.status === "arrived") && !!r.baggage_belt);
+}
+
+/** Keys and types match FlightActivityAttributes.ContentState (ios/FlightActivity/FlightActivityAttributes.swift). */
+export function liveActivityState(r: FlightRow, now: Date): Record<string, unknown> {
+  return {
+    status: r.status,
+    schedDep: appleDate(r.sched_dep),
+    estDep: appleDate(r.act_dep ?? r.est_dep), // best known time: the actual one once it happened
+    schedArr: appleDate(r.sched_arr),
+    estArr: appleDate(r.act_arr ?? r.est_arr),
+    depTerminal: r.dep_terminal,
+    depGate: r.dep_gate,
+    belt: r.baggage_belt,
+    updatedAt: appleDate(r.updated_at) ?? appleDate(now.toISOString()),
+  };
+}
+
+/**
+ * Updates (or ends) one Live Activity through FCM: message.token is the phone's FCM token, the activity's
+ * own APNs token rides in apns.live_activity_token. Priority 10 is budgeted by iOS, so it is kept for
+ * changes that also raised an alert, and for the end; everything else goes at 5.
+ */
+export function buildLiveActivityMessage(
+  fcmToken: string, activityToken: string, row: FlightRow, now: Date, urgent: boolean,
+): FcmMessage {
+  const end = liveActivityDone(row);
+  const timestamp = Math.floor(now.getTime() / 1000);
+  return {
+    token: fcmToken,
+    apns: {
+      live_activity_token: activityToken,
+      headers: {
+        "apns-push-type": "liveactivity",
+        "apns-topic": `${IOS_BUNDLE_ID}.push-type.liveactivity`,
+        "apns-priority": end || urgent ? "10" : "5",
+      },
+      payload: {
+        aps: {
+          timestamp,
+          event: end ? "end" : "update",
+          "content-state": liveActivityState(row, now),
+          ...(end ? { "dismissal-date": timestamp + LIVE_ACTIVITY_LINGER_S } : {}),
+        },
+      },
+    },
+  };
+}

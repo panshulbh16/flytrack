@@ -44,6 +44,7 @@ targets:
         excludes:
           - FlyTrack.entitlements
           - Info.plist
+      - path: FlightActivity/FlightActivityAttributes.swift
     dependencies:
       - package: FlyTrackCore
         product: FlyTrackCore
@@ -56,6 +57,8 @@ targets:
       - package: GoogleSignIn
         product: GoogleSignIn
       - target: ShareExtension
+        embed: true
+      - target: FlightActivity
         embed: true
     settings:
       base:
@@ -78,6 +81,7 @@ targets:
         ITSAppUsesNonExemptEncryption: false
         UIBackgroundModes:
           - remote-notification
+        NSSupportsLiveActivities: true
         UIAppFonts:
           - InstrumentSerif-Regular.ttf
           - InstrumentSerif-Italic.ttf
@@ -140,12 +144,36 @@ targets:
       properties:
         com.apple.security.application-groups:
           - group.app.heygate.flytrack
+  FlightActivity:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: FlightActivity
+        excludes:
+          - Info.plist
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(FLYTRACK_BUNDLE_ID).activity
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        GENERATE_INFOPLIST_FILE: YES
+        SKIP_INSTALL: YES
+    info:
+      path: FlightActivity/Info.plist
+      properties:
+        CFBundleDisplayName: HeyGate
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
 schemes:
   FlyTrack:
     build:
       targets:
         FlyTrack: all
         ShareExtension: all
+        FlightActivity: all
     run:
       config: Debug
     test:

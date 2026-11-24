@@ -983,6 +983,17 @@
         }
       }
     },
+    "Remove from Lock Screen" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove from Lock Screen"
+          }
+        }
+      }
+    },
     "Running %lld min late" : {
 
     },
@@ -1057,6 +1068,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Several flights were found. Choose one."
+          }
+        }
+      }
+    },
+    "Show on Lock Screen" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show on Lock Screen"
           }
         }
       }

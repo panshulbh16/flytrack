@@ -1,5 +1,5 @@
 import { changedFields, evaluateAlerts, evaluateInbound, snapshotState } from "./diff.ts";
-import { buildAlertMessage, buildSyncMessage, type Tz } from "./notify.ts";
+import { buildAlertMessage, buildLiveActivityMessage, buildSyncMessage, liveActivityDone, type Tz } from "./notify.ts";
 import type { Pusher } from "./fcm.ts";
 import type { FlightDataProvider } from "./providers/provider.ts";
 import { ProviderError } from "./providers/provider.ts";
@@ -186,12 +186,20 @@ export async function ingest(
 
 export async function fanOut(deps: Deps, row: FlightRow, events: (FlightEvent & { id: string })[], sendSync: boolean) {
   const recipients = await deps.repo.getRecipients(row.id);
-  if (!recipients.length) {
+  // A Live Activity the user started keeps updating even if they muted notifications on that phone.
+  const activities = sendSync ? await deps.repo.getLiveActivities(row.id) : [];
+  if (!recipients.length && !activities.length) {
     if (events.length) await deps.repo.markEventsPushed(events.map((e) => e.id));
     return;
   }
   const tz: Tz = { dep: await deps.repo.airportTz(row.dep_iata), arr: await deps.repo.airportTz(row.arr_iata) };
-  const jobs: { kind: "alert" | "sync"; eventId: string | null; r: (typeof recipients)[number]; msg: ReturnType<typeof buildSyncMessage> }[] = [];
+  const jobs: {
+    kind: PushLogRow["kind"];
+    eventId: string | null;
+    r: { device_id: string; user_id: string; fcm_token: string };
+    liveActivityId?: string;
+    msg: ReturnType<typeof buildSyncMessage>;
+  }[] = [];
 
   for (const e of events) {
     for (const r of recipients) {
@@ -208,20 +216,32 @@ export async function fanOut(deps: Deps, row: FlightRow, events: (FlightEvent & 
       seen.add(r.fcm_token);
       jobs.push({ kind: "sync", eventId: null, r, msg: buildSyncMessage(r.fcm_token, row, near) });
     }
+    for (const a of activities) {
+      const msg = buildLiveActivityMessage(a.fcm_token, a.activity_token, row, deps.now(), events.length > 0);
+      jobs.push({ kind: "live_activity", eventId: null, r: a, liveActivityId: a.id, msg });
+    }
   }
 
   // Alerts first (they are what users feel), all in parallel.
-  jobs.sort((a, b) => (a.kind === b.kind ? 0 : a.kind === "alert" ? -1 : 1));
+  const rank = (k: PushLogRow["kind"]) => (k === "alert" ? 0 : 1);
+  jobs.sort((a, b) => rank(a.kind) - rank(b.kind));
   const results = await Promise.all(jobs.map((j) => deps.pusher.send(j.msg)));
   const logs: PushLogRow[] = [];
   const dead = new Set<string>();
+  const doneActivities: string[] = [];
+  const ended = liveActivityDone(row);
   results.forEach((res, i) => {
     const j = jobs[i];
     logs.push({ eventId: j.eventId, deviceId: j.r.device_id, userId: j.r.user_id, kind: j.kind, result: res });
-    if (res.invalidToken) dead.add(j.r.fcm_token);
+    if (j.liveActivityId) {
+      // A rejected token here is usually the activity's (dismissed on the phone), not the FCM token:
+      // drop the activity, keep the device. A failed "end" stays for the next change to retry.
+      if (res.invalidToken || (ended && res.ok)) doneActivities.push(j.liveActivityId);
+    } else if (res.invalidToken) dead.add(j.r.fcm_token);
   });
   await deps.repo.logPushes(logs);
   for (const t of dead) await deps.repo.deleteDeviceByToken(t);
+  await deps.repo.deleteLiveActivities(doneActivities);
   if (events.length) await deps.repo.markEventsPushed(events.map((e) => e.id));
 }
 
