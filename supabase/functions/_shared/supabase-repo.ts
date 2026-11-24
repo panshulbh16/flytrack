@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 import type { FlightEvent, FlightRow, Recipient, TrackedField } from "./types.ts";
-import type { ProviderCallLog, PushLogRow, Repo } from "./repo.ts";
+import type { LiveActivityTarget, ProviderCallLog, PushLogRow, Repo } from "./repo.ts";
 
 /** Service-role client (bypasses RLS). Only ever used inside Edge Functions. */
 export function serviceClient(): SupabaseClient {
@@ -118,6 +118,21 @@ export class SupabaseRepo implements Repo {
 
   async deleteDeviceByToken(token: string) {
     must(await this.db.from("devices").delete().eq("fcm_token", token), "deleteDevice");
+  }
+
+  async getLiveActivities(flightId: string): Promise<LiveActivityTarget[]> {
+    const rows = must(
+      await this.db.from("live_activities").select("id, user_id, device_id, activity_token, devices(fcm_token)")
+        .eq("flight_id", flightId),
+      "liveActivities",
+    ) as unknown as { id: string; user_id: string; device_id: string; activity_token: string; devices: { fcm_token: string } }[];
+    // devices is many-to-one, so PostgREST embeds one object (the untyped client guesses an array).
+    return rows.map(({ devices, ...r }) => ({ ...r, fcm_token: devices.fcm_token }));
+  }
+
+  async deleteLiveActivities(ids: string[]) {
+    if (!ids.length) return;
+    must(await this.db.from("live_activities").delete().in("id", ids), "deleteLiveActivities");
   }
 
   async airportTz(iata: string) {
