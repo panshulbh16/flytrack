@@ -282,6 +282,8 @@ struct DetailScreen: View {
 struct SettingsScreen: View {
     @ObservedObject var shell: AppShell
     @State private var store: SettingsStoreBox?
+    @State private var testAlertSending = false
+    @State private var testAlertText: String?
 
     var body: some View {
         PaperScreen {
@@ -326,6 +328,16 @@ struct SettingsScreen: View {
                             }
                         }
                         .hitTarget()
+                        Button(testAlertSending ? String(localized: "Sending…") : String(localized: "Send a test alert")) {
+                            Task {
+                                testAlertSending = true
+                                testAlertText = await TestAlert.send(client: shell.stack.client, push: shell.push)
+                                testAlertSending = false
+                            }
+                        }
+                        .disabled(testAlertSending)
+                        .hitTarget()
+                        if let testAlertText { Text(testAlertText) }
                     }
                     Section { Text(String(localized: "HeyGate \(store.state.versionName)")) }
                 }

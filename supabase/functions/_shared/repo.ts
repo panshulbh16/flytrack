@@ -16,7 +16,7 @@ export interface PushLogRow {
   eventId: string | null;
   deviceId: string;
   userId: string;
-  kind: "alert" | "sync";
+  kind: "alert" | "sync" | "test";
   result: PushResult;
 }
 

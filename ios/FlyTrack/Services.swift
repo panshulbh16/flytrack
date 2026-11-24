@@ -181,6 +181,47 @@ private struct RegisterParams: Encodable {
 
 private struct UnregisterParams: Encodable { var p_token: String }
 
+/// Asks the backend (send-test-push) to send a test alert to THIS phone's push token. Returns the text to show.
+enum TestAlert {
+    @MainActor
+    static func send(client: SupabaseClient?, push: LivePush) async -> String {
+        guard AppConfig.pushPlistPresent else {
+            return String(localized: "Push is not configured. Add GoogleService-Info.plist from the Firebase project. The app still runs.")
+        }
+        guard let client else { return String(localized: "Backend not configured.") }
+        guard let token = await push.currentToken() else { return notRegistered }
+        // Signing out or into another account leaves this phone's device row on the old account until the
+        // next cold launch, and the backend only sends to the caller's own devices. Re-register first (an
+        // upsert on the token) so the test reaches this phone and real alerts follow the current account.
+        await DeviceRegistrar.register(token: token, client: client)
+        do {
+            let response: TestAlertResponse = try await client.functions.invoke(
+                "send-test-push",
+                options: FunctionInvokeOptions(body: TestAlertRequest(token: token))
+            )
+            return response.sent
+                ? String(localized: "Test alert sent. It should arrive in a few seconds.")
+                : String(localized: "Firebase did not accept the test alert. Alerts will not reach this phone yet.")
+        } catch FunctionsError.httpError(let code, let data) {
+            let error = (try? JSONDecoder().decode(FunctionErrorBody.self, from: data))?.error
+            if error == "not_registered" { return notRegistered }
+            if error == "rate_limited" || code == 429 { return String(localized: "Too many test alerts. Try again in 10 minutes.") }
+            return String(localized: "Could not send the test alert. Try again later.")
+        } catch is URLError {
+            return String(localized: "You are offline. Connect to the internet and try again.")
+        } catch {
+            return String(localized: "Could not send the test alert. Try again later.")
+        }
+    }
+
+    private static var notRegistered: String {
+        String(localized: "This phone is not registered for alerts yet. Close the app fully, open it again, then try again.")
+    }
+}
+
+private struct TestAlertRequest: Encodable { var token: String }
+private struct TestAlertResponse: Decodable { var sent: Bool }
+
 @MainActor
 final class OnDeviceExtractor: TicketTextExtracting {
     func extract(_ request: ExtractRequest) async throws -> ExtractedTicket {

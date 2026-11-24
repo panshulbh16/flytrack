@@ -203,6 +203,36 @@ export function buildAlertMessage(token: string, flightId: string, eventId: stri
   };
 }
 
+/**
+ * Fixed alert for send-test-push: same channel, priority and APNs level as a critical flight alert, so it
+ * proves the real delivery path. kind "test" carries no flight, so both apps ignore it as data; the system
+ * shows it while the app is in the background, and the iOS app also shows it in the foreground.
+ * ponytail: an Android app in the foreground shows nothing (onMessageReceived ignores kind "test");
+ * handle it there when Android gets the "Send a test alert" button.
+ */
+export function buildTestMessage(token: string): FcmMessage {
+  const title = "HeyGate test alert";
+  const body = "Alerts reach this phone. Gate changes and delays will arrive like this.";
+  const data = { kind: "test", title, body };
+  return {
+    token,
+    data,
+    android: {
+      priority: "HIGH",
+      ttl: "600s", // a test that arrives 10 minutes late is a failed test
+      notification: {
+        title,
+        body,
+        channel_id: CHANNEL_CRITICAL,
+        tag: "test",
+        notification_priority: "PRIORITY_MAX",
+        default_sound: true,
+      },
+    },
+    apns: apnsAlert(title, body, "test", true, data),
+  };
+}
+
 /** Compact flight state for the app's Room cache / widget / live notification (data-only, collapsible). */
 export function compactFlight(r: FlightRow): Record<string, unknown> {
   return {

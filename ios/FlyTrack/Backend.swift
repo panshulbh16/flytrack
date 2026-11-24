@@ -413,7 +413,7 @@ private func validate(_ extras: TrackExtras) -> Checked {
 
 private struct SearchRequest: Encodable { var flight: String; var date: String }
 private struct ParseRequest: Encodable { var text: String }
-private struct FunctionErrorBody: Decodable { var error: String?; var message: String? }
+struct FunctionErrorBody: Decodable { var error: String?; var message: String? }
 
 private struct SearchResponse: Decodable {
     var flights: [WireFlight]
