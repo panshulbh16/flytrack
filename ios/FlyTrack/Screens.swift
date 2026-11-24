@@ -240,6 +240,8 @@ struct DetailScreen: View {
                         }
                         if detail.trackingState == .tracked {
                             Button(String(localized: "Stop tracking"), role: .destructive) { Task { await store?.untrack() } }
+                                // PaperScreen's ink foreground would otherwise hide the destructive red.
+                                .foregroundStyle(FlyColor.cancelled)
                                 .hitTarget()
                         }
                     }
