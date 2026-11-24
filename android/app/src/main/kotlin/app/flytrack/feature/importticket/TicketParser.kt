@@ -271,3 +271,58 @@ private fun findPnr(text: String): String? {
     }
     return null
 }
+
+/** One leg of a boarding-pass barcode. */
+data class BoardingPassLeg(
+    val pnr: String?,
+    val fromIata: String,
+    val toIata: String,
+    val flight: FlightNumber,
+    val date: LocalDate?,
+    val seat: String?,
+)
+
+/**
+ * Reads the mandatory fields of each leg of an IATA BCBP barcode (Resolution 792, format "M"):
+ * "M1DESMARAIS/LUC       EABC123 YULFRAAC 0834 326J001A0025 100". Empty when the text is not one.
+ * The barcode carries a day of the year but no year: the leg goes to the year that puts it nearest [today].
+ */
+fun parseBoardingPass(raw: String, today: LocalDate): List<BoardingPassLeg> {
+    val legCount = raw.getOrNull(1)?.digitToIntOrNull() ?: return emptyList()
+    if (raw[0] != 'M' || legCount == 0) return emptyList()
+    val legs = mutableListOf<BoardingPassLeg>()
+    var start = 23 // "M", leg count, 20-character name, e-ticket flag
+    repeat(legCount) {
+        if (raw.length < start + 37) return legs
+        fun field(offset: Int, length: Int) = raw.substring(start + offset, start + offset + length).trim()
+        val from = field(7, 3)
+        val to = field(10, 3)
+        val flight = parseFlightNumber(field(13, 3) + " " + field(16, 5))
+        if (!isIataCode(from) || !isIataCode(to) || flight == null) return legs
+        legs += BoardingPassLeg(
+            pnr = normalizePnr(field(0, 7)),
+            fromIata = from,
+            toIata = to,
+            flight = flight,
+            date = field(21, 3).toIntOrNull()?.let { julianDate(it, today) },
+            seat = field(25, 4).trimStart('0').takeIf { BOARDING_SEAT.matches(it) },
+        )
+        val conditionalSize = field(35, 2).toIntOrNull(16) ?: return legs
+        start += 37 + conditionalSize
+    }
+    return legs
+}
+
+/** "12A" once the leading zeros of "012A" are gone. "INF ", "GATE" and blanks are not seats. */
+private val BOARDING_SEAT = Regex("""[0-9]{1,3}[A-Z]""")
+
+private fun isIataCode(code: String) = code.length == 3 && code.all { it in 'A'..'Z' }
+
+internal fun julianDate(dayOfYear: Int, near: LocalDate): LocalDate? {
+    if (dayOfYear !in 1..366) return null
+    return listOf(near.year - 1, near.year, near.year + 1)
+        .mapNotNull { year ->
+            LocalDate(year, 1, 1).plus(DatePeriod(days = dayOfYear - 1)).takeIf { it.year == year } // day 366 of a non-leap year
+        }
+        .minByOrNull { kotlin.math.abs(it.toEpochDays() - near.toEpochDays()) }
+}

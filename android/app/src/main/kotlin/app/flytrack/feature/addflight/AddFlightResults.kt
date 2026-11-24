@@ -33,6 +33,7 @@ import app.flytrack.core.model.Flight
 import app.flytrack.core.model.FlightStatusTone
 import app.flytrack.core.model.statusTone
 import app.flytrack.core.time.FlightTimeFormat
+import app.flytrack.feature.importticket.ScanBoardingPassButton
 import app.flytrack.ui.components.BackendNotConfiguredState
 import app.flytrack.ui.components.ErrorState
 import app.flytrack.ui.components.HairlineDivider
@@ -143,6 +144,7 @@ private fun ImportPrompt(onImportTicket: () -> Unit) {
             onClick = onImportTicket,
             icon = painterResource(R.drawable.ic_ticket),
         )
+        ScanBoardingPassButton()
     }
 }
 

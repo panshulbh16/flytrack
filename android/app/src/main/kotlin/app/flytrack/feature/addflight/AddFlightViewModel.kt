@@ -84,6 +84,7 @@ class AddFlightViewModel @AssistedInject constructor(
                 firstSelectableDate = selectable.start,
                 lastSelectableDate = selectable.endInclusive,
                 pnrInput = resolved.pnrInput,
+                seatInput = sanitizeSeatInput(prefill.seat.orEmpty()),
                 prefillNotice = resolved.notice,
                 isFromTicket = !prefill.isEmpty,
             ).withFlightInput(resolved.flightInput),

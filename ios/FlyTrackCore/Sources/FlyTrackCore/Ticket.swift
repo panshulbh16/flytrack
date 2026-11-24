@@ -373,3 +373,72 @@ public enum CloudParseResult: Equatable, Sendable {
     case offline
     case failed
 }
+
+/// One leg of a boarding-pass barcode.
+public struct BoardingPassLeg: Hashable, Sendable {
+    public var pnr: String?
+    public var fromIata: String
+    public var toIata: String
+    public var flight: FlightNumber
+    public var date: LocalDate?
+    public var seat: String?
+
+    public init(pnr: String?, fromIata: String, toIata: String, flight: FlightNumber, date: LocalDate?, seat: String?) {
+        self.pnr = pnr
+        self.fromIata = fromIata
+        self.toIata = toIata
+        self.flight = flight
+        self.date = date
+        self.seat = seat
+    }
+}
+
+/// Reads the mandatory fields of each leg of an IATA BCBP barcode (Resolution 792, format "M"):
+/// "M1DESMARAIS/LUC       EABC123 YULFRAAC 0834 326J001A0025 100". Empty when the text is not one.
+/// The barcode carries a day of the year but no year: the leg goes to the year that puts it nearest `today`.
+public func parseBoardingPass(_ raw: String, today: LocalDate) -> [BoardingPassLeg] {
+    let chars = Array(raw)
+    guard chars.count > 2, chars[0] == "M", let legCount = chars[1].wholeNumberValue, legCount > 0 else { return [] }
+    var legs: [BoardingPassLeg] = []
+    var start = 23  // "M", leg count, 20-character name, e-ticket flag
+    for _ in 0..<legCount {
+        guard chars.count >= start + 37 else { break }
+        func field(_ offset: Int, _ length: Int) -> String {
+            String(chars[(start + offset)..<(start + offset + length)]).trimmingCharacters(in: .whitespaces)
+        }
+        let from = field(7, 3)
+        let to = field(10, 3)
+        guard isIataCode(from), isIataCode(to), let flight = parseFlightNumber(field(13, 3) + " " + field(16, 5)) else { break }
+        legs.append(BoardingPassLeg(
+            pnr: normalizePnr(field(0, 7)),
+            fromIata: from,
+            toIata: to,
+            flight: flight,
+            date: Int(field(21, 3)).flatMap { julianDate($0, near: today) },
+            seat: boardingSeat(field(25, 4))
+        ))
+        guard let conditionalSize = Int(field(35, 2), radix: 16) else { break }
+        start += 37 + conditionalSize
+    }
+    return legs
+}
+
+func julianDate(_ dayOfYear: Int, near today: LocalDate) -> LocalDate? {
+    guard (1...366).contains(dayOfYear) else { return nil }
+    return [today.year - 1, today.year, today.year + 1]
+        .compactMap { year in
+            let date = LocalDate(year: year, month: 1, day: 1).adding(days: dayOfYear - 1)
+            return date.year == year ? date : nil  // day 366 of a non-leap year
+        }
+        .min { abs($0.epochDays - today.epochDays) < abs($1.epochDays - today.epochDays) }
+}
+
+private func isIataCode(_ code: String) -> Bool {
+    code.count == 3 && code.allSatisfy { $0.isASCII && $0.isUppercase }
+}
+
+/// "012A" -> "12A". Nil for "INF ", "GATE" and blanks.
+private func boardingSeat(_ raw: String) -> String? {
+    let seat = String(raw.drop { $0 == "0" })
+    return seat.range(of: "^[0-9]{1,3}[A-Z]$", options: .regularExpression) == nil ? nil : seat
+}

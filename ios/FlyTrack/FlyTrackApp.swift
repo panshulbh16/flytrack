@@ -148,6 +148,7 @@ enum Route: Hashable {
     case detail(String)
     case settings
     case importTicket
+    case scanBoardingPass
 }
 
 struct RootView: View {
@@ -166,6 +167,8 @@ struct RootView: View {
                         SettingsScreen(shell: shell)
                     case .importTicket:
                         ImportScreen(shell: shell)
+                    case .scanBoardingPass:
+                        ScanScreen(shell: shell)
                     }
                 }
         }

@@ -5,12 +5,14 @@ public struct AddFlightPrefill: Hashable, Sendable {
     public var date: String?
     public var pnr: String?
     public var source: TrackSource?
+    public var seat: String?
 
-    public init(flight: String? = nil, date: String? = nil, pnr: String? = nil, source: TrackSource? = nil) {
+    public init(flight: String? = nil, date: String? = nil, pnr: String? = nil, source: TrackSource? = nil, seat: String? = nil) {
         self.flight = flight
         self.date = date
         self.pnr = pnr
         self.source = source
+        self.seat = seat
     }
 
     public var isEmpty: Bool {
@@ -186,7 +188,7 @@ public final class AddFlightModel {
             dateRejected: false,
             pnrInput: resolved.pnrInput,
             pnrInvalid: false,
-            seatInput: "",
+            seatInput: sanitizeSeatInput(prefill.seat ?? ""),
             seatInvalid: false,
             prefillNotice: resolved.notice,
             isFromTicket: !prefill.isEmpty,

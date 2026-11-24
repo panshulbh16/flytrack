@@ -309,3 +309,59 @@ final class TicketParserTests: XCTestCase {
         XCTAssertNil(ticket.flights[1].date)
     }
 }
+
+final class BoardingPassTests: XCTestCase {
+    private func legs(_ text: String, today: LocalDate = LocalDate(year: 2026, month: 11, day: 22)) -> [BoardingPassLeg] {
+        parseBoardingPass(text, today: today)
+    }
+
+    func testResolution792Example() {
+        let leg = legs("M1DESMARAIS/LUC       EABC123 YULFRAAC 0834 326J001A0025 100")
+        XCTAssertEqual(leg, [BoardingPassLeg(
+            pnr: "ABC123", fromIata: "YUL", toIata: "FRA", flight: FlightNumber(carrier: "AC", number: "834"),
+            date: LocalDate(year: 2026, month: 11, day: 22), seat: "1A"
+        )])
+    }
+
+    func testIndiGoWithConditionalAndSecurityData() {
+        let pass = "M1SHARMA/RAHUL        EXY7ZQP DELBOM6E 2341 330Y012A0045 149>5180  W6328B6E              2A00000000000000 6E                        N^164GIWVC5EH7JNT684FVNJ91W2QA4DVN5J8K4F0L0GEQ3DF5TGBN8709HKT5D3DW3GBHFCVHMY7J5T6HFR41W2QA4DVN5J8K4F0L0GE"
+        let leg = legs(pass)
+        XCTAssertEqual(leg.count, 1)
+        XCTAssertEqual(leg.first?.flight.display, "6E 2341")
+        XCTAssertEqual(leg.first?.date?.iso, "2026-11-26")
+        XCTAssertEqual(leg.first?.pnr, "XY7ZQP")
+        XCTAssertEqual(leg.first?.seat, "12A")
+        XCTAssertEqual(leg.first?.fromIata, "DEL")
+        XCTAssertEqual(leg.first?.toIata, "BOM")
+    }
+
+    func testTwoLegsOverNewYear() {
+        let pass = "M2IYER/ANANYA MS      EQWE9RT DELDXBEK 0511 365Y034K0101 148>5180  W6363BEK              2A1762345678901 EK                        NQWE9RT DXBLHREK 0001 001Y061A0202 12B2A1762345678901 EK                        N"
+        let found = legs(pass, today: LocalDate(year: 2026, month: 12, day: 30))
+        XCTAssertEqual(found.map(\.flight.display), ["EK 511", "EK 1"])
+        XCTAssertEqual(found.map { $0.date?.iso }, ["2026-12-31", "2027-01-01"])
+        XCTAssertEqual(found.map { "\($0.fromIata)-\($0.toIata)" }, ["DEL-DXB", "DXB-LHR"])
+        XCTAssertEqual(found.map(\.seat), ["34K", "61A"])
+    }
+
+    func testSuffixAndNoSeat() {
+        let leg = legs("M1KUMAR/AARAV MSTR    EZX12AB BLRGOIQP 1372A002YINF 0007 100", today: LocalDate(year: 2027, month: 1, day: 1))
+        XCTAssertEqual(leg.first?.flight.display, "QP 1372A")
+        XCTAssertEqual(leg.first?.date?.iso, "2027-01-02")
+        XCTAssertNil(leg.first?.seat)
+    }
+
+    func testJulianYearRollover() {
+        XCTAssertEqual(julianDate(364, near: LocalDate(year: 2027, month: 1, day: 2))?.iso, "2026-12-30")
+        XCTAssertEqual(julianDate(2, near: LocalDate(year: 2026, month: 12, day: 30))?.iso, "2027-01-02")
+        XCTAssertEqual(julianDate(366, near: LocalDate(year: 2028, month: 6, day: 1))?.iso, "2028-12-31")
+        XCTAssertNil(julianDate(366, near: LocalDate(year: 2026, month: 6, day: 1)))
+        XCTAssertNil(julianDate(0, near: LocalDate(year: 2026, month: 6, day: 1)))
+    }
+
+    func testRejectsOtherBarcodes() {
+        XCTAssertEqual(legs("https://example.com/checkin"), [])
+        XCTAssertEqual(legs("M1TOO SHORT"), [])
+        XCTAssertEqual(legs(""), [])
+    }
+}

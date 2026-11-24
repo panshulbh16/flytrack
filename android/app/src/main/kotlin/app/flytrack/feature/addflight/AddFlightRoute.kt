@@ -59,12 +59,14 @@ fun AddFlightRoute(
     onDone: (flightId: String?) -> Unit,
     onBack: () -> Unit,
     prefillSource: String? = null,
+    prefillSeat: String? = null,
 ) {
     val prefill = AddFlightPrefill(
         flight = prefillFlight,
         date = prefillDate,
         pnr = prefillPnr,
         source = prefillSource?.let { raw -> TrackSource.entries.firstOrNull { it.wire == raw } },
+        seat = prefillSeat,
     )
     val viewModel = hiltViewModel<AddFlightViewModel, AddFlightViewModel.Factory>(
         creationCallback = { factory -> factory.create(prefill) },

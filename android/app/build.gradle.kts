@@ -117,6 +117,7 @@ dependencies {
     implementation(libs.googleid)
 
     implementation(libs.mlkit.text.recognition)
+    implementation(libs.play.services.code.scanner)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
