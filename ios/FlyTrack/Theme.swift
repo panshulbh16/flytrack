@@ -1,26 +1,54 @@
 import FlyTrackCore
 import SwiftUI
+import UIKit
 
+/// "Aubergine and platinum" from docs/design-brief.md. Every token resolves per appearance (light, dark).
 enum FlyColor {
-    static let paper = Color(red: 0.965, green: 0.961, blue: 0.937)
-    static let paperRaised = Color(red: 0.984, green: 0.980, blue: 0.961)
-    static let ink = Color(red: 0.141, green: 0.278, blue: 0.208)
-    static let moss = Color(red: 0.376, green: 0.447, blue: 0.376)
-    static let terracotta = Color(red: 0.784, green: 0.408, blue: 0.259)
-    static let hairline = Color(red: 0.839, green: 0.863, blue: 0.812)
-    static let onTime = Color(red: 0.298, green: 0.482, blue: 0.255)
-    static let delayed = Color(red: 0.553, green: 0.329, blue: 0.176)
-    static let cancelled = Color(red: 0.639, green: 0.282, blue: 0.192)
-    static let night = Color(red: 0.094, green: 0.180, blue: 0.145)
-    static let nightInk = Color(red: 0.965, green: 0.957, blue: 0.906)
+    /// Screen background. Also the text colour on `primary` fills.
+    static let paper = adaptive(0xF7F1E8, 0x1C1220)
+    /// List rows and cards.
+    static let paperRaised = adaptive(0xFFFBF4, 0x271A2B)
+    static let ink = adaptive(0x3A1D38, 0xF3EBDD)
+    static let muted = adaptive(0x6B5468, 0xBFAEBB)
+    /// App tint: plum in light, platinum in dark.
+    static let primary = adaptive(0x4B2347, 0xD3D7DE)
+    /// Platinum dark enough for 11 pt text on paper (6.1:1).
+    static let accent = adaptive(0x555B66, 0xD3D7DE)
+    /// Decorative platinum for rings and rules. Never text: 1.9:1 on paper in light.
+    static let accentLine = adaptive(0xB4B9C2, 0x9AA0AA)
+    static let onTime = adaptive(0x2E6A4C, 0x8FCBA8)
+    static let delayed = adaptive(0x8A5512, 0xE7BE7A)
+    static let cancelled = adaptive(0x9E2B3B, 0xF0A2A9)
 
-    static func tone(_ tone: FlightStatusTone, dark: Bool) -> Color {
+    static func tone(_ tone: FlightStatusTone) -> Color {
         switch tone {
         case .onTime: return onTime
         case .delayed: return delayed
         case .cancelled: return cancelled
-        case .active: return terracotta
-        case .estimated: return moss
+        case .active: return accent
+        case .estimated: return muted
+        }
+    }
+
+    private static func adaptive(_ light: UInt32, _ dark: UInt32) -> Color {
+        func rgb(_ hex: UInt32) -> UIColor {
+            UIColor(red: CGFloat(hex >> 16 & 0xFF) / 255, green: CGFloat(hex >> 8 & 0xFF) / 255, blue: CGFloat(hex & 0xFF) / 255, alpha: 1)
+        }
+        return Color(UIColor { $0.userInterfaceStyle == .dark ? rgb(dark) : rgb(light) })
+    }
+}
+
+/// The appearance picked in Settings, stored in UserDefaults. `system` follows the phone.
+enum Appearance: String, CaseIterable {
+    case system, light, dark
+
+    static let storageKey = "appearance"
+
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system: nil
+        case .light: .light
+        case .dark: .dark
         }
     }
 }
@@ -54,16 +82,15 @@ extension View {
 }
 
 struct PaperScreen<Content: View>: View {
-    @Environment(\.colorScheme) private var scheme
     @ViewBuilder var content: () -> Content
 
     // The paper is a real view, not a background on `content`: a screen whose content is empty while it loads
-    // (Add flight) otherwise renders nothing and never runs its `.task`. Same fix as PR #6.
+    // (Add flight) otherwise renders nothing, stays white, and never runs its `.task`.
     var body: some View {
         ZStack(alignment: .top) {
-            (scheme == .dark ? FlyColor.night : FlyColor.paper).ignoresSafeArea()
+            FlyColor.paper.ignoresSafeArea()
             content()
         }
-        .foregroundStyle(scheme == .dark ? FlyColor.nightInk : FlyColor.ink)
+        .foregroundStyle(FlyColor.ink)
     }
 }

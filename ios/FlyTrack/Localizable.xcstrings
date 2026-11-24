@@ -193,6 +193,17 @@
         }
       }
     },
+    "Appearance" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appearance"
+          }
+        }
+      }
+    },
     "Arrival" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -412,6 +423,17 @@
     },
     "Could not send the test alert. Try again later." : {
 
+    },
+    "Dark" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dark"
+          }
+        }
+      }
     },
     "Date" : {
       "extractionState" : "manual",
@@ -683,6 +705,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Leaving on time"
+          }
+        }
+      }
+    },
+    "Light" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Light"
           }
         }
       }
@@ -1134,6 +1167,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Stop tracking"
+          }
+        }
+      }
+    },
+    "System" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System"
           }
         }
       }

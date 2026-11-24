@@ -20,14 +20,15 @@ struct FlightsScreen: View {
         }
         .navigationTitle(String(localized: "My flights"))
         .toolbar {
+            // Toolbar items already get the system 44 pt target, so no hitTarget() here.
+            // Settings is an icon (its title stays the VoiceOver label); the text label clipped in its glass button.
             ToolbarItem(placement: .topBarLeading) {
-                Button(String(localized: "Settings")) { shell.path.append(Route.settings) }
-                    .hitTarget()
-                    .accessibilityLabel(String(localized: "Settings"))
+                Button(String(localized: "Settings"), systemImage: "gearshape") { shell.path.append(Route.settings) }
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Button(String(localized: "Add flight")) { shell.path.append(Route.add(AddFlightPrefill())) }
-                    .hitTarget()
+                    .buttonStyle(.glassProminent)
+                    .foregroundStyle(FlyColor.paper)
             }
         }
         .task {
@@ -53,6 +54,7 @@ struct FlightsScreen: View {
                     Section {
                         NextCard(next: next) { shell.openFlight(next.card.flightId) }
                     }
+                    .listRowBackground(FlyColor.paperRaised)
                 }
                 if !store.state.upcoming.isEmpty {
                     Section(String(localized: "Upcoming")) {
@@ -60,6 +62,7 @@ struct FlightsScreen: View {
                             FlightRow(card: card) { shell.openFlight(card.flightId) }
                         }
                     }
+                    .listRowBackground(FlyColor.paperRaised)
                 }
                 if !store.state.past.isEmpty {
                     Section(String(localized: "Past")) {
@@ -67,6 +70,7 @@ struct FlightsScreen: View {
                             FlightRow(card: card) { shell.openFlight(card.flightId) }
                         }
                     }
+                    .listRowBackground(FlyColor.paperRaised)
                 }
             }
             .scrollContentBackground(.hidden)
@@ -83,6 +87,7 @@ struct FlightsScreen: View {
                 .multilineTextAlignment(.center)
             Button(String(localized: "Import a ticket")) { shell.path.append(Route.importTicket) }
                 .buttonStyle(.borderedProminent)
+                .foregroundStyle(FlyColor.paper)
                 .hitTarget()
         }
         .padding(24)
@@ -104,29 +109,32 @@ struct AddFlightScreen: View {
         PaperScreen {
             if let store {
                 Form {
-                    if let notice = store.state.prefillNotice {
-                        Text(prefillText(notice)).font(FlyFont.serifItalic(18, relativeTo: .headline))
+                    Section {
+                        if let notice = store.state.prefillNotice {
+                            Text(prefillText(notice)).font(FlyFont.serifItalic(18, relativeTo: .headline))
+                        }
+                        TextField(String(localized: "Flight number"), text: Binding(
+                            get: { store.state.flightInput },
+                            set: { store.setFlight($0) }
+                        ))
+                        .textInputAutocapitalization(.characters)
+                        .accessibilityLabel(String(localized: "Flight number"))
+                        if let error = store.state.flightError {
+                            Text(error == .required ? String(localized: "Enter a flight number such as 6E 2341.") : String(localized: "That is not a flight number."))
+                                .foregroundStyle(FlyColor.cancelled)
+                        }
+                        DatePicker(String(localized: "Date"), selection: Binding(
+                            get: { store.state.date.startOfDayUTC() },
+                            set: { store.setDate(FlightTimeFormat.localDate($0, tz: "UTC")) }
+                        ), in: store.state.firstSelectableDate.startOfDayUTC()...store.state.lastSelectableDate.startOfDayUTC(), displayedComponents: .date)
+                        TextField(String(localized: "Booking reference"), text: Binding(get: { store.state.pnrInput }, set: { store.setPnr($0) }))
+                        TextField(String(localized: "Seat"), text: Binding(get: { store.state.seatInput }, set: { store.setSeat($0) }))
+                        Button(String(localized: "Search")) { Task { await store.search() } }
+                            .hitTarget()
+                            .disabled(store.state.isSearching)
+                        searchBody(store)
                     }
-                    TextField(String(localized: "Flight number"), text: Binding(
-                        get: { store.state.flightInput },
-                        set: { store.setFlight($0) }
-                    ))
-                    .textInputAutocapitalization(.characters)
-                    .accessibilityLabel(String(localized: "Flight number"))
-                    if let error = store.state.flightError {
-                        Text(error == .required ? String(localized: "Enter a flight number such as 6E 2341.") : String(localized: "That is not a flight number."))
-                            .foregroundStyle(FlyColor.cancelled)
-                    }
-                    DatePicker(String(localized: "Date"), selection: Binding(
-                        get: { store.state.date.startOfDayUTC() },
-                        set: { store.setDate(FlightTimeFormat.localDate($0, tz: "UTC")) }
-                    ), in: store.state.firstSelectableDate.startOfDayUTC()...store.state.lastSelectableDate.startOfDayUTC(), displayedComponents: .date)
-                    TextField(String(localized: "Booking reference"), text: Binding(get: { store.state.pnrInput }, set: { store.setPnr($0) }))
-                    TextField(String(localized: "Seat"), text: Binding(get: { store.state.seatInput }, set: { store.setSeat($0) }))
-                    Button(String(localized: "Search")) { Task { await store.search() } }
-                        .hitTarget()
-                        .disabled(store.state.isSearching)
-                    searchBody(store)
+                    .listRowBackground(FlyColor.paperRaised)
                 }
                 .scrollContentBackground(.hidden)
             }
@@ -206,7 +214,7 @@ struct DetailScreen: View {
                     VStack(alignment: .leading, spacing: 18) {
                         Text(statusWord(detail.card.statusWord))
                             .font(FlyFont.serifItalic(32, relativeTo: .largeTitle))
-                            .foregroundStyle(FlyColor.tone(detail.card.tone, dark: false))
+                            .foregroundStyle(FlyColor.tone(detail.card.tone))
                             .accessibilityAddTraits(.isHeader)
                         Text(statusSentence(detail.card.statusLine))
                             .font(FlyFont.sans(16, relativeTo: .body))
@@ -306,6 +314,7 @@ struct SettingsScreen: View {
     @State private var store: SettingsStoreBox?
     @State private var testAlertSending = false
     @State private var testAlertText: String?
+    @AppStorage(Appearance.storageKey) private var appearance = Appearance.system
 
     var body: some View {
         PaperScreen {
@@ -326,6 +335,17 @@ struct SettingsScreen: View {
                         if let message = store.state.message { Text(settingsMessage(message)) }
                         Button(String(localized: "Sign out")) { Task { await store.signOut() } }.hitTarget()
                     }
+                    .listRowBackground(FlyColor.paperRaised)
+                    Section(String(localized: "Appearance")) {
+                        Picker(String(localized: "Appearance"), selection: $appearance) {
+                            Text(String(localized: "System")).tag(Appearance.system)
+                            Text(String(localized: "Light")).tag(Appearance.light)
+                            Text(String(localized: "Dark")).tag(Appearance.dark)
+                        }
+                        .pickerStyle(.segmented)
+                        .labelsHidden()
+                    }
+                    .listRowBackground(FlyColor.paperRaised)
                     Section(String(localized: "Alerts for flights you add next")) {
                         ForEach(store.state.alerts, id: \.group) { toggle in
                             Toggle(alertTitle(toggle.group), isOn: Binding(
@@ -335,12 +355,14 @@ struct SettingsScreen: View {
                             .disabled(toggle.locked)
                         }
                     }
+                    .listRowBackground(FlyColor.paperRaised)
                     Section(String(localized: "Ticket reading")) {
                         Toggle(String(localized: "Allow cloud reading when the phone cannot read the ticket"), isOn: Binding(
                             get: { store.state.cloudConsent },
                             set: { value in Task { await store.setConsent(value) } }
                         ))
                     }
+                    .listRowBackground(FlyColor.paperRaised)
                     Section(String(localized: "Notifications")) {
                         Text(pushText(store.state.push))
                         Text(healthText(store.state.health))
@@ -361,7 +383,9 @@ struct SettingsScreen: View {
                         .hitTarget()
                         if let testAlertText { Text(testAlertText) }
                     }
+                    .listRowBackground(FlyColor.paperRaised)
                     Section { Text(String(localized: "HeyGate \(store.state.versionName)")) }
+                    .listRowBackground(FlyColor.paperRaised)
                 }
             }
             .scrollContentBackground(.hidden)
@@ -409,6 +433,7 @@ struct ImportScreen: View {
                     .font(FlyFont.sans(15, relativeTo: .body))
                 Button(String(localized: "Choose a PDF or screenshot")) { showFiles = true }
                     .buttonStyle(.borderedProminent)
+                    .foregroundStyle(FlyColor.paper)
                     .hitTarget()
                 if let store {
                     if store.state.busy { ProgressView(String(localized: "Reading the ticket…")) }
@@ -481,7 +506,7 @@ private struct NextCard: View {
                 Text(String(localized: "Next takeoff").uppercased())
                     .font(FlyFont.sans(11, weight: .medium, relativeTo: .caption2))
                     .tracking(1.2)
-                    .foregroundStyle(FlyColor.terracotta)
+                    .foregroundStyle(FlyColor.accent)
                 Text(next.card.designator).font(FlyFont.sans(17, weight: .medium, relativeTo: .headline))
                 Text("\(next.card.depCode) → \(next.card.arrCode)").font(FlyFont.numeral(28))
                 Text(countdownText(next.countdown)).font(FlyFont.serifItalic(20, relativeTo: .title3))
@@ -502,12 +527,12 @@ private struct FlightRow: View {
             HStack(spacing: 12) {
                 Image(systemName: "airplane")
                     .frame(width: 44, height: 44)
-                    .overlay(Circle().stroke(FlyColor.hairline, lineWidth: 1))
+                    .overlay(Circle().stroke(FlyColor.accentLine, lineWidth: 1))
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("\(card.depCode) → \(card.arrCode)").font(FlyFont.sans(17, weight: .medium, relativeTo: .headline))
                     Text(String(localized: "\(card.depCity) to \(card.arrCity)")).font(FlyFont.sans(14, relativeTo: .subheadline))
-                    Text(statusWord(card.statusWord)).font(FlyFont.serifItalic(18, relativeTo: .headline)).foregroundStyle(FlyColor.tone(card.tone, dark: false))
+                    Text(statusWord(card.statusWord)).font(FlyFont.serifItalic(18, relativeTo: .headline)).foregroundStyle(FlyColor.tone(card.tone))
                 }
                 Spacer()
                 if let time = card.departure?.time {

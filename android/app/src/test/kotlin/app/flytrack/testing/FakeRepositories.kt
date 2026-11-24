@@ -11,6 +11,7 @@ import app.flytrack.core.result.AuthResult
 import app.flytrack.core.result.SearchResult
 import app.flytrack.core.result.TrackResult
 import app.flytrack.data.repo.AirportRepository
+import app.flytrack.data.repo.Appearance
 import app.flytrack.data.repo.AuthRepository
 import app.flytrack.data.repo.DeviceRegistration
 import app.flytrack.data.repo.DeviceRepository
@@ -278,5 +279,12 @@ class FakeSettingsStore(
 
     override suspend fun setLastDeviceRegistration(registration: DeviceRegistration?) {
         this.registration.value = registration
+    }
+
+    private val appearanceFlow = MutableStateFlow(Appearance.SYSTEM)
+    override val appearance: Flow<Appearance> = appearanceFlow
+
+    override suspend fun setAppearance(appearance: Appearance) {
+        appearanceFlow.value = appearance
     }
 }

@@ -8,85 +8,85 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import app.flytrack.core.model.FlightStatusTone
 
-// Tokens from docs/design-brief.md: warm paper, forest-green ink, terracotta accent.
-// Roles the brief leaves open (marked "derived") follow the same hues.
+// "Aubergine and platinum" from docs/design-brief.md: plum ink on warm ivory, platinum accents.
+// Dark is plum-black with platinum as the action colour. Contrast ratios are in the brief.
 
 internal val LightColors: ColorScheme = lightColorScheme(
-    primary = Color(0xFF244735),
-    onPrimary = Color(0xFFFFFFFF),
-    primaryContainer = Color(0xFFD9DFC8),
-    onPrimaryContainer = Color(0xFF244735), // derived
-    inversePrimary = Color(0xFFA0B99F),
-    secondary = Color(0xFF607260),
-    onSecondary = Color(0xFFFFFFFF), // derived
-    secondaryContainer = Color(0xFFE9EDE3),
-    onSecondaryContainer = Color(0xFF244735), // derived
-    tertiary = Color(0xFFC86842),
-    onTertiary = Color(0xFFFFFFFF), // derived
-    tertiaryContainer = Color(0xFFFBF3EA),
-    onTertiaryContainer = Color(0xFF8B422A),
-    error = Color(0xFFA34831),
-    onError = Color(0xFFFFFFFF), // derived
-    errorContainer = Color(0xFFF5E6D9),
-    onErrorContainer = Color(0xFF7A3220), // derived
-    background = Color(0xFFF6F5EF),
-    onBackground = Color(0xFF244735),
-    surface = Color(0xFFF6F5EF),
-    onSurface = Color(0xFF244735),
-    surfaceVariant = Color(0xFFEAEEE1), // derived: = surfaceContainerHigh
-    onSurfaceVariant = Color(0xFF607260),
-    surfaceTint = Color(0xFF244735),
-    inverseSurface = Color(0xFF182E25),
-    inverseOnSurface = Color(0xFFF6F4E7),
-    outline = Color(0xFFBEC9B9),
-    outlineVariant = Color(0xFFD6DCCF),
-    scrim = Color(0xFF142B24),
-    surfaceBright = Color(0xFFFFFDF6), // derived
-    surfaceDim = Color(0xFFE4E8DB), // derived
-    surfaceContainerLowest = Color(0xFFFFFDF6),
-    surfaceContainerLow = Color(0xFFFBFAF5),
-    surfaceContainer = Color(0xFFF3F2EA),
-    surfaceContainerHigh = Color(0xFFEAEEE1),
-    surfaceContainerHighest = Color(0xFFE4E8DB),
+    primary = Color(0xFF4B2347),
+    onPrimary = Color(0xFFF7F1E8),
+    primaryContainer = Color(0xFFEFE1EA),
+    onPrimaryContainer = Color(0xFF3A1D38),
+    inversePrimary = Color(0xFFD3D7DE),
+    secondary = Color(0xFF6B5468),
+    onSecondary = Color(0xFFFFFFFF),
+    secondaryContainer = Color(0xFFEEE4E6),
+    onSecondaryContainer = Color(0xFF3A1D38),
+    tertiary = Color(0xFF555B66),
+    onTertiary = Color(0xFFFFFFFF),
+    tertiaryContainer = Color(0xFFE6E8EC),
+    onTertiaryContainer = Color(0xFF3A3F48),
+    error = Color(0xFF9E2B3B),
+    onError = Color(0xFFFFFFFF),
+    errorContainer = Color(0xFFF6DFE2),
+    onErrorContainer = Color(0xFF6E1A26),
+    background = Color(0xFFF7F1E8),
+    onBackground = Color(0xFF3A1D38),
+    surface = Color(0xFFF7F1E8),
+    onSurface = Color(0xFF3A1D38),
+    surfaceVariant = Color(0xFFEFE6DA),
+    onSurfaceVariant = Color(0xFF6B5468),
+    surfaceTint = Color(0xFF4B2347),
+    inverseSurface = Color(0xFF2A1A2C),
+    inverseOnSurface = Color(0xFFF3EBDD),
+    outline = Color(0xFF988390),
+    outlineVariant = Color(0xFFE4D8C6),
+    scrim = Color(0xFF1C1220),
+    surfaceBright = Color(0xFFFFFBF4),
+    surfaceDim = Color(0xFFE9DFD2),
+    surfaceContainerLowest = Color(0xFFFFFDF9),
+    surfaceContainerLow = Color(0xFFFFFBF4),
+    surfaceContainer = Color(0xFFF2EADF),
+    surfaceContainerHigh = Color(0xFFEFE6DA),
+    surfaceContainerHighest = Color(0xFFE9DFD2),
 )
 
 internal val DarkColors: ColorScheme = darkColorScheme(
-    primary = Color(0xFFA0B99F),
-    onPrimary = Color(0xFF173F2A),
-    primaryContainer = Color(0xFF35533E),
-    onPrimaryContainer = Color(0xFFD9DFC8), // derived
-    inversePrimary = Color(0xFF244735),
-    secondary = Color(0xFFC0CDBB),
-    onSecondary = Color(0xFF173F2A), // derived
-    secondaryContainer = Color(0xFF253E36),
-    onSecondaryContainer = Color(0xFFE9EDE3), // derived
-    tertiary = Color(0xFFDF754E),
-    onTertiary = Color(0xFF3A1608), // derived
-    tertiaryContainer = Color(0xFF5A2E1E), // derived
-    onTertiaryContainer = Color(0xFFFBF3EA), // derived
-    error = Color(0xFFF2BDA3), // derived
-    onError = Color(0xFF4A1A0C), // derived
-    errorContainer = Color(0xFF6E2E1E), // derived
-    onErrorContainer = Color(0xFFF5E6D9), // derived
-    background = Color(0xFF182E25),
-    onBackground = Color(0xFFF6F4E7),
-    surface = Color(0xFF182E25),
-    onSurface = Color(0xFFF6F4E7),
-    surfaceVariant = Color(0xFF253E36), // derived
-    onSurfaceVariant = Color(0xFFC0CDBB),
-    surfaceTint = Color(0xFFA0B99F),
-    inverseSurface = Color(0xFFF6F4E7),
-    inverseOnSurface = Color(0xFF244735),
-    outline = Color(0xFF647C68),
-    outlineVariant = Color(0xFF4C6450),
-    scrim = Color(0xFF142B24),
-    surfaceBright = Color(0xFF2C473D), // derived
-    surfaceDim = Color(0xFF142B24), // derived
-    surfaceContainerLowest = Color(0xFF142B24), // derived
-    surfaceContainerLow = Color(0xFF1B3329), // derived
-    surfaceContainer = Color(0xFF1F3A2F),
-    surfaceContainerHigh = Color(0xFF253E36),
-    surfaceContainerHighest = Color(0xFF2C473D), // derived
+    primary = Color(0xFFD3D7DE),
+    onPrimary = Color(0xFF1C1220),
+    primaryContainer = Color(0xFF4B2347),
+    onPrimaryContainer = Color(0xFFF3EBDD),
+    inversePrimary = Color(0xFF4B2347),
+    secondary = Color(0xFFBFAEBB),
+    onSecondary = Color(0xFF2A1A2C),
+    secondaryContainer = Color(0xFF3D2C40),
+    onSecondaryContainer = Color(0xFFEFE6E9),
+    tertiary = Color(0xFFDDE0E6),
+    onTertiary = Color(0xFF1C1F24),
+    tertiaryContainer = Color(0xFF3A3E46),
+    onTertiaryContainer = Color(0xFFE6E8EC),
+    error = Color(0xFFF0A2A9),
+    onError = Color(0xFF4A1219),
+    errorContainer = Color(0xFF6B2430),
+    onErrorContainer = Color(0xFFF6DFE2),
+    background = Color(0xFF1C1220),
+    onBackground = Color(0xFFF3EBDD),
+    surface = Color(0xFF1C1220),
+    onSurface = Color(0xFFF3EBDD),
+    surfaceVariant = Color(0xFF3D2C40),
+    onSurfaceVariant = Color(0xFFBFAEBB),
+    surfaceTint = Color(0xFFD3D7DE),
+    inverseSurface = Color(0xFFF3EBDD),
+    inverseOnSurface = Color(0xFF3A1D38),
+    outline = Color(0xFF7A6679),
+    outlineVariant = Color(0xFF3D2C40),
+    scrim = Color(0xFF0E0810),
+    surfaceBright = Color(0xFF3D2E41),
+    surfaceDim = Color(0xFF1C1220),
+    surfaceContainerLowest = Color(0xFF170E1A),
+    surfaceContainerLow = Color(0xFF221626),
+    surfaceContainer = Color(0xFF271A2B),
+    surfaceContainerHigh = Color(0xFF2F2133),
+    surfaceContainerHighest = Color(0xFF382A3C),
 )
 
 /**
@@ -126,38 +126,38 @@ data class FlightStatusColors(
 }
 
 internal val LightStatusColors = FlightStatusColors(
-    onTime = StatusColor(content = Color(0xFF4C7B41), container = Color(0xFFDFE7D9), onContainer = Color(0xFF2F5A28)),
-    delayed = StatusColor(content = Color(0xFF8D542D), container = Color(0xFFEFD9A8), onContainer = Color(0xFF6B3D1C)),
-    cancelled = StatusColor(content = Color(0xFFA34831), container = Color(0xFFF2BDA3), onContainer = Color(0xFF6E2A18)),
-    active = StatusColor(content = Color(0xFFC86842), container = Color(0xFFFBF3EA), onContainer = Color(0xFF8B422A)),
+    onTime = StatusColor(content = Color(0xFF2E6A4C), container = Color(0xFFE3EFE7), onContainer = Color(0xFF1F4D36)),
+    delayed = StatusColor(content = Color(0xFF8A5512), container = Color(0xFFF5E6CF), onContainer = Color(0xFF6A400B)),
+    cancelled = StatusColor(content = Color(0xFF9E2B3B), container = Color(0xFFF6DFE2), onContainer = Color(0xFF741E2A)),
+    active = StatusColor(content = Color(0xFF555B66), container = Color(0xFFE6E8EC), onContainer = Color(0xFF3A3F48)),
     estimated = StatusColor(
-        content = Color(0xFF607260),
+        content = Color(0xFF6B5468),
         container = Color.Transparent,
-        onContainer = Color(0xFF607260),
-        outline = Color(0xFFBEC9B9),
+        onContainer = Color(0xFF6B5468),
+        outline = Color(0xFF988390),
     ),
 )
 
 internal val DarkStatusColors = FlightStatusColors(
-    onTime = StatusColor(content = Color(0xFFA9CFA0), container = Color(0xFF2E4A2B), onContainer = Color(0xFFDFE7D9)),
-    delayed = StatusColor(content = Color(0xFFE8C98A), container = Color(0xFF4A3518), onContainer = Color(0xFFEFD9A8)),
-    cancelled = StatusColor(content = Color(0xFFF2BDA3), container = Color(0xFF5C2618), onContainer = Color(0xFFF5D3C2)),
-    active = StatusColor(content = Color(0xFFDF754E), container = Color(0xFF4A2516), onContainer = Color(0xFFFBF3EA)),
+    onTime = StatusColor(content = Color(0xFF8FCBA8), container = Color(0xFF22402F), onContainer = Color(0xFFD6EEDF)),
+    delayed = StatusColor(content = Color(0xFFE7BE7A), container = Color(0xFF45321A), onContainer = Color(0xFFF5E6CF)),
+    cancelled = StatusColor(content = Color(0xFFF0A2A9), container = Color(0xFF4A2128), onContainer = Color(0xFFF8D9DC)),
+    active = StatusColor(content = Color(0xFFD3D7DE), container = Color(0xFF3A3E46), onContainer = Color(0xFFEEF0F3)),
     estimated = StatusColor(
-        content = Color(0xFFC0CDBB),
+        content = Color(0xFFBFAEBB),
         container = Color.Transparent,
-        onContainer = Color(0xFFC0CDBB),
-        outline = Color(0xFF647C68),
+        onContainer = Color(0xFFBFAEBB),
+        outline = Color(0xFF7A6679),
     ),
 )
 
 internal val LocalFlightStatusColors = staticCompositionLocalOf { LightStatusColors }
 
 /**
- * Terracotta for small accent TEXT (uppercase captions). The light theme's `tertiary` is too pale
- * for 11sp text on paper (3.5:1), so the darker brand terracotta is used there.
+ * Platinum for small accent TEXT (uppercase captions). Decorative platinum (#B4B9C2) is 1.9:1 on
+ * ivory, so light uses dark platinum (6.1:1); dark uses light platinum (12.6:1 on plum-black).
  */
-internal val LightAccentText = Color(0xFF8B422A)
-internal val DarkAccentText = Color(0xFFDF754E)
+internal val LightAccentText = Color(0xFF555B66)
+internal val DarkAccentText = Color(0xFFD3D7DE)
 
 internal val LocalAccentText = staticCompositionLocalOf { LightAccentText }

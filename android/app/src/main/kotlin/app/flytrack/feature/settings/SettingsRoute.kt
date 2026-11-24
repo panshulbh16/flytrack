@@ -15,6 +15,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
@@ -37,6 +40,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.flytrack.R
 import app.flytrack.core.push.PushContract
+import app.flytrack.data.repo.Appearance
 import app.flytrack.feature.flights.presentation.AlertGroup
 import app.flytrack.feature.flights.presentation.AlertToggleUiModel
 import app.flytrack.push.ChannelHealth
@@ -58,6 +62,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsRoute(onBack: () -> Unit, viewModel: SettingsViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val appearance by viewModel.appearance.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val requester = remember(context) {
         EntryPointAccessors.fromApplication(context.applicationContext, SettingsEntryPoint::class.java).googleSignIn()
@@ -83,6 +88,8 @@ fun SettingsRoute(onBack: () -> Unit, viewModel: SettingsViewModel = hiltViewMod
         onOpenUpdatesChannel = { viewModel.openChannelSettings(PushContract.CHANNEL_UPDATES) },
         onOpenBattery = viewModel::openBatterySettings,
         onMessageShown = viewModel::messageShown,
+        appearance = appearance,
+        onAppearance = viewModel::setAppearance,
     )
 }
 
@@ -106,6 +113,8 @@ fun SettingsScreen(
     onOpenUpdatesChannel: () -> Unit,
     onOpenBattery: () -> Unit,
     onMessageShown: () -> Unit,
+    appearance: Appearance,
+    onAppearance: (Appearance) -> Unit,
 ) {
     val snackbars = remember { SnackbarHostState() }
     val message = state.message?.let { settingsMessage(it) }
@@ -130,6 +139,12 @@ fun SettingsScreen(
             SectionCaption(stringResource(R.string.settings_section_account))
             Spacer(Modifier.height(8.dp))
             AccountSection(state, onLinkGoogle, onSignInWithGoogle, onSignOut)
+            Spacer(Modifier.height(20.dp))
+            HairlineDivider()
+            Spacer(Modifier.height(16.dp))
+            SectionCaption(stringResource(R.string.settings_section_appearance))
+            Spacer(Modifier.height(8.dp))
+            AppearancePicker(appearance, onAppearance)
             Spacer(Modifier.height(20.dp))
             HairlineDivider()
             Spacer(Modifier.height(16.dp))
@@ -160,6 +175,24 @@ fun SettingsScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+private fun AppearancePicker(selected: Appearance, onSelect: (Appearance) -> Unit) {
+    val options = listOf(
+        Appearance.SYSTEM to R.string.settings_appearance_system,
+        Appearance.LIGHT to R.string.settings_appearance_light,
+        Appearance.DARK to R.string.settings_appearance_dark,
+    )
+    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+        options.forEachIndexed { index, (value, label) ->
+            SegmentedButton(
+                selected = selected == value,
+                onClick = { onSelect(value) },
+                shape = SegmentedButtonDefaults.itemShape(index, options.size),
+            ) { Text(stringResource(label)) }
         }
     }
 }

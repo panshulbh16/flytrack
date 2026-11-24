@@ -54,4 +54,15 @@ class DataStoreSettingsStoreTest {
         assertFalse(store.cloudTicketParsingConsent.first())
         assertNull(store.lastDeviceRegistration.first())
     }
+
+    @Test
+    fun `appearance follows the phone until the user picks one`() = scope.runTest {
+        val store = store()
+        assertEquals(Appearance.SYSTEM, store.appearance.first())
+
+        store.setAppearance(Appearance.DARK)
+        assertEquals(Appearance.DARK, store.appearance.first())
+        store.setAppearance(Appearance.SYSTEM)
+        assertEquals(Appearance.SYSTEM, store.appearance.first())
+    }
 }
