@@ -1,52 +1,53 @@
-# UI design brief — "Aubergine and platinum"
+# UI design brief — "Midnight navy and platinum"
 
-A luxury-getaway palette: deep plum ink on warm ivory, platinum accents, and a plum-black night mode
-where platinum becomes the action colour. It replaced the earlier HeyTurbulence/Roamly match (forest green + terracotta);
-platinum replaced a first-round champagne gold at the user's request. Type, shapes and patterns below are unchanged.
+A luxury-getaway palette: midnight navy ink on porcelain, platinum accents, and a midnight-navy night mode
+where platinum becomes the action colour. Navy replaced "Aubergine and platinum" at the user's request, keeping each token's
+lightness, so every contrast ratio below is within 0.4 of the aubergine one. Before that came the HeyTurbulence/Roamly match
+(forest green + terracotta), and platinum replaced a first-round champagne gold. Type, shapes and patterns below are unchanged.
 Code: iOS `ios/FlyTrack/Theme.swift` (`FlyColor`, each token adapts to light/dark), Android `ui/theme/Color.kt`.
-Screenshots: [iOS, light and dark](screenshots/ios-aubergine-platinum.png) · [Android, light and dark](screenshots/android-aubergine-platinum.png).
+Screenshots (still the previous aubergine palette, to be retaken): [iOS, light and dark](screenshots/ios-aubergine-platinum.png) · [Android, light and dark](screenshots/android-aubergine-platinum.png).
 
 ## Look & feel
-- Editorial "atlas" style: ivory paper, plum ink, platinum used sparingly (captions, rings, active state), 1px hairlines instead of heavy cards.
-- Light theme is primary. Dark is its own composition, not an inversion: plum-black surfaces, ivory text, platinum actions.
+- Editorial "atlas" style: porcelain paper, navy ink, platinum used sparingly (captions, rings, active state), 1px hairlines instead of heavy cards.
+- Light theme is primary. Dark is its own composition, not an inversion: midnight-navy surfaces, porcelain text, platinum actions.
 - **Appearance setting**: Settings → Appearance offers System (default), Light and Dark on both apps.
   iOS stores it in `@AppStorage("appearance")` and applies `.preferredColorScheme` at the root; Android stores it in
   DataStore (`SettingsStore.appearance`) and passes it to `FlyTrackTheme(darkTheme)`, with system-bar icons following it.
-- Platinum has two strengths: decorative platinum (#B4B9C2) for rings and rules, never text (1.9:1 on ivory), and dark platinum (#555B66) whenever it is text.
+- Platinum has two strengths: decorative platinum (#B4B9C2) for rings and rules, never text (1.8:1 on porcelain), and dark platinum (#555B66) whenever it is text.
 - Fonts (Google Fonts, OFL): **Instrument Serif** (display, italics for emphasis) + **DM Sans** (UI). Tabular numerals everywhere.
 - Icons: line icons, 24dp grid, 1.6 stroke, round caps. Minimal illustration (tilted plane in an orbit ellipse).
-- Motion: ease-out cubic-bezier(.22,1,.36,1), spring (.32,.72,0,1); sheets slide up 40px; scrim #1C1220 @40% + blur.
-- Map (not built yet): ocean #EFE6DA, land #4B2347, graticule #E4D8C6, routes = platinum great-circle arcs (#B4B9C2) that draw in,
-  airports = ivory dots with a platinum ring.
+- Motion: ease-out cubic-bezier(.22,1,.36,1), spring (.32,.72,0,1); sheets slide up 40px; scrim #0E1625 @40% + blur.
+- Map (not built yet): ocean #EAE7E1, land #1B335F, graticule #DDD9D1, routes = platinum great-circle arcs (#B4B9C2) that draw in,
+  airports = porcelain dots with a platinum ring.
 - iOS toolbar: Settings is a gear icon (label kept for VoiceOver); Add flight is a prominent capsule in the primary colour.
 
 ## Color tokens (Material 3 roles; iOS `FlyColor` uses the same values)
 | Role | Light | Dark |
 |---|---|---|
-| primary / onPrimary (iOS `primary`, the tint) | #4B2347 / #F7F1E8 | #D3D7DE / #1C1220 |
-| primaryContainer / on | #EFE1EA / #3A1D38 | #4B2347 / #F3EBDD |
-| secondary (iOS `muted`) | #6B5468 | #BFAEBB |
-| secondaryContainer / on | #EEE4E6 / #3A1D38 | #3D2C40 / #EFE6E9 |
+| primary / onPrimary (iOS `primary`, the tint) | #1B335F / #F4F2ED | #D3D7DE / #0E1625 |
+| primaryContainer / on | #DEE6F4 / #172849 | #1B335F / #EFECE5 |
+| secondary (iOS `muted`) | #4F5D76 | #AAB4C6 |
+| secondaryContainer / on | #E3E7EF / #172849 | #27334A / #E5E9F0 |
 | tertiary = platinum as text (iOS `accent`) | #555B66 | #DDE0E6 (iOS #D3D7DE) |
 | tertiaryContainer / on | #E6E8EC / #3A3F48 | #3A3E46 / #E6E8EC |
 | error / errorContainer / on | #9E2B3B / #F6DFE2 / #6E1A26 | #F0A2A9 / #6B2430 / #F6DFE2 |
-| background = surface (iOS `paper`) / onSurface (iOS `ink`) | #F7F1E8 / #3A1D38 | #1C1220 / #F3EBDD |
-| onSurfaceVariant | #6B5468 | #BFAEBB |
-| surfaceContainerLowest…Highest | #FFFDF9, #FFFBF4, #F2EADF, #EFE6DA, #E9DFD2 | #170E1A, #221626, #271A2B, #2F2133, #382A3C |
-| raised rows and cards (iOS `paperRaised`) | #FFFBF4 | #271A2B |
-| outline / outlineVariant | #988390 / #E4D8C6 | #7A6679 / #3D2C40 |
+| background = surface (iOS `paper`) / onSurface (iOS `ink`) | #F4F2ED / #172849 | #0E1625 / #EFECE5 |
+| onSurfaceVariant | #4F5D76 | #AAB4C6 |
+| surfaceContainerLowest…Highest | #FEFDFB, #FDFBF8, #EEEBE6, #EAE7E1, #E3E0DA | #0B121F, #121B2C, #152032, #1C273B, #253044 |
+| raised rows and cards (iOS `paperRaised`) | #FDFBF8 | #152032 |
+| outline / outlineVariant | #7F8B9F / #DDD9D1 | #616E85 / #27334A |
 | decorative platinum (iOS `accentLine`) | #B4B9C2 | #9AA0AA |
-| scrim | #1C1220 | #0E0810 |
+| scrim | #0E1625 | #060B13 |
 
 Flight status (text / pill container / pill text): on-time #2E6A4C / #E3EFE7 / #1F4D36 · delayed #8A5512 / #F5E6CF / #6A400B ·
 cancelled #9E2B3B / #F6DFE2 / #741E2A · boarding/in-air = dark platinum #555B66 / #E6E8EC / #3A3F48 ·
-"Estimated (offline)" = outline style + italic serif label in #6B5468.
+"Estimated (offline)" = outline style + italic serif label in #4F5D76.
 Dark: on-time #8FCBA8 / #22402F / #D6EEDF · delayed #E7BE7A / #45321A / #F5E6CF · cancelled #F0A2A9 / #4A2128 / #F8D9DC ·
-active #D3D7DE / #3A3E46 / #EEF0F3 · estimated #BFAEBB.
-Active (platinum) and estimated (mauve) are both quiet greys; the status word always names the state, so colour is never the only cue.
+active #D3D7DE / #3A3E46 / #EEF0F3 · estimated #AAB4C6.
+Active (platinum) and estimated (slate) are both quiet greys; the status word always names the state, so colour is never the only cue.
 
-Contrast (WCAG AA, checked): ink on paper 13.2:1 light / 15.3:1 dark · muted 6.0 / 8.6 · platinum text 6.1 light / 12.6 dark · status words ≥5.5 light, ≥9.0 dark ·
-onPrimary on primary 11.5 / 12.6 · every status pill text ≥7.2 · outline ≥3.1 on paper and cards (2.9 on surfaceContainer, so avoid outlines there).
+Contrast (WCAG AA, checked): ink on paper 13.1:1 light / 15.3:1 dark · muted 5.9 / 8.7 · platinum text 6.1 light / 12.5 dark · status words ≥5.5 light, ≥8.6 dark (≥7.8 on dark cards) ·
+onPrimary on primary 11.1 / 12.5 · every status pill text ≥7.2 · outline ≥3.0 on paper and cards (2.9 on surfaceContainer, so avoid outlines there).
 Not yet recoloured: the launcher/app icons (still forest green) until the artwork is redrawn.
 
 ## Type scale

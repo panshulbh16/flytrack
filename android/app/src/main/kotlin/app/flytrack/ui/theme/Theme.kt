@@ -20,7 +20,7 @@ internal val FlyTrackShapes = Shapes(
 )
 
 /**
- * The app theme. Light (ivory) is the primary look; dark is plum-black with platinum actions. Settings can force either.
+ * The app theme. Light (porcelain) is the primary look; dark is midnight navy with platinum actions. Settings can force either.
  * Dynamic colour is deliberately not used: the brand palette is the identity.
  */
 @Composable
