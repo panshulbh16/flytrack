@@ -136,7 +136,7 @@ fun PlaneBadge(phase: FlightPhase, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .size(44.dp)
-            .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape),
+            .border(1.dp, MaterialTheme.colorScheme.tertiary, CircleShape),
         contentAlignment = Alignment.Center,
     ) {
         Icon(

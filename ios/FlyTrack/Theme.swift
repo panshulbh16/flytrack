@@ -2,23 +2,23 @@ import FlyTrackCore
 import SwiftUI
 import UIKit
 
-/// "Midnight navy and platinum" from docs/design-brief.md. Every token resolves per appearance (light, dark).
+/// HeyTurbulence's palette from docs/design-brief.md. Every token resolves per appearance (light, dark).
 enum FlyColor {
     /// Screen background. Also the text colour on `primary` fills.
-    static let paper = adaptive(0xF4F2ED, 0x0E1625)
+    static let paper = adaptive(0xF6F5EF, 0x182E25)
     /// List rows and cards.
-    static let paperRaised = adaptive(0xFDFBF8, 0x152032)
-    static let ink = adaptive(0x172849, 0xEFECE5)
-    static let muted = adaptive(0x4F5D76, 0xAAB4C6)
-    /// App tint: navy in light, platinum in dark.
-    static let primary = adaptive(0x1B335F, 0xD3D7DE)
-    /// Platinum dark enough for 11 pt text on paper (6.1:1).
-    static let accent = adaptive(0x555B66, 0xD3D7DE)
-    /// Decorative platinum for rings and rules. Never text: 1.8:1 on paper in light.
-    static let accentLine = adaptive(0xB4B9C2, 0x9AA0AA)
-    static let onTime = adaptive(0x2E6A4C, 0x8FCBA8)
-    static let delayed = adaptive(0x8A5512, 0xE7BE7A)
-    static let cancelled = adaptive(0x9E2B3B, 0xF0A2A9)
+    static let paperRaised = adaptive(0xFBFAF5, 0x1F3A2F)
+    static let ink = adaptive(0x244735, 0xF6F4E7)
+    static let muted = adaptive(0x5A6C5A, 0xC0CDBB)
+    /// App tint: forest green in light, sage in dark.
+    static let primary = adaptive(0x244735, 0xA0B99F)
+    /// Terracotta for 11 pt text: 5.2:1 on paper in light (the brand #C86842 is only 3.5:1), 4.8:1 on cards in dark.
+    static let accent = adaptive(0xA34E2E, 0xE88A62)
+    /// Brand terracotta for rings, rules and route arrows. Not for small text in light (3.5:1 on paper).
+    static let accentLine = adaptive(0xC86842, 0xDF754E)
+    static let onTime = adaptive(0x4C7B41, 0xA9CFA0)
+    static let delayed = adaptive(0x8D542D, 0xE8C98A)
+    static let cancelled = adaptive(0xA34831, 0xF2BDA3)
 
     static func tone(_ tone: FlightStatusTone) -> Color {
         switch tone {

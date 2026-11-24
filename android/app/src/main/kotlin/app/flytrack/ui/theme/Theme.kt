@@ -20,7 +20,7 @@ internal val FlyTrackShapes = Shapes(
 )
 
 /**
- * The app theme. Light (porcelain) is the primary look; dark is midnight navy with platinum actions. Settings can force either.
+ * The app theme. Light (warm paper) is the primary look; dark is HeyTurbulence's deep forest "Night" palette. Settings can force either.
  * Dynamic colour is deliberately not used: the brand palette is the identity.
  */
 @Composable
@@ -52,7 +52,7 @@ object FlyTrackTheme {
     val type: FlyTrackExtraType
         @Composable @ReadOnlyComposable get() = LocalFlyTrackExtraType.current
 
-    /** Platinum that is legible as small text in both themes. */
+    /** Terracotta that is legible as small text in both themes. */
     val accentText: Color
         @Composable @ReadOnlyComposable get() = LocalAccentText.current
 }

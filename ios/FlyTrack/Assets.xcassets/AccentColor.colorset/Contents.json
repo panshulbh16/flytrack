@@ -1,7 +1,7 @@
 {
   "colors": [
-    {"idiom": "universal", "color": {"color-space": "srgb", "components": {"red": "0.106", "green": "0.200", "blue": "0.373", "alpha": "1"}}},
-    {"idiom": "universal", "appearances": [{"appearance": "luminosity", "value": "dark"}], "color": {"color-space": "srgb", "components": {"red": "0.827", "green": "0.843", "blue": "0.871", "alpha": "1"}}}
+    {"idiom": "universal", "color": {"color-space": "srgb", "components": {"red": "0.141", "green": "0.278", "blue": "0.208", "alpha": "1"}}},
+    {"idiom": "universal", "appearances": [{"appearance": "luminosity", "value": "dark"}], "color": {"color-space": "srgb", "components": {"red": "0.627", "green": "0.725", "blue": "0.624", "alpha": "1"}}}
   ],
   "info": {"author": "xcode", "version": 1}
 }

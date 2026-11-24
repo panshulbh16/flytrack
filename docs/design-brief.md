@@ -1,54 +1,56 @@
-# UI design brief — "Midnight navy and platinum"
+# UI design brief — match HeyTurbulence (by Roamly)
 
-A luxury-getaway palette: midnight navy ink on porcelain, platinum accents, and a midnight-navy night mode
-where platinum becomes the action colour. Navy replaced "Aubergine and platinum" at the user's request, keeping each token's
-lightness, so every contrast ratio below is within 0.4 of the aubergine one. Before that came the HeyTurbulence/Roamly match
-(forest green + terracotta), and platinum replaced a first-round champagne gold. Type, shapes and patterns below are unchanged.
+Source: built CSS/JS of github.com/panshulbh16/heyturbulence-site (heyturbulence.com). Read from code, not screenshots.
+HeyGate and HeyTurbulence should look like one family: same paper, forest-green ink, terracotta accent and fonts.
+HeyGate tried "Aubergine and platinum" and then "Midnight navy and platinum" and came back to this palette at the user's request.
 Code: iOS `ios/FlyTrack/Theme.swift` (`FlyColor`, each token adapts to light/dark), Android `ui/theme/Color.kt`.
-Screenshots (still the previous aubergine palette, to be retaken): [iOS, light and dark](screenshots/ios-aubergine-platinum.png) · [Android, light and dark](screenshots/android-aubergine-platinum.png).
+Screenshots in `docs/screenshots/` still show the earlier aubergine palette; retake them.
 
 ## Look & feel
-- Editorial "atlas" style: porcelain paper, navy ink, platinum used sparingly (captions, rings, active state), 1px hairlines instead of heavy cards.
-- Light theme is primary. Dark is its own composition, not an inversion: midnight-navy surfaces, porcelain text, platinum actions.
+- Editorial "atlas" style: warm paper background, deep forest-green ink, terracotta accent, 1px hairlines instead of heavy cards.
+- Light theme is primary; dark is HeyTurbulence's "Night" share-card palette (deep forest surfaces, warm off-white text, sage actions).
 - **Appearance setting**: Settings → Appearance offers System (default), Light and Dark on both apps.
   iOS stores it in `@AppStorage("appearance")` and applies `.preferredColorScheme` at the root; Android stores it in
   DataStore (`SettingsStore.appearance`) and passes it to `FlyTrackTheme(darkTheme)`, with system-bar icons following it.
-- Platinum has two strengths: decorative platinum (#B4B9C2) for rings and rules, never text (1.8:1 on porcelain), and dark platinum (#555B66) whenever it is text.
+- Terracotta has two strengths: the brand terracotta (#C86842) for rings, rules, route arrows and other decoration (3.5:1 on paper, so
+  never small text), and a darker terracotta (#A34E2E, 5.2:1) whenever it is small text. Dark uses #DF754E for decoration and #E88A62 for text.
 - Fonts (Google Fonts, OFL): **Instrument Serif** (display, italics for emphasis) + **DM Sans** (UI). Tabular numerals everywhere.
 - Icons: line icons, 24dp grid, 1.6 stroke, round caps. Minimal illustration (tilted plane in an orbit ellipse).
-- Motion: ease-out cubic-bezier(.22,1,.36,1), spring (.32,.72,0,1); sheets slide up 40px; scrim #0E1625 @40% + blur.
-- Map (not built yet): ocean #EAE7E1, land #1B335F, graticule #DDD9D1, routes = platinum great-circle arcs (#B4B9C2) that draw in,
-  airports = porcelain dots with a platinum ring.
+- Motion: ease-out cubic-bezier(.22,1,.36,1), spring (.32,.72,0,1); sheets slide up 40px; scrim #142B24 @40% + blur.
+- Map (not built yet): ocean #E2E9DF, land #3E6B56, graticule #C2D0C1, routes = orange great-circle arcs (#DF754E) that draw in,
+  airports = cream dots with orange ring.
 - iOS toolbar: Settings is a gear icon (label kept for VoiceOver); Add flight is a prominent capsule in the primary colour.
+- Launcher icon background and the Android notification accent are the brand forest green (#244735, `@color/forest`).
 
 ## Color tokens (Material 3 roles; iOS `FlyColor` uses the same values)
 | Role | Light | Dark |
 |---|---|---|
-| primary / onPrimary (iOS `primary`, the tint) | #1B335F / #F4F2ED | #D3D7DE / #0E1625 |
-| primaryContainer / on | #DEE6F4 / #172849 | #1B335F / #EFECE5 |
-| secondary (iOS `muted`) | #4F5D76 | #AAB4C6 |
-| secondaryContainer / on | #E3E7EF / #172849 | #27334A / #E5E9F0 |
-| tertiary = platinum as text (iOS `accent`) | #555B66 | #DDE0E6 (iOS #D3D7DE) |
-| tertiaryContainer / on | #E6E8EC / #3A3F48 | #3A3E46 / #E6E8EC |
-| error / errorContainer / on | #9E2B3B / #F6DFE2 / #6E1A26 | #F0A2A9 / #6B2430 / #F6DFE2 |
-| background = surface (iOS `paper`) / onSurface (iOS `ink`) | #F4F2ED / #172849 | #0E1625 / #EFECE5 |
-| onSurfaceVariant | #4F5D76 | #AAB4C6 |
-| surfaceContainerLowest…Highest | #FEFDFB, #FDFBF8, #EEEBE6, #EAE7E1, #E3E0DA | #0B121F, #121B2C, #152032, #1C273B, #253044 |
-| raised rows and cards (iOS `paperRaised`) | #FDFBF8 | #152032 |
-| outline / outlineVariant | #7F8B9F / #DDD9D1 | #616E85 / #27334A |
-| decorative platinum (iOS `accentLine`) | #B4B9C2 | #9AA0AA |
-| scrim | #0E1625 | #060B13 |
+| primary / onPrimary (iOS `primary`, the tint; iOS draws `paper` on it) | #244735 / #FFFFFF | #A0B99F / #173F2A |
+| primaryContainer / on | #D9DFC8 / #244735 | #35533E / #D9DFC8 |
+| secondary (iOS `muted`) | #5A6C5A | #C0CDBB |
+| secondaryContainer / on | #E9EDE3 / #244735 | #253E36 / #E9EDE3 |
+| tertiary = brand terracotta (iOS `accentLine`) | #C86842 | #DF754E |
+| accent text (Android `accentText`, iOS `accent`) | #A34E2E | #E88A62 |
+| tertiaryContainer / on | #FBF3EA / #8B422A | #5A2E1E / #FBF3EA |
+| error / errorContainer / on | #A34831 / #F5E6D9 / #7A3220 | #F2BDA3 / #6E2E1E / #F5E6D9 |
+| background = surface (iOS `paper`) / onSurface (iOS `ink`) | #F6F5EF / #244735 | #182E25 / #F6F4E7 |
+| onSurfaceVariant | #5A6C5A | #C0CDBB |
+| surfaceContainerLowest…Highest | #FFFDF6, #FBFAF5, #F3F2EA, #EAEEE1, #E4E8DB | #142B24, #1B3329, #1F3A2F, #253E36, #2C473D |
+| raised rows and cards (iOS `paperRaised`) | #FBFAF5 | #1F3A2F |
+| outline / outlineVariant | #768775 / #D6DCCF | #7A927E / #4C6450 |
+| scrim | #142B24 | #142B24 |
 
-Flight status (text / pill container / pill text): on-time #2E6A4C / #E3EFE7 / #1F4D36 · delayed #8A5512 / #F5E6CF / #6A400B ·
-cancelled #9E2B3B / #F6DFE2 / #741E2A · boarding/in-air = dark platinum #555B66 / #E6E8EC / #3A3F48 ·
-"Estimated (offline)" = outline style + italic serif label in #4F5D76.
-Dark: on-time #8FCBA8 / #22402F / #D6EEDF · delayed #E7BE7A / #45321A / #F5E6CF · cancelled #F0A2A9 / #4A2128 / #F8D9DC ·
-active #D3D7DE / #3A3E46 / #EEF0F3 · estimated #AAB4C6.
-Active (platinum) and estimated (slate) are both quiet greys; the status word always names the state, so colour is never the only cue.
+Flight status (text / pill container / pill text): on-time #4C7B41 / #DFE7D9 / #2F5A28 · delayed #8D542D / #EFD9A8 / #6B3D1C ·
+cancelled #A34831 / #F2BDA3 / #6E2A18 · boarding/in-air = terracotta #A34E2E / #FBF3EA / #8B422A ·
+"Estimated (offline)" = outline style + italic serif label in #5A6C5A.
+Dark: on-time #A9CFA0 / #2E4A2B / #DFE7D9 · delayed #E8C98A / #4A3518 / #EFD9A8 · cancelled #F2BDA3 / #5C2618 / #F5D3C2 ·
+active #E88A62 / #4A2516 / #FBF3EA · estimated #C0CDBB.
+The status word always names the state, so colour is never the only cue.
 
-Contrast (WCAG AA, checked): ink on paper 13.1:1 light / 15.3:1 dark · muted 5.9 / 8.7 · platinum text 6.1 light / 12.5 dark · status words ≥5.5 light, ≥8.6 dark (≥7.8 on dark cards) ·
-onPrimary on primary 11.1 / 12.5 · every status pill text ≥7.2 · outline ≥3.0 on paper and cards (2.9 on surfaceContainer, so avoid outlines there).
-Not yet recoloured: the launcher/app icons (still forest green) until the artwork is redrawn.
+Contrast (WCAG AA, checked): ink on paper 9.5:1 light / 13.1:1 dark · muted 5.2 (≥4.5 on every surface, dialogs included) / 8.7 · accent text 5.2 light / 5.7 dark (4.8 on dark cards) ·
+onPrimary on primary 10.4 / 5.6 (iOS paper on primary 9.5 / 6.8) · status words ≥4.6 light, ≥4.8 dark · every status pill text ≥6.3 ·
+outline ≥3.0 on every surface in both themes, dialogs included (HeyTurbulence's own #BEC9B9 is 1.6:1, so it was darkened).
+The brand terracotta #C86842 (3.5:1) and the outlineVariant hairlines (#D6DCCF) are decorative only.
 
 ## Type scale
 Serif (Instrument Serif 400): display 57/45/36, headline 32/28/24 (status words like *Delayed*, *On time*).
@@ -59,7 +61,7 @@ Custom "numeral": DM Sans 400, 36–40sp, −1 tracking, tnum — departure/arri
 4dp (xs), 6dp (buttons/inputs), 10dp (cards), 14dp (large), 16dp sheet top, full for chips.
 
 ## Patterns to reuse
-- Flight row: 44dp outlined circle with plane icon · route code "DEL → BOM" + "Delhi to Mumbai" · times · duration.
-- "Next takeoff · in 3 days" countdown card with a platinum uppercase caption.
+- Flight row: 44dp circle with a 1dp terracotta ring (`tertiary`, iOS `accentLine`) around the plane icon · route code "DEL → BOM" + "Delhi to Mumbai" · times · duration.
+- "Next takeoff · in 3 days" countdown card with a terracotta uppercase caption.
 - Plain-language status ("Running 25 min late") instead of raw codes; italic serif for the key word.
 - Share cards (light + night). "Little numbers" chips (hours in the sky, km flown).
