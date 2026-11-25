@@ -37,6 +37,31 @@ final class DeviceSettings: SettingsStore, DefaultAlertPreferences {
     }
 }
 
+/// Gmail import settings. On this phone only; `clearGmail()` removes them on disconnect or HeyGate sign-out.
+extension DeviceSettings: GmailSettingsStoring {
+    private static let gmailKeys = [
+        "gmail_account_email", "gmail_auto_check", "gmail_last_check", "gmail_needs_reconnect", "gmail_last_app_open_check",
+    ]
+
+    func gmailAccountEmail() async -> String? { defaults.string(forKey: "gmail_account_email") }
+    func setGmailAccountEmail(_ email: String?) async { defaults.set(email, forKey: "gmail_account_email") }
+    /// On by default once Gmail is connected.
+    func gmailAutoCheck() async -> Bool { defaults.object(forKey: "gmail_auto_check") as? Bool ?? true }
+    func setGmailAutoCheck(_ enabled: Bool) async { defaults.set(enabled, forKey: "gmail_auto_check") }
+    func gmailLastCheck() async -> Int64? { (defaults.object(forKey: "gmail_last_check") as? NSNumber)?.int64Value }
+    func setGmailLastCheck(_ value: Int64?) async { defaults.set(value, forKey: "gmail_last_check") }
+    func gmailNeedsReconnect() async -> Bool { defaults.bool(forKey: "gmail_needs_reconnect") }
+    func setGmailNeedsReconnect(_ value: Bool) async { defaults.set(value, forKey: "gmail_needs_reconnect") }
+    func gmailLastAppOpenCheck() async -> Int64? {
+        (defaults.object(forKey: "gmail_last_app_open_check") as? NSNumber)?.int64Value
+    }
+    func setGmailLastAppOpenCheck(_ value: Int64?) async { defaults.set(value, forKey: "gmail_last_app_open_check") }
+
+    func clearGmail() {
+        for key in Self.gmailKeys { defaults.removeObject(forKey: key) }
+    }
+}
+
 @MainActor
 final class LiveHealth: NotificationHealthSource {
     func read() async -> NotificationHealth {
@@ -236,7 +261,7 @@ final class OnDeviceExtractor: TicketTextExtracting {
             let kind = mediaKind(mime: request.mimeType, name: name)
             kinds.append(kind == .unknown ? mediaKind(mime: nil, name: name) : kind)
             if kind == .pdf || name.lowercased().hasSuffix(".pdf") {
-                chunks.append(pdfText(url))
+                chunks.append(pdfText(PDFDocument(url: url)))
             } else if kind == .image || (request.mimeType?.hasPrefix("image/") ?? false) {
                 chunks.append(await imageText(url))
             } else if kind == .text {
@@ -250,8 +275,8 @@ final class OnDeviceExtractor: TicketTextExtracting {
         return ExtractedTicket(text: text, source: source, truncated: truncated)
     }
 
-    private func pdfText(_ url: URL) -> String {
-        guard let document = PDFDocument(url: url) else { return "" }
+    private func pdfText(_ document: PDFDocument?) -> String {
+        guard let document else { return "" }
         let count = min(document.pageCount, maxPDFPages)
         return (0..<count).compactMap { document.page(at: $0)?.string }.joined(separator: "\n")
     }
@@ -273,12 +298,32 @@ final class OnDeviceExtractor: TicketTextExtracting {
     }
 }
 
+extension OnDeviceExtractor: PDFTextReading {
+    /// A Gmail PDF attachment, read in memory with the same PDFKit reader as imported files. Nothing is written to disk.
+    func read(_ data: Data) async -> String { pdfText(PDFDocument(data: data)) }
+}
+
+/// Info.plist has no GIDClientID, so GoogleSignIn has no configuration until this sets one. Call it before
+/// any signIn or restorePreviousSignIn: without it, connecting Gmail before linking Google crashes with
+/// "No active configuration".
+enum GoogleConfig {
+    @MainActor
+    static func configure() -> Bool {
+        guard AppConfig.isGoogleConfigured, let ios = AppConfig.googleIOSClientID else { return false }
+        #if canImport(GoogleSignIn)
+        GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: ios, serverClientID: AppConfig.googleWebClientID)
+        return true
+        #else
+        return false
+        #endif
+    }
+}
+
 enum GoogleLinker {
     @MainActor
     static func token() async -> Result<(idToken: String, accessToken: String?), GoogleFailure> {
-        guard AppConfig.isGoogleConfigured, let ios = AppConfig.googleIOSClientID else { return .failure(.notConfigured) }
+        guard GoogleConfig.configure() else { return .failure(.notConfigured) }
         #if canImport(GoogleSignIn)
-        GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: ios, serverClientID: AppConfig.googleWebClientID)
         guard let presenter = topController() else { return .failure(.failed) }
         return await withCheckedContinuation { continuation in
             GIDSignIn.sharedInstance.signIn(withPresenting: presenter) { result, error in
@@ -302,7 +347,7 @@ enum GoogleLinker {
 }
 
 @MainActor
-private func topController() -> UIViewController? {
+func topController() -> UIViewController? {
     let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
     let root = scenes.flatMap(\.windows).first { $0.isKeyWindow }?.rootViewController
     var current = root

@@ -14,7 +14,10 @@ struct FlyTrackApp: App {
     private let container: ModelContainer
 
     init() {
-        let container = try! ModelContainer(for: CachedFlightRecord.self, CachedTrackingRecord.self, CachedProfileRecord.self)
+        let container = try! ModelContainer(
+            for: CachedFlightRecord.self, CachedTrackingRecord.self, CachedProfileRecord.self,
+            GmailSuggestionRecord.self, GmailSeenMessageRecord.self
+        )
         self.container = container
         let shell = AppShell(context: container.mainContext)
         _shell = State(initialValue: shell)
@@ -81,6 +84,9 @@ final class AppShell: ObservableObject {
     let push: LivePush
     let cloud: LiveCloudParser
     let extractor: OnDeviceExtractor
+    let gmailAPI = GmailAPIClient()
+    let gmailStore: SwiftDataGmailStore
+    let gmailAuth: GmailAuth
     let shared = SharedContentHolder()
     let clock: FlyClock = SystemClock()
 
@@ -97,6 +103,8 @@ final class AppShell: ObservableObject {
         push = LivePush(flights: flights, client: stack.client)
         cloud = LiveCloudParser(stack: stack, auth: auth)
         extractor = OnDeviceExtractor()
+        gmailStore = SwiftDataGmailStore(context: context)
+        gmailAuth = GmailAuth(settings: settings, api: gmailAPI)
         PushBridge.shared.onToken = { token in
             Task { @MainActor in await DeviceRegistrar.register(token: token, client: stack.client) }
         }
@@ -120,6 +128,28 @@ final class AppShell: ObservableObject {
             Task { @MainActor in await self.handlePush(data) }
         }
         PushBridge.shared.onFlight = { [weak self] id in self?.openFlight(id) }
+        auth.onUserDataWiped = { [weak self] in await self?.clearGmail() }
+    }
+
+    /// One scanner per run (Gmail screen, app-open check, BGTask). It keeps no state between scans.
+    func gmailScanner() -> GmailScanner {
+        let clock = clock
+        return GmailScanner(
+            api: gmailAPI, tokens: gmailAuth, store: gmailStore, settings: settings, tracked: flights, pdf: extractor,
+            now: { Int64(clock.now().timeIntervalSince1970 * 1000) },
+            today: { clock.today(tz: TimeZone.current.identifier) }
+        )
+    }
+
+    /// HeyGate sign-out or a user switch ends here (Settings' "Disconnect Gmail" uses GmailImportModel.disconnect()).
+    /// It revokes only while GoogleSignIn still holds the Gmail account, then drops suggestions, seen ids and
+    /// Gmail settings.
+    func clearGmail() async {
+        await gmailAuth.disconnect()
+        // Before the store is wiped, so a scan still running fails its account check and writes nothing.
+        await settings.setGmailAccountEmail(nil)
+        await gmailStore.clear()
+        settings.clearGmail()
     }
 
     func bootstrap() async {
