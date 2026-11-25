@@ -414,14 +414,25 @@ public final class AddFlightModel {
         _ = await flights.updateNotifyPrefs(flightId: flightId, prefs: prefs)
     }
 
-    /// The flight is tracked. A Gmail suggestion that opened this screen is now added and its notification goes.
+    /// The flight is tracked. A Gmail suggestion that opened this screen is now added and its notification goes,
+    /// but only when the tracked flight is the suggestion's own (same flight and date). After an edit it stays
+    /// pending; the scanner's cleanup marks it added if that flight is tracked later.
     private func finish(_ flightId: String) async {
-        if let id = gmailSuggestionId, let gmailStore {
+        if let id = gmailSuggestionId, let gmailStore, trackedSuggestionId(flightId) == id {
             await gmailStore.setStatus([id], .added)
             await gmailSystem?.cancelNotifications([id])
         }
         state.finishedFlightId = flightId
         publish()
+    }
+
+    /// The suggestion id of the tracked leg: from the search result that holds it, else from the form.
+    private func trackedSuggestionId(_ flightId: String) -> String {
+        if case .results(_, let legs) = state.search, let leg = legs.first(where: { $0.id == flightId }) {
+            return GmailSuggestions.suggestionId(flightCompact: GmailSuggestions.compact(leg.carrierIata + leg.flightNumber), date: leg.flightDate)
+        }
+        let flight = parseFlightNumber(state.flightInput)?.display ?? state.flightInput
+        return GmailSuggestions.suggestionId(flightCompact: GmailSuggestions.compact(flight), date: state.date)
     }
 
     private func fail(_ flightId: String, _ problem: TrackProblem) {

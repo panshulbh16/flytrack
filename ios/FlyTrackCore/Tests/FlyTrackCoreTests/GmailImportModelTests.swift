@@ -203,6 +203,74 @@ final class GmailImportModelTests: XCTestCase {
     }
 }
 
+extension GmailImportModelTests {
+    private func gmailAddFlight(_ repo: FakeFlights, _ store: GmailMemoryStore, _ system: GmailFakeSystem) -> AddFlightModel {
+        store.items = [suggestion("6E2341_2026-11-25", "6E 2341", 25, month: 11)]
+        repo.trackResult = .tracked(TrackedFlight(id: "t1", userId: "user-1", flightId: "f1", source: .gmail))
+        return AddFlightModel(
+            prefill: suggestion("6E2341_2026-11-25", "6E 2341", 25, month: 11).addFlightPrefill,
+            flights: repo, clock: ManualClock(parseInstant("2026-11-22T10:00:00Z")!), homeTimeZone: "Asia/Kolkata",
+            backendConfigured: true, googleConfigured: false, isAnonymous: true, defaultAlerts: MemoryAlerts(),
+            gmailStore: store, gmailSystem: system
+        )
+    }
+
+    func testAddFlightLeavesTheSuggestionPendingWhenAnotherDateIsTracked() async {
+        let (repo, store, system) = (FakeFlights(), GmailMemoryStore(), GmailFakeSystem())
+        let model = gmailAddFlight(repo, store, system)
+
+        model.setDate(LocalDate(year: 2026, month: 11, day: 26))
+        await model.track(flightId: "f1")
+
+        XCTAssertEqual(model.state.finishedFlightId, "f1")
+        XCTAssertEqual(store.items.first?.status, .pending)
+        XCTAssertTrue(system.cancelled.isEmpty)
+    }
+
+    func testAddFlightLeavesTheSuggestionPendingWhenAnotherFlightIsTracked() async {
+        let (repo, store, system) = (FakeFlights(), GmailMemoryStore(), GmailFakeSystem())
+        let model = gmailAddFlight(repo, store, system)
+
+        model.setFlightInput("6E 2342")
+        await model.track(flightId: "f1")
+
+        XCTAssertEqual(model.state.finishedFlightId, "f1")
+        XCTAssertEqual(store.items.first?.status, .pending)
+        XCTAssertTrue(system.cancelled.isEmpty)
+    }
+
+    /// The searched leg decides: a result for another flight leaves the suggestion pending even with the form unchanged.
+    func testAddFlightComparesTheTrackedSearchResult() async {
+        let (repo, store, system) = (FakeFlights(), GmailMemoryStore(), GmailFakeSystem())
+        let model = gmailAddFlight(repo, store, system)
+        repo.searchResult = .found([leg(id: "f1", number: "2341"), leg(id: "f2", number: "2342")])
+        await model.search()
+
+        await model.track(flightId: "f2")
+        XCTAssertEqual(store.items.first?.status, .pending)
+        XCTAssertTrue(system.cancelled.isEmpty)
+    }
+
+    func testAddFlightMarksTheSuggestionAddedWhenItsSearchedLegIsTracked() async {
+        let (repo, store, system) = (FakeFlights(), GmailMemoryStore(), GmailFakeSystem())
+        let model = gmailAddFlight(repo, store, system)
+        repo.searchResult = .found([leg(id: "f1", number: "2341")])
+        await model.search()
+
+        await model.track(flightId: "f1")
+        XCTAssertEqual(store.items.first?.status, .added)
+        XCTAssertEqual(system.cancelled, [["6E2341_2026-11-25"]])
+    }
+
+    private func leg(id: String, number: String) -> Flight {
+        Flight(
+            id: id, carrierIata: "6E", flightNumber: number, flightDate: LocalDate(year: 2026, month: 11, day: 25),
+            depIata: "DEL", arrIata: "BOM", airlineName: "IndiGo", status: .scheduled,
+            schedDep: nil, estDep: nil, actArr: nil, depAirport: nil, arrAirport: nil
+        )
+    }
+}
+
 private func suggestion(_ id: String, _ flight: String, _ day: Int, month: Int = 12, status: GmailSuggestionStatus = .pending) -> GmailSuggestion {
     GmailSuggestion(
         id: id, messageId: "m-\(id)", flight: flight, date: LocalDate(year: 2026, month: month, day: day),
