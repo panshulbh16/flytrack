@@ -100,6 +100,23 @@ class GmailConnectionTest {
         assertCleared()
     }
 
+    @Test
+    fun `clearLocal forgets the account before it empties the store, so a running scan cannot write into the wiped store`() = runTest {
+        fillState()
+        var emailWhenCleared: String? = "not cleared"
+        val recording = object : GmailSuggestionStore by store {
+            override suspend fun clear() {
+                emailWhenCleared = settings.gmailAccountEmail.first()
+                store.clear()
+            }
+        }
+
+        GmailConnection(auth, api, recording, settings, notifier, work).clearLocal()
+
+        assertNull(emailWhenCleared)
+        assertCleared()
+    }
+
     private suspend fun fillState() {
         settings.setGmailAccountEmail("traveller@gmail.com")
         settings.setGmailAutoCheck(false)

@@ -53,10 +53,11 @@ class GmailConnection @Inject constructor(
 
     /** Forgets the account, suggestions, seen ids and Gmail settings, stops the check and removes Gmail notifications. No network. */
     suspend fun clearLocal() {
+        // First, so a running scan's account check fails before the store is wiped, not after (GmailScanner.scan).
+        settings.setGmailAccountEmail(null)
         work.cancel()
         notifier.cancelAll()
         store.clear()
-        settings.setGmailAccountEmail(null)
         settings.setGmailAutoCheck(true)
         settings.setGmailLastCheckEpochSeconds(null)
         settings.setGmailNeedsReconnect(false)

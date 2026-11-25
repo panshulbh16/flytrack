@@ -92,6 +92,9 @@ class FakeGmailApi : GmailApi {
 
 /** The n-th [silentToken] call returns `silentResults[n]`; the last entry repeats. */
 class FakeGmailAuth : GmailAuth {
+    /** Runs at the start of every [silentToken] call, e.g. to land a disconnect mid-scan. */
+    var onSilentToken: suspend () -> Unit = {}
+
     var silentResults: List<GmailAuthResult> = listOf(GmailAuthResult.Granted("token-1"))
     var connectResult: GmailAuthResult = GmailAuthResult.Granted("token-1")
     var revokeError: Exception? = null
@@ -107,6 +110,7 @@ class FakeGmailAuth : GmailAuth {
     }
 
     override suspend fun silentToken(email: String): GmailAuthResult {
+        onSilentToken()
         silentEmails += email
         return silentResults[minOf(silentEmails.size - 1, silentResults.lastIndex)]
     }

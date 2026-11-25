@@ -58,6 +58,8 @@ class GmailScanner @Inject constructor(
         val token = when (val granted = auth.silentToken(email)) {
             is GmailAuthResult.Granted -> granted.token
             is GmailAuthResult.NeedsUser -> {
+                // A disconnect during silentToken has already wiped the flag: leave it off.
+                if (settings.gmailAccountEmail.first() != email) return outcome(ScanResult.NotConnected)
                 settings.setGmailNeedsReconnect(true)
                 return outcome(ScanResult.NeedsReconnect)
             }
@@ -183,7 +185,10 @@ class GmailScanner @Inject constructor(
                 is GmailAuthResult.Granted -> again.token
                 is GmailAuthResult.NeedsUser -> throw GmailApiException(GmailFailure.AccessLost)
                 GmailAuthResult.Offline -> throw GmailApiException(GmailFailure.Offline)
-                GmailAuthResult.NotConfigured, GmailAuthResult.Failed -> throw GmailApiException(GmailFailure.Other)
+                // Not Other: skipOnOther would mark the email seen unread. RateLimited ends the scan as Partial,
+                // so the email is read next time and needs-reconnect is left alone.
+                GmailAuthResult.NotConfigured, GmailAuthResult.Failed ->
+                    throw GmailApiException(GmailFailure.RateLimited, "token refresh failed")
             }
             request(token)
         }

@@ -383,6 +383,35 @@ class GmailScannerTest {
     }
 
     @Test
+    fun `a failed token refresh after a 401 stops the scan without losing the email or asking to reconnect`() = runTest {
+        connected()
+        auth.silentResults = listOf(GmailAuthResult.Granted("token-1"), GmailAuthResult.Failed)
+        inbox(
+            textMessage("m1", "Booking", ticket("AI-101")),
+            textMessage("m2", "Booking", ticket("AI-102")),
+        )
+        api.fail("message:m1", GmailFailure.Unauthorized)
+
+        val outcome = scanner.scan()
+
+        assertEquals(ScanOutcome(ScanResult.Partial, emptyList()), outcome)
+        assertEquals(listOf("m1"), api.messageCalls) // the scan stopped at m1
+        assertTrue(store.seenIds.isEmpty()) // m1 is read again next time
+        assertFalse(settings.gmailNeedsReconnect.first())
+        assertNull(settings.gmailLastCheckEpochSeconds.first())
+    }
+
+    @Test
+    fun `disconnecting while the token is fetched does not mark needs reconnect`() = runTest {
+        connected()
+        auth.silentResults = listOf(GmailAuthResult.NeedsUser(null))
+        auth.onSilentToken = { settings.setGmailAccountEmail(null) }
+
+        assertEquals(ScanOutcome(ScanResult.NotConnected, emptyList()), scanner.scan())
+        assertFalse(settings.gmailNeedsReconnect.first())
+    }
+
+    @Test
     fun `lost access stops the scan and marks needs reconnect`() = runTest {
         connected()
         inbox(textMessage("m1", "Booking", ticket()))
