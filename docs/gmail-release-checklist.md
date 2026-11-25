@@ -2,7 +2,7 @@
 
 The owner works through this list before switching `GMAIL_IMPORT_ENABLED` on in release builds. Until then, release builds hide "From Gmail", and debug builds work for test users only (see "Adding test users" in the README).
 
-Background: `https://www.googleapis.com/auth/gmail.readonly` is a **restricted** scope. Public use needs Google's restricted-scope verification. Without it, the "unverified app" screen appears and the app is capped at 100 new users. All Gmail data, and everything derived from it, stays on the phone. The design is in `docs/superpowers/specs/2026-11-24-gmail-ticket-import-design.md`.
+Background: `https://www.googleapis.com/auth/gmail.readonly` is a **restricted** scope. Public use needs Google's restricted-scope verification. Without it, the "unverified app" screen appears and the app is capped at 100 new users. Plan for a CASA security assessment before launch, and for yearly reverification, until Google confirms in writing that on-device processing exempts the app (sections 6 and 7). All Gmail data, and everything derived from it, stays on the phone. The design is in `docs/superpowers/specs/2026-11-24-gmail-ticket-import-design.md`.
 
 The Android app is shown to users as "FlyTrack" and the iOS app as "HeyGate". Below, "the app" means either one.
 
@@ -78,8 +78,11 @@ Add captions at steps 3 and 5: "Emails are read on this phone only. Nothing from
 
 - [ ] File Google's written answer about CASA with this checklist.
 
-## 7. CASA (if Google requires it)
+## 7. CASA security assessment (plan for it)
 
+Assume the assessment is required. Start scheduling and budgeting it now, while Google's written answer (section 6) is pending; skip this section only when that filed answer says it is not required. An assessment takes weeks.
+
+- [ ] Book an authorized assessor named in Google's instructions and budget for the assessment.
 - [ ] Complete the assessment with an authorized assessor named in Google's instructions before launch.
 - [ ] Put annual reverification in the calendar. Google reverifies restricted-scope apps every 12 months, and the assessment repeats if it applies. Budget for it.
 
@@ -109,7 +112,7 @@ Gmail import adds nothing to the Data safety form. Under Play's rules, data acce
 
 ## 9. Switch it on
 
-- [ ] Google verification approved (and CASA passed, if required).
+- [ ] Google verification approved, and CASA passed (unless Google confirmed in writing that it is not required).
 - [ ] Android: set `GMAIL_IMPORT_ENABLED` to `true` for the `release` build type in `android/app/build.gradle.kts`.
 - [ ] iOS: set the default `GMAIL_IMPORT_ENABLED` value to `YES` in `ios/Config/Shared.xcconfig` (the Debug override is already `YES`).
 - [ ] Repeat the manual test from section 2 on a release build of each app with a non-test Google account.
