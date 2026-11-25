@@ -326,7 +326,7 @@ private fun PlaneBadge() {
         shape = CircleShape,
         color = Color.Transparent,
         contentColor = MaterialTheme.colorScheme.primary,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.tertiary),
     ) {
         Box(contentAlignment = Alignment.Center) {
             Icon(painter = painterResource(R.drawable.ic_plane), contentDescription = null, modifier = Modifier.size(22.dp))

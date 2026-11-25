@@ -96,7 +96,7 @@
             android:resource="@drawable/ic_notification" />
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_color"
-            android:resource="@color/plum" />
+            android:resource="@color/forest" />
 
         <!--
           Ticket import. PdfRenderer and reading shared/picked files need no permission (content Uris).

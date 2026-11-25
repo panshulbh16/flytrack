@@ -54,6 +54,7 @@ import app.flytrack.ui.components.PrimaryButton
 import app.flytrack.ui.components.SecondaryButton
 import app.flytrack.ui.components.SectionCaption
 import app.flytrack.ui.nav.LocalAppNavigator
+import app.flytrack.ui.theme.FlyTrackTheme
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -294,7 +295,7 @@ private fun AlertSwitch(toggle: AlertToggleUiModel, onAlertGroup: (AlertGroup, B
                 Text(
                     stringResource(R.string.settings_alert_inbound_locked),
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.tertiary,
+                    color = FlyTrackTheme.accentText,
                 )
             }
         }
