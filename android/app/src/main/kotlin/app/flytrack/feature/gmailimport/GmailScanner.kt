@@ -122,9 +122,9 @@ class GmailScanner @Inject constructor(
             for (id in unseen) {
                 if (read == GMAIL_MAX_READ_PER_SCAN) return ScanResult.Partial
                 read++
-                // Gmail lists newest first, so the first email naming a leg is the newest one:
-                // keep its PNR and subject and drop the same leg from older emails (spec "Filter").
-                readMessage(session, id, day).filterTo(found) { leg -> found.none { it.id == leg.id } }
+                // Duplicate legs are merged by GmailSuggestions.newOnly: the newest email (by its own date, not
+                // list order) keeps its PNR and subject (spec "Filter").
+                found += readMessage(session, id, day)
                 seenIds += id
             }
             pageToken = page.nextPageToken
@@ -151,7 +151,8 @@ class GmailScanner @Inject constructor(
             val bytes = skipOnOther { session.call { api.attachment(it, id, attachmentId) } }
             if (bytes != null) ticket = parseTicketText(readPdf(bytes), reference)
         }
-        return GmailSuggestions.fromTicket(ticket, id, content.subject, day, clock.now().toEpochMilliseconds())
+        val foundAt = message.internalDate?.toLongOrNull() ?: clock.now().toEpochMilliseconds()
+        return GmailSuggestions.fromTicket(ticket, id, content.subject, day, foundAt)
     }
 
     private suspend fun readPdf(bytes: ByteArray): String = try {

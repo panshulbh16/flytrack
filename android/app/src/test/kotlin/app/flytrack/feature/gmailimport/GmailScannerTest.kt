@@ -172,8 +172,8 @@ class GmailScannerTest {
     fun `duplicate legs keep the newest email's pnr and subject`() = runTest {
         connected()
         inbox( // Gmail lists newest first
-            textMessage("m-new", "Changed booking", ticket(pnr = "NEW222")),
-            textMessage("m-old", "Booking", ticket(pnr = "OLD111")),
+            textMessage("m-new", "Changed booking", ticket(pnr = "NEW222")).copy(internalDate = "1795000000000"),
+            textMessage("m-old", "Booking", ticket(pnr = "OLD111")).copy(internalDate = "1794000000000"),
         )
         api.onCall = { clock.advance(1.minutes) } // the older email is read later
 
@@ -182,6 +182,23 @@ class GmailScannerTest {
         assertEquals("m-new", found.messageId)
         assertEquals("NEW222", found.pnr)
         assertEquals("Changed booking", found.subject)
+        assertEquals(setOf("m-new", "m-old"), store.seenIds)
+    }
+
+    @Test
+    fun `duplicate legs keep the newest email even when the inbox lists the oldest first`() = runTest {
+        connected()
+        inbox(
+            textMessage("m-old", "Booking", ticket(pnr = "OLD111")).copy(internalDate = "1794000000000"),
+            textMessage("m-new", "Changed booking", ticket(pnr = "NEW222")).copy(internalDate = "1795000000000"),
+        )
+        api.onCall = { clock.advance(1.minutes) } // the newer email is read later, but its own date decides
+
+        val found = scanner.scan().newSuggestions.single()
+
+        assertEquals("m-new", found.messageId)
+        assertEquals("NEW222", found.pnr)
+        assertEquals(1_795_000_000_000L, found.foundAtEpochMs)
         assertEquals(setOf("m-new", "m-old"), store.seenIds)
     }
 
