@@ -64,7 +64,9 @@ public func decodeBase64URL(_ s: String) -> Data? {
 public func htmlToText(_ html: String) -> String {
     var text = html
     text = replaceAll(#"(?is)<!--.*?-->"#, in: text, with: " ")
-    text = replaceAll(#"(?is)<(script|style)\b[^>]*>.*?</\1\s*>"#, in: text, with: " ")
+    text = replaceAll(#"(?is)<(script|style|head)\b[^>]*>.*?</\1\s*>"#, in: text, with: " ")
+    // Source line breaks are not breaks (hard-wrapped HTML): collapse before <br>/block ends add real ones. Matches Android.
+    text = replaceAll(#"\s+"#, in: text, with: " ")
     text = replaceAll(#"(?i)<br\s*/?>|</(p|div|tr|li|h[1-6]|table|ul|ol)\s*>"#, in: text, with: "\n")
     text = replaceAll(#"(?s)<[^>]*>"#, in: text, with: " ")
     text = decodeEntities(text)

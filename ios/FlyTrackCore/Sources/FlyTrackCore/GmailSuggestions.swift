@@ -17,9 +17,9 @@ public enum GmailSuggestions {
         "\(flightCompact)_\(date.iso)"
     }
 
-    /// "6E 2341" or "6e-2341" -> "6E2341".
+    /// "6E 2341", "6e-2341" or "6E.2341" -> "6E2341".
     public static func compact(_ flightDisplay: String) -> String {
-        flightDisplay.filter { !$0.isWhitespace && $0 != "-" }.uppercased()
+        flightDisplay.filter { $0.isLetter || $0.isNumber }.uppercased()
     }
 
     /// Backstop to the query: a subject mentioning a cancellation or refund is never a booking.

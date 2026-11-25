@@ -193,6 +193,18 @@ final class GmailMessageTextTests: XCTestCase {
         XCTAssertNil(decodeBase64URL("@@@@"))
     }
 
+    func testHardWrappedHTMLIsOneLine() {
+        let html = "<html><head><title>Booking confirmation PNR ABC123</title></head><body><p>Akasa Air flight\nQP\n1372\nBLR - DEL\non 15 Dec 2026</p><table><tr><td>PNR\nQPZ456</td></tr></table></body></html>"
+        let text = htmlToText(html)
+        XCTAssertEqual(text, "Akasa Air flight QP 1372 BLR - DEL on 15 Dec 2026\nPNR QPZ456")
+        XCTAssertFalse(text.contains("Booking confirmation"), text)
+        let ticket = parseTicketText(text, today: today)
+        XCTAssertEqual(ticket.flights.map(\.flight.display), ["QP 1372"])
+        XCTAssertEqual(ticket.flights.first?.date, LocalDate(year: 2026, month: 12, day: 15))
+        XCTAssertEqual(ticket.flights.first?.fromIata, "BLR")
+        XCTAssertEqual(ticket.flights.first?.toIata, "DEL")
+    }
+
     func testHTMLToText() {
         XCTAssertEqual(htmlToText("<div>6E&nbsp;2341</div><div>DEL&#8594;BOM &#x2192; GOI</div>"), "6E 2341\nDEL→BOM → GOI")
         XCTAssertEqual(htmlToText("Line one<br>Line two<BR/>three"), "Line one\nLine two\nthree")
@@ -222,6 +234,8 @@ final class GmailSuggestionsTests: XCTestCase {
     func testIdAndCompact() {
         XCTAssertEqual(GmailSuggestions.compact("6E 2341"), "6E2341")
         XCTAssertEqual(GmailSuggestions.compact("ai-101a"), "AI101A")
+        XCTAssertEqual(GmailSuggestions.compact("6E.2341"), "6E2341")
+        XCTAssertEqual(GmailSuggestions.compact("6E.2341"), GmailSuggestions.compact("6E 2341"))
         XCTAssertEqual(GmailSuggestions.suggestionId(flightCompact: "6E2341", date: date("2026-12-03")), "6E2341_2026-12-03")
         let id = GmailSuggestions.suggestionId(flightCompact: GmailSuggestions.compact("QP 1372"), date: date("2026-12-15"))
         XCTAssertNotNil(id.range(of: #"^[A-Z0-9]{3,8}_\d{4}-\d{2}-\d{2}$"#, options: .regularExpression))
