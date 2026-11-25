@@ -43,6 +43,8 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>GmailImportEnabled</key>
+	<string>$(GMAIL_IMPORT_ENABLED)</string>
 	<key>GoogleIOSClientID</key>
 	<string>$(GOOGLE_IOS_CLIENT_ID)</string>
 	<key>GoogleWebClientID</key>

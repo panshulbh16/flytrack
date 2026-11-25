@@ -16,6 +16,8 @@ enum AppConfig {
 
     static var isBackendConfigured: Bool { supabaseURL != nil && anonKey != nil }
     static var isGoogleConfigured: Bool { googleIOSClientID != nil && googleWebClientID != nil }
+    /// The GMAIL_IMPORT_ENABLED release switch, and a build that can sign in to Google.
+    static var isGmailImportEnabled: Bool { string("GmailImportEnabled") == "YES" && isGoogleConfigured }
 
     static var versionName: String {
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.1.0"

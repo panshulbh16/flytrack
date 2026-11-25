@@ -102,6 +102,7 @@ targets:
         SupabaseAnonKey: $(SUPABASE_ANON_KEY)
         GoogleIOSClientID: $(GOOGLE_IOS_CLIENT_ID)
         GoogleWebClientID: $(GOOGLE_WEB_CLIENT_ID)
+        GmailImportEnabled: $(GMAIL_IMPORT_ENABLED)
         UILaunchScreen:
           UIColorName: LaunchBackground
     entitlements:

@@ -7,6 +7,7 @@ import UserNotifications
 struct FlightsScreen: View {
     @ObservedObject var shell: AppShell
     @State private var store: FlightsStore?
+    @State private var gmail: GmailImportStore?
 
     var body: some View {
         PaperScreen {
@@ -37,6 +38,10 @@ struct FlightsScreen: View {
                 store = FlightsStore(model: model)
             }
             await store?.reload(session: shell.session)
+            if AppConfig.isGmailImportEnabled {
+                if gmail == nil { gmail = GmailImportStore(model: shell.gmailModel()) }
+                await gmail?.refresh()
+            }
             await askForNotifications()
         }
     }
@@ -47,9 +52,22 @@ struct FlightsScreen: View {
             banner(String(localized: "This build has no server address. Add SUPABASE_URL and SUPABASE_ANON_KEY to ios/Config/Secrets.xcconfig."))
         }
         if store.state.isEmpty {
-            empty
+            VStack(spacing: 0) {
+                if let gmail, !gmail.state.suggestions.isEmpty {
+                    FoundInGmailCard(shell: shell, store: gmail)
+                        .padding(.horizontal, 16)
+                        .background(FlyColor.paperRaised, in: .rect(cornerRadius: 12))
+                        .padding(.horizontal, 24)
+                        .padding(.top, 16)
+                }
+                empty
+            }
         } else {
             List {
+                if let gmail, !gmail.state.suggestions.isEmpty {
+                    Section { FoundInGmailCard(shell: shell, store: gmail) }
+                        .listRowBackground(FlyColor.paperRaised)
+                }
                 if let next = store.state.next {
                     Section {
                         NextCard(next: next) { shell.openFlight(next.card.flightId) }
@@ -74,7 +92,10 @@ struct FlightsScreen: View {
                 }
             }
             .scrollContentBackground(.hidden)
-            .refreshable { await store.refresh(session: shell.session) }
+            .refreshable {
+                await store.refresh(session: shell.session)
+                await gmail?.refresh()
+            }
         }
     }
 
@@ -85,7 +106,7 @@ struct FlightsScreen: View {
             Text(String(localized: "Add a flight number, or import a ticket, and HeyGate will watch the gate, delays and baggage belt."))
                 .font(FlyFont.sans(16, relativeTo: .body))
                 .multilineTextAlignment(.center)
-            Button(String(localized: "Import a ticket")) { shell.path.append(Route.importTicket) }
+            ImportTicketButton(shell: shell)
                 .buttonStyle(.borderedProminent)
                 .foregroundStyle(FlyColor.paper)
                 .hitTarget()
@@ -146,7 +167,7 @@ struct AddFlightScreen: View {
         .toolbar {
             if !prefill.isEmpty == false {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(String(localized: "Import a ticket")) { shell.path.append(Route.importTicket) }.hitTarget()
+                    ImportTicketButton(shell: shell).hitTarget()
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(String(localized: "Scan boarding pass"), systemImage: "barcode.viewfinder") { shell.path.append(Route.scanBoardingPass) }
@@ -161,7 +182,8 @@ struct AddFlightScreen: View {
                 let model = AddFlightModel(
                     prefill: prefill, flights: shell.flights, clock: shell.clock, homeTimeZone: TimeZone.current.identifier,
                     backendConfigured: shell.session != .notConfigured, googleConfigured: AppConfig.isGoogleConfigured,
-                    isAnonymous: anonymous, defaultAlerts: shell.settings
+                    isAnonymous: anonymous, defaultAlerts: shell.settings,
+                    gmailStore: shell.gmailStore, gmailSystem: LiveGmailSystem(auth: shell.gmailAuth)
                 )
                 let wrapped = AddStore(model: model)
                 store = wrapped
@@ -321,6 +343,7 @@ struct DetailScreen: View {
 struct SettingsScreen: View {
     @ObservedObject var shell: AppShell
     @State private var store: SettingsStoreBox?
+    @State private var gmail: GmailImportStore?
     @State private var testAlertSending = false
     @State private var testAlertText: String?
     @AppStorage(Appearance.storageKey) private var appearance = Appearance.system
@@ -338,11 +361,22 @@ struct SettingsScreen: View {
                             .hitTarget()
                         }
                         if store.state.message == .googleInUse {
-                            Button(String(localized: "Sign in to that Google account")) { Task { await store.signInPending() } }
-                                .hitTarget()
+                            Button(String(localized: "Sign in to that Google account")) {
+                                Task {
+                                    await store.signInPending()
+                                    await gmail?.refresh()
+                                }
+                            }
+                            .hitTarget()
                         }
                         if let message = store.state.message { Text(settingsMessage(message)) }
-                        Button(String(localized: "Sign out")) { Task { await store.signOut() } }.hitTarget()
+                        Button(String(localized: "Sign out")) {
+                            Task {
+                                await store.signOut()
+                                await gmail?.refresh()
+                            }
+                        }
+                        .hitTarget()
                     }
                     .listRowBackground(FlyColor.paperRaised)
                     Section(String(localized: "Appearance")) {
@@ -372,6 +406,10 @@ struct SettingsScreen: View {
                         ))
                     }
                     .listRowBackground(FlyColor.paperRaised)
+                    if let gmail {
+                        GmailSettingsSection(store: gmail)
+                            .listRowBackground(FlyColor.paperRaised)
+                    }
                     Section(String(localized: "Notifications")) {
                         Text(pushText(store.state.push))
                         Text(healthText(store.state.health))
@@ -409,6 +447,8 @@ struct SettingsScreen: View {
                 )
                 store = SettingsStoreBox(model: model)
             }
+            if AppConfig.isGmailImportEnabled, gmail == nil { gmail = GmailImportStore(model: shell.gmailModel()) }
+            await gmail?.refresh()
             await store?.load()
         }
     }

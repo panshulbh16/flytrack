@@ -230,6 +230,7 @@ enum Route: Hashable {
     case settings
     case importTicket
     case scanBoardingPass
+    case gmailImport
 }
 
 struct RootView: View {
@@ -251,6 +252,8 @@ struct RootView: View {
                         ImportScreen(shell: shell)
                     case .scanBoardingPass:
                         ScanScreen(shell: shell)
+                    case .gmailImport:
+                        GmailImportScreen(shell: shell)
                     }
                 }
         }

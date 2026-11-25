@@ -7,5 +7,8 @@ SUPABASE_ANON_KEY =
 GOOGLE_IOS_CLIENT_ID =
 GOOGLE_WEB_CLIENT_ID =
 REVERSED_GOOGLE_CLIENT_ID = com.googleusercontent.apps.PLACEHOLDER
+// Gmail import: on in Debug, off in Release until Google's restricted-scope verification passes.
+GMAIL_IMPORT_ENABLED = NO
+GMAIL_IMPORT_ENABLED[config=Debug] = YES
 
 #include? "Secrets.xcconfig"
