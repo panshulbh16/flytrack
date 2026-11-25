@@ -30,6 +30,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,6 +47,8 @@ import app.flytrack.feature.flights.presentation.FlightCardUiModel
 import app.flytrack.feature.flights.ui.FlightCard
 import app.flytrack.feature.flights.ui.NextFlightCard
 import app.flytrack.feature.flights.ui.PreviewFlights
+import app.flytrack.feature.gmailimport.ImportChooserSheet
+import app.flytrack.feature.gmailimport.isGmailImportAvailable
 import app.flytrack.feature.importticket.ScanBoardingPassButton
 import app.flytrack.push.NotificationPermissionPrompt
 import app.flytrack.ui.components.BackendNotConfiguredState
@@ -68,13 +71,23 @@ fun FlightsRoute(
     val viewModel: FlightsViewModel = hiltViewModel()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val navigator = LocalAppNavigator.current
+    var choosingImport by rememberSaveable { mutableStateOf(false) }
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.onScreenResumed() }
+
+    if (choosingImport) {
+        ImportChooserSheet(
+            onFromFile = navigator::openImportTicket,
+            onFromGmail = navigator::openGmailImport,
+            onDismiss = { choosingImport = false },
+        )
+    }
 
     FlightsScreen(
         state = state,
         onAddFlight = onAddFlight,
-        onImportTicket = navigator::openImportTicket,
+        // Without Gmail there is only one way to import, so the chooser is skipped.
+        onImportTicket = { if (isGmailImportAvailable) choosingImport = true else navigator.openImportTicket() },
         onOpenFlight = onOpenFlight,
         onOpenSettings = onOpenSettings,
         onRefresh = viewModel::refresh,

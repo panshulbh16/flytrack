@@ -9,9 +9,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import app.flytrack.core.model.TrackSource
 import app.flytrack.feature.addflight.AddFlightRoute
 import app.flytrack.feature.flights.FlightDetailRoute
 import app.flytrack.feature.flights.FlightsRoute
+import app.flytrack.feature.gmailimport.GmailImportRoute
+import app.flytrack.feature.gmailimport.GmailSuggestion
 import app.flytrack.feature.importticket.ImportTicketRoute
 import app.flytrack.feature.settings.SettingsRoute
 
@@ -27,6 +30,23 @@ class NavControllerNavigator(private val navController: NavHostController) : App
 
     override fun openImportTicket() {
         navController.navigate(ImportTicket) { launchSingleTop = true }
+    }
+
+    override fun openGmailImport() {
+        navController.navigate(GmailImport) { launchSingleTop = true }
+    }
+
+    /** Back from add-flight returns to wherever the suggestion was picked; the suggestion stays pending. */
+    override fun openAddFlightFromGmail(s: GmailSuggestion) {
+        navController.navigate(
+            AddFlight(
+                prefillFlight = s.flight,
+                prefillDate = s.date.toString(),
+                prefillPnr = s.pnr,
+                prefillSource = TrackSource.GMAIL.wire,
+                prefillGmailSuggestionId = s.id,
+            ),
+        ) { launchSingleTop = true }
     }
 
     override fun openSettings() {
@@ -83,6 +103,7 @@ fun FlyTrackNavHost(
                     prefillPnr = route.prefillPnr,
                     prefillSource = route.prefillSource,
                     prefillSeat = route.prefillSeat,
+                    prefillGmailSuggestionId = route.prefillGmailSuggestionId,
                     onDone = { flightId -> if (flightId != null) navigator.openFlightFromAdd(flightId) else navigator.back() },
                     onBack = { navigator.back() },
                 )
@@ -99,6 +120,14 @@ fun FlyTrackNavHost(
             composable<ImportTicket> {
                 ImportTicketRoute(
                     onParsed = { flight, date, pnr, source -> navigator.openAddFlightFromImport(flight, date, pnr, source) },
+                    onBack = { navigator.back() },
+                )
+            }
+            composable<GmailImport> {
+                GmailImportRoute(
+                    onOpenSuggestion = navigator::openAddFlightFromGmail,
+                    onImportManually = navigator::openImportTicket,
+                    onTypeInstead = { navigator.openAddFlight() },
                     onBack = { navigator.back() },
                 )
             }

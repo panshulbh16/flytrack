@@ -23,6 +23,8 @@ data class AddFlight(
     val prefillSource: String? = null,
     /** Seat from a boarding pass, e.g. "12A". */
     val prefillSeat: String? = null,
+    /** [app.flytrack.feature.gmailimport.GmailSuggestion.id] when opened from a Gmail suggestion. */
+    val prefillGmailSuggestionId: String? = null,
 )
 
 /** Detail of one flight; [flightId] is `flights.id` (what FCM sends as `flight_id`). */
@@ -35,3 +37,7 @@ data object Settings
 /** Ticket import (PDF, screenshot, text). Shared content is read from SharedContentHolder, not from arguments. */
 @Serializable
 data object ImportTicket
+
+/** Import from Gmail: connect, scan, pick a suggestion. */
+@Serializable
+data object GmailImport

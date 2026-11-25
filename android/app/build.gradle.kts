@@ -42,7 +42,12 @@ android {
     }
 
     buildTypes {
+        // Gmail import needs Google's restricted-scope verification: off in release until it passes.
+        debug {
+            buildConfigField("boolean", "GMAIL_IMPORT_ENABLED", "true")
+        }
         release {
+            buildConfigField("boolean", "GMAIL_IMPORT_ENABLED", "false")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")

@@ -5,6 +5,7 @@ import android.content.Intent
 import androidx.compose.runtime.staticCompositionLocalOf
 import app.flytrack.MainActivity
 import app.flytrack.core.push.PushContract
+import app.flytrack.feature.gmailimport.GmailSuggestion
 
 /**
  * Cross-feature navigation for the cases the route callbacks do not cover (for example an
@@ -18,6 +19,10 @@ interface AppNavigator {
 
     /** A ticket or boarding pass was read: open add-flight filled in, replacing the screen that read it. */
     fun openAddFlightFromImport(flight: String?, date: String?, pnr: String?, source: String?, seat: String? = null)
+    fun openGmailImport()
+
+    /** A Gmail suggestion was picked (Gmail screen, Found in Gmail card, notification): add-flight filled in from it. */
+    fun openAddFlightFromGmail(s: GmailSuggestion)
     fun openSettings()
     fun back()
 }
@@ -27,6 +32,8 @@ private object NoOpNavigator : AppNavigator {
     override fun openAddFlight(prefillFlight: String?, prefillDate: String?, prefillPnr: String?) = Unit
     override fun openImportTicket() = Unit
     override fun openAddFlightFromImport(flight: String?, date: String?, pnr: String?, source: String?, seat: String?) = Unit
+    override fun openGmailImport() = Unit
+    override fun openAddFlightFromGmail(s: GmailSuggestion) = Unit
     override fun openSettings() = Unit
     override fun back() = Unit
 }

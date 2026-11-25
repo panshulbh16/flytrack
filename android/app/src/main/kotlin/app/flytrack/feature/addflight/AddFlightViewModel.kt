@@ -18,6 +18,9 @@ import app.flytrack.data.repo.AuthRepository
 import app.flytrack.data.repo.FlightRepository
 import app.flytrack.data.repo.ProfileRepository
 import app.flytrack.data.repo.SessionState
+import app.flytrack.feature.gmailimport.GmailNotifier
+import app.flytrack.feature.gmailimport.GmailSuggestionStore
+import app.flytrack.feature.gmailimport.SuggestionStatus
 import app.flytrack.feature.settings.DefaultAlertPreferences
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -51,6 +54,8 @@ class AddFlightViewModel @AssistedInject constructor(
     private val clock: Clock,
     homeTimeZone: HomeTimeZone,
     backendConfig: BackendConfig,
+    private val gmailSuggestions: GmailSuggestionStore,
+    private val gmailNotifier: GmailNotifier,
     private val defaultAlerts: DefaultAlertPreferences = DefaultAlertPreferences.AllOn,
 ) : ViewModel() {
 
@@ -67,6 +72,7 @@ class AddFlightViewModel @AssistedInject constructor(
 
     // A prefill without a source is a share (the route did not say which). An empty form was typed.
     private val source = prefill.source ?: if (prefill.isEmpty) TrackSource.MANUAL else TrackSource.SHARE
+    private val gmailSuggestionId = prefill.gmailSuggestionId
 
     private var searchJob: Job? = null
     private var trackedByFlightId: Map<String, TrackedFlight> = emptyMap()
@@ -271,6 +277,11 @@ class AddFlightViewModel @AssistedInject constructor(
     }
 
     private suspend fun finish(flightId: String) {
+        // The flight is tracked now, so the Gmail suggestion it came from is done. Backing out never gets here.
+        gmailSuggestionId?.let { id ->
+            gmailSuggestions.setStatus(listOf(id), SuggestionStatus.ADDED)
+            gmailNotifier.cancel(listOf(id))
+        }
         // trackingFlightId stays set: the screen is about to close, and a late tap must not start a second request.
         _events.send(AddFlightEvent.Finished(flightId))
     }
