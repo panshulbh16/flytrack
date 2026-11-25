@@ -49,8 +49,8 @@ extension GmailScanner: GmailScanning {}
 public protocol GmailSystem: AnyObject {
     /// Shows Google's account picker and consent. `.granted` once the connected address is saved in settings.
     func connect() async -> GmailTokenResult
-    /// Withdraws the Gmail grant from Google.
-    func revoke() async
+    /// Withdraws the Gmail grant from Google for [storedEmail], the address that was connected before the local wipe.
+    func revoke(storedEmail: String) async
     func cancelNotifications(_ ids: [String]) async
     func cancelAllNotifications() async
     func setBackgroundChecks(_ on: Bool)
@@ -148,14 +148,14 @@ public final class GmailImportModel {
         publish()
     }
 
-    /// Revokes access and deletes everything Gmail-derived on this phone.
+    /// Deletes everything Gmail-derived on this phone, then revokes access. The local wipe comes first, so it is
+    /// done at once and a scan still running cannot post or write afterwards; the revoke only needs the address.
     public func disconnect() async {
         if state.busy { return }
         state.busy = true
         publish()
-        await system.revoke()
+        let email = await settings.gmailAccountEmail()
         system.setBackgroundChecks(false)
-        await system.cancelAllNotifications()
         // Before the store is wiped, so a scan still running fails its account check and writes nothing.
         await settings.setGmailAccountEmail(nil)
         await store.clear()
@@ -163,9 +163,12 @@ public final class GmailImportModel {
         await settings.setGmailLastAppOpenCheck(nil)
         await settings.setGmailNeedsReconnect(false)
         await settings.setGmailAutoCheck(true)
+        // Last of the local steps: removes what a scan that passed its account check posted meanwhile.
+        await system.cancelAllNotifications()
         stoppedEarly = false
         state = GmailImportState()
         publish()
+        if let email { await system.revoke(storedEmail: email) }
     }
 
     /// Returns whether access was lost.

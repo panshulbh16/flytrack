@@ -144,11 +144,20 @@ final class GmailImportModelTests: XCTestCase {
         await rig.model.refresh()
         var emailAtClear: String? = "unset"
         rig.store.onClear = { emailAtClear = rig.settings.email }
+        var atRevoke: (email: String?, items: Int, cancelAll: Int, background: [Bool])?
+        rig.system.onRevoke = {
+            atRevoke = (rig.settings.email, rig.store.items.count, rig.system.cancelAllCalls, rig.system.background)
+        }
 
         await rig.model.disconnect()
 
         XCTAssertNil(emailAtClear) // forgotten first, so a scan still running writes nothing back
-        XCTAssertEqual(rig.system.revokes, 1)
+        XCTAssertEqual(rig.system.revokedEmails, ["me@gmail.com"]) // the address captured before the wipe
+        // Everything on the phone is gone before the network revoke starts.
+        XCTAssertNil(atRevoke?.email)
+        XCTAssertEqual(atRevoke?.items, 0)
+        XCTAssertEqual(atRevoke?.cancelAll, 1)
+        XCTAssertEqual(atRevoke?.background, [false])
         XCTAssertEqual(rig.system.background, [false])
         XCTAssertEqual(rig.system.cancelAllCalls, 1)
         XCTAssertTrue(rig.store.items.isEmpty)
@@ -250,7 +259,8 @@ private final class GmailMemoryStore: GmailSuggestionStoring {
 private final class GmailFakeSystem: GmailSystem {
     var connectResult: GmailTokenResult = .needsUser
     var onConnect: () -> Void = {}
-    var revokes = 0
+    var revokedEmails: [String] = []
+    var onRevoke: () -> Void = {}
     var cancelled: [[String]] = []
     var cancelAllCalls = 0
     var background: [Bool] = []
@@ -258,7 +268,10 @@ private final class GmailFakeSystem: GmailSystem {
         onConnect()
         return connectResult
     }
-    func revoke() async { revokes += 1 }
+    func revoke(storedEmail: String) async {
+        revokedEmails.append(storedEmail)
+        onRevoke()
+    }
     func cancelNotifications(_ ids: [String]) async { cancelled.append(ids) }
     func cancelAllNotifications() async { cancelAllCalls += 1 }
     func setBackgroundChecks(_ on: Bool) { background.append(on) }

@@ -103,6 +103,9 @@ final class AppShell: ObservableObject {
 
     @Published var session: SessionState = .loading
     @Published var path = NavigationPath()
+    /// Bumped when Gmail suggestions change outside the Gmail screen (background check, Not now, wipe), so the
+    /// Found in Gmail card reloads.
+    @Published var gmailRevision = 0
 
     init(context: ModelContext) {
         let stack = SupabaseStack(context: context)
@@ -154,19 +157,35 @@ final class AppShell: ObservableObject {
     }
 
     /// HeyGate sign-out or a user switch ends here (Settings' "Disconnect Gmail" uses GmailImportModel.disconnect()).
-    /// It revokes only while GoogleSignIn still holds the Gmail account, then drops suggestions, seen ids and
-    /// Gmail settings.
+    /// Wipes everything Gmail-derived at once, then revokes in an unstructured Task so the cache wipe that follows
+    /// this hook does not wait on Google. The revoke runs only while GoogleSignIn still holds the captured account.
     func clearGmail() async {
+        let email = await settings.gmailAccountEmail()
+        await clearGmailLocal()
+        if let email {
+            let gmailAuth = gmailAuth
+            Task { await gmailAuth.disconnect(storedEmail: email) }
+        }
+    }
+
+    /// The local part of the wipe, no network: account, suggestions, seen ids, Gmail settings, the BGTask and
+    /// Gmail notifications. Also run at launch by a build with the release switch off.
+    func clearGmailLocal() async {
         GmailBackground.cancel()
-        await GmailNotifications.cancelAll()
-        await gmailAuth.disconnect()
         // Before the store is wiped, so a scan still running fails its account check and writes nothing.
         await settings.setGmailAccountEmail(nil)
         await gmailStore.clear()
         settings.clearGmail()
+        // Last, so it also removes what a scan that passed its account check posted meanwhile.
+        await GmailNotifications.cancelAll()
+        gmailRevision += 1
     }
 
     func bootstrap() async {
+        // A build with Gmail import switched off forgets what a build with it on left (e.g. TestFlight over Debug).
+        if GmailNotice.leftoversNeedWipe(importEnabled: AppConfig.isGmailImportEnabled, accountEmail: await settings.gmailAccountEmail()) {
+            await clearGmailLocal()
+        }
         _ = await auth.ensureSignedIn()
         session = await auth.session()
         push.start()
@@ -210,6 +229,7 @@ final class AppShell: ObservableObject {
             defer { UIApplication.shared.endBackgroundTask(background) }
             if dismiss {
                 await gmailStore.setStatus([id], .dismissed)
+                gmailRevision += 1
                 return
             }
             guard let prefill = GmailNotice.trackPrefill(await gmailStore.get(id)) else { return }

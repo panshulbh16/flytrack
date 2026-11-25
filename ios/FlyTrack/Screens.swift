@@ -8,6 +8,7 @@ struct FlightsScreen: View {
     @ObservedObject var shell: AppShell
     @State private var store: FlightsStore?
     @State private var gmail: GmailImportStore?
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         PaperScreen {
@@ -43,6 +44,11 @@ struct FlightsScreen: View {
                 await gmail?.refresh()
             }
             await askForNotifications()
+        }
+        // Background and app-open checks, Not now and the sign-out wipe change suggestions behind this screen.
+        .onChange(of: shell.gmailRevision) { Task { await gmail?.refresh() } }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { Task { await gmail?.refresh() } }
         }
     }
 

@@ -88,17 +88,27 @@ enum GmailBackground {
         guard await enabled(shell.settings) else { return cancel() }
         running = true
         defer { running = false }
+        let email = await shell.settings.gmailAccountEmail()
         let scanner = shell.gmailScanner()
         let cleaned = await scanner.cleanup()
         GmailNotifications.cancel(cleaned.deleteIds + cleaned.markAddedIds)
         let outcome = await scanner.scan()
+        if !outcome.newSuggestions.isEmpty || !cleaned.deleteIds.isEmpty || !cleaned.markAddedIds.isEmpty {
+            shell.gmailRevision += 1
+        }
+        // Disconnect, sign-out or a user switch ran during the scan: its wipe is done, so post and book nothing.
+        guard await shell.settings.gmailAccountEmail() == email else { return }
         await GmailNotifications.post(outcome.newSuggestions)
         submit()
     }
 
-    /// Connected, Auto-check on, and access not lost: background checks stop until the user reconnects.
+    /// Release switch on, connected, Auto-check on, and access not lost: background checks stop until the user reconnects.
     private static func enabled(_ settings: DeviceSettings) async -> Bool {
-        guard await settings.gmailAccountEmail() != nil, await settings.gmailAutoCheck() else { return false }
-        return await !settings.gmailNeedsReconnect()
+        GmailNotice.autoCheckEnabled(
+            importEnabled: AppConfig.isGmailImportEnabled,
+            accountEmail: await settings.gmailAccountEmail(),
+            autoCheck: await settings.gmailAutoCheck(),
+            needsReconnect: await settings.gmailNeedsReconnect()
+        )
     }
 }

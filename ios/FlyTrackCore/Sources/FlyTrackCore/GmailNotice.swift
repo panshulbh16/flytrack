@@ -32,6 +32,17 @@ public enum GmailNotice {
         return now < lastCheck || now - lastCheck >= appOpenThrottleSeconds
     }
 
+    /// The automatic check (app open and BGTask) runs only in a build with the release switch on, for a connected
+    /// account with Auto-check on and access not lost.
+    public static func autoCheckEnabled(importEnabled: Bool, accountEmail: String?, autoCheck: Bool, needsReconnect: Bool) -> Bool {
+        importEnabled && accountEmail != nil && autoCheck && !needsReconnect
+    }
+
+    /// A build with the release switch off forgets the Gmail state a build with it on left on the phone.
+    public static func leftoversNeedWipe(importEnabled: Bool, accountEmail: String?) -> Bool {
+        !importEnabled && accountEmail != nil
+    }
+
     /// What Track opens: Add flight pre-filled, only while the suggestion is still pending. Nil when it was dismissed,
     /// added or deleted (Disconnect, past-date cleanup) since the notification was posted.
     public static func trackPrefill(_ suggestion: GmailSuggestion?) -> AddFlightPrefill? {

@@ -37,6 +37,20 @@ final class GmailNoticeTests: XCTestCase {
         XCTAssertTrue(GmailNotice.appOpenCheckDue(lastCheck: 10_000, now: 9_000))
     }
 
+    func testAutomaticCheckNeedsTheReleaseSwitchAConnectedAccountAutoCheckAndAccess() {
+        XCTAssertTrue(GmailNotice.autoCheckEnabled(importEnabled: true, accountEmail: "me@gmail.com", autoCheck: true, needsReconnect: false))
+        XCTAssertFalse(GmailNotice.autoCheckEnabled(importEnabled: false, accountEmail: "me@gmail.com", autoCheck: true, needsReconnect: false))
+        XCTAssertFalse(GmailNotice.autoCheckEnabled(importEnabled: true, accountEmail: nil, autoCheck: true, needsReconnect: false))
+        XCTAssertFalse(GmailNotice.autoCheckEnabled(importEnabled: true, accountEmail: "me@gmail.com", autoCheck: false, needsReconnect: false))
+        XCTAssertFalse(GmailNotice.autoCheckEnabled(importEnabled: true, accountEmail: "me@gmail.com", autoCheck: true, needsReconnect: true))
+    }
+
+    func testABuildWithTheSwitchOffWipesAStoredAccount() {
+        XCTAssertTrue(GmailNotice.leftoversNeedWipe(importEnabled: false, accountEmail: "me@gmail.com"))
+        XCTAssertFalse(GmailNotice.leftoversNeedWipe(importEnabled: false, accountEmail: nil))
+        XCTAssertFalse(GmailNotice.leftoversNeedWipe(importEnabled: true, accountEmail: "me@gmail.com"))
+    }
+
     /// Track on a notification whose suggestion was dismissed, added or deleted since it was posted.
     func testTrackOpensAddFlightOnlyForAPendingSuggestion() {
         var found = suggestion(from: "DEL", to: "BOM")

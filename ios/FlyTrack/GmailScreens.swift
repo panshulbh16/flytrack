@@ -211,7 +211,7 @@ final class LiveGmailSystem: GmailSystem {
     init(auth: GmailAuth) { self.auth = auth }
 
     func connect() async -> GmailTokenResult { await auth.connect() }
-    func revoke() async { await auth.disconnect() }
+    func revoke(storedEmail: String) async { await auth.disconnect(storedEmail: storedEmail) }
     func cancelNotifications(_ ids: [String]) async { GmailNotifications.cancel(ids) }
     func cancelAllNotifications() async { await GmailNotifications.cancelAll() }
     func setBackgroundChecks(_ on: Bool) { on ? GmailBackground.submit() : GmailBackground.cancel() }

@@ -133,11 +133,11 @@ final class GmailAuth: GmailTokenProviding {
     /// unexpired token gets a second 401, and the scanner then treats that as access lost, as the spec intends.
     func refresh() async -> GmailTokenResult { await silentToken() }
 
-    /// Revokes the grant only while GoogleSignIn still holds the stored Gmail account. After a GoogleLinker
+    /// Revokes the grant only while GoogleSignIn still holds `storedEmail`, the Gmail account the caller captured
+    /// before it wiped local state (AppShell.clearGmail() or GmailImportModel.disconnect()). After a GoogleLinker
     /// switch, or offline, it does nothing (the user can remove the grant at myaccount.google.com).
-    /// Local state is cleared by the caller: AppShell.clearGmail() or GmailImportModel.disconnect().
-    func disconnect() async {
-        guard GoogleConfig.configure(), let stored = await settings.gmailAccountEmail() else { return }
+    func disconnect(storedEmail stored: String) async {
+        guard GoogleConfig.configure() else { return }
         guard case .user(_, let email?, _) = await restore(), email.caseInsensitiveCompare(stored) == .orderedSame else { return }
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
             GIDSignIn.sharedInstance.disconnect { _ in continuation.resume() }
