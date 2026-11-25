@@ -160,6 +160,9 @@ public final class AddFlightModel {
     private let clock: FlyClock
     private let defaultAlerts: DefaultAlertPreferences
     private let source: TrackSource
+    private let gmailSuggestionId: String?
+    private let gmailStore: GmailSuggestionStoring?
+    private let gmailSystem: GmailSystem?
     private var trackedByFlightId: [String: TrackedFlight] = [:]
     private var profile: UserProfile?
     private var searchGeneration = 0
@@ -172,11 +175,16 @@ public final class AddFlightModel {
         backendConfigured: Bool,
         googleConfigured: Bool,
         isAnonymous: Bool,
-        defaultAlerts: DefaultAlertPreferences
+        defaultAlerts: DefaultAlertPreferences,
+        gmailStore: GmailSuggestionStoring? = nil,
+        gmailSystem: GmailSystem? = nil
     ) {
         self.flights = flights
         self.clock = clock
         self.defaultAlerts = defaultAlerts
+        gmailSuggestionId = prefill.gmailSuggestionId
+        self.gmailStore = gmailStore
+        self.gmailSystem = gmailSystem
         source = prefill.source ?? (prefill.isEmpty ? .manual : .share)
         let today = clock.today(tz: homeTimeZone)
         let selectable = selectableDates(today: today, now: clock.now())
@@ -295,7 +303,7 @@ public final class AddFlightModel {
         switch await flights.track(flightId: flightId, extras: extras) {
         case .tracked:
             await applyDefaultMutes(flightId)
-            finish(flightId)
+            await finish(flightId)
         case .alreadyTracked(let tracking):
             await saveDetailsAndFinish(tracking, extras)
         case .trackingLimitReached:
@@ -384,13 +392,13 @@ public final class AddFlightModel {
         let pnr = typed.pnr ?? existing.pnr
         let seat = typed.seat ?? existing.seat
         if pnr == existing.pnr && seat == existing.seat {
-            finish(existing.flightId)
+            await finish(existing.flightId)
             return
         }
         let merged = TrackExtras(pnr: pnr, seat: seat, cabin: existing.cabin, source: existing.source, note: existing.note)
         switch await flights.updateTrackingDetails(flightId: existing.flightId, extras: merged) {
         case .success:
-            finish(existing.flightId)
+            await finish(existing.flightId)
         case .invalidInput(let field):
             reject(existing.flightId, field)
         default:
@@ -406,7 +414,12 @@ public final class AddFlightModel {
         _ = await flights.updateNotifyPrefs(flightId: flightId, prefs: prefs)
     }
 
-    private func finish(_ flightId: String) {
+    /// The flight is tracked. A Gmail suggestion that opened this screen is now added and its notification goes.
+    private func finish(_ flightId: String) async {
+        if let id = gmailSuggestionId, let gmailStore {
+            await gmailStore.setStatus([id], .added)
+            await gmailSystem?.cancelNotifications([id])
+        }
         state.finishedFlightId = flightId
         publish()
     }
