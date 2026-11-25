@@ -19,7 +19,7 @@ data class AddFlight(
     val prefillFlight: String? = null,
     val prefillDate: String? = null,
     val prefillPnr: String? = null,
-    /** [app.flytrack.core.model.TrackSource.wire]: pdf, screenshot, share, or null when typed by hand. */
+    /** [app.flytrack.core.model.TrackSource.wire]: pdf, screenshot, share, gmail, or null when typed by hand. */
     val prefillSource: String? = null,
     /** Seat from a boarding pass, e.g. "12A". */
     val prefillSeat: String? = null,

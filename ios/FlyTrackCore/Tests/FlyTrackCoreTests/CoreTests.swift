@@ -365,3 +365,11 @@ final class BoardingPassTests: XCTestCase {
         XCTAssertEqual(legs(""), [])
     }
 }
+
+final class TrackSourceTests: XCTestCase {
+    func testGmailWireValue() {
+        XCTAssertEqual(TrackSource.fromWire("gmail"), .gmail)
+        XCTAssertEqual(TrackSource.gmail.wire, "gmail")
+        XCTAssertEqual(TrackSource.fromWire("bogus"), .manual)
+    }
+}

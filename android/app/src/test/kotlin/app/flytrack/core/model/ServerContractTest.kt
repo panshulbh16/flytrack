@@ -70,6 +70,23 @@ class ServerContractTest {
     }
 
     @Test
+    fun `gmail source round-trips`() {
+        assertEquals(TrackSource.GMAIL, TrackSource.fromWire("gmail"))
+        assertEquals("gmail", TrackSource.GMAIL.wire)
+    }
+
+    @Test
+    fun `TrackSource matches the user_flights source check`() {
+        val migrations = File("../../supabase/migrations")
+        assumeTrue("backend sources not present next to the android project", migrations.isDirectory)
+        val sql = migrations.listFiles()!!.sortedBy { it.name }.joinToString("\n") { it.readText() }
+        // the latest migration that redefines the check wins
+        val values = Regex("""add constraint user_flights_source_check check \(source in \(([^)]*)\)\)""")
+            .findAll(sql).last().groupValues[1]
+        assertEquals(Regex("'([^']+)'").findAll(values).map { it.groupValues[1] }.toList(), TrackSource.entries.map { it.wire })
+    }
+
+    @Test
     fun `only the inbound alert is Pro-only`() {
         assertEquals(listOf(AlertType.INBOUND_LATE), AlertType.entries.filter { it.proOnly })
     }

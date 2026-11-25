@@ -19,7 +19,8 @@ enum class TrackSource(val wire: String) {
     MANUAL("manual"),
     PDF("pdf"),
     SHARE("share"),
-    SCREENSHOT("screenshot");
+    SCREENSHOT("screenshot"),
+    GMAIL("gmail");
 
     companion object {
         fun fromWire(value: String?): TrackSource = entries.firstOrNull { it.wire == value } ?: MANUAL

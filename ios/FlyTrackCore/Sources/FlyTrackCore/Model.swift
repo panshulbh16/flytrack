@@ -83,7 +83,7 @@ public enum Cabin: String, CaseIterable, Sendable, Equatable {
 }
 
 public enum TrackSource: String, CaseIterable, Sendable, Equatable {
-    case manual, pdf, share, screenshot
+    case manual, pdf, share, screenshot, gmail
 
     public var wire: String { rawValue }
 
