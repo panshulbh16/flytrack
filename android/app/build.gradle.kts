@@ -59,6 +59,11 @@ android {
         compose = true
         buildConfig = true
     }
+
+    // MigrationTestHelper reads Room's exported schemas from the test APK's assets.
+    sourceSets {
+        getByName("androidTest").assets.srcDir("$projectDir/schemas")
+    }
 }
 
 ksp {
@@ -124,4 +129,9 @@ dependencies {
     testImplementation(libs.turbine)
     testImplementation(libs.ktor.client.mock)
     testImplementation(libs.room.testing)
+
+    androidTestImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.room.testing)
 }
