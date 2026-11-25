@@ -56,6 +56,40 @@ class DataStoreSettingsStoreTest {
     }
 
     @Test
+    fun `gmail starts disconnected with auto-check on`() = scope.runTest {
+        val store = store()
+        assertNull(store.gmailAccountEmail.first())
+        assertTrue("auto-check is on by default", store.gmailAutoCheck.first())
+        assertNull(store.gmailLastCheckEpochSeconds.first())
+        assertFalse(store.gmailNeedsReconnect.first())
+        assertNull(store.gmailLastAppOpenCheckEpochSeconds.first())
+    }
+
+    @Test
+    fun `gmail values are stored, read back and cleared with null`() = scope.runTest {
+        val store = store()
+
+        store.setGmailAccountEmail("traveller@gmail.com")
+        store.setGmailAutoCheck(false)
+        store.setGmailLastCheckEpochSeconds(1_764_000_000L)
+        store.setGmailNeedsReconnect(true)
+        store.setGmailLastAppOpenCheckEpochSeconds(1_764_003_600L)
+
+        assertEquals("traveller@gmail.com", store.gmailAccountEmail.first())
+        assertFalse(store.gmailAutoCheck.first())
+        assertEquals(1_764_000_000L, store.gmailLastCheckEpochSeconds.first())
+        assertTrue(store.gmailNeedsReconnect.first())
+        assertEquals(1_764_003_600L, store.gmailLastAppOpenCheckEpochSeconds.first())
+
+        store.setGmailAccountEmail(null)
+        store.setGmailLastCheckEpochSeconds(null)
+        store.setGmailLastAppOpenCheckEpochSeconds(null)
+        assertNull(store.gmailAccountEmail.first())
+        assertNull(store.gmailLastCheckEpochSeconds.first())
+        assertNull(store.gmailLastAppOpenCheckEpochSeconds.first())
+    }
+
+    @Test
     fun `appearance follows the phone until the user picks one`() = scope.runTest {
         val store = store()
         assertEquals(Appearance.SYSTEM, store.appearance.first())

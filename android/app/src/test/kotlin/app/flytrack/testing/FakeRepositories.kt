@@ -287,4 +287,36 @@ class FakeSettingsStore(
     override suspend fun setAppearance(appearance: Appearance) {
         appearanceFlow.value = appearance
     }
+
+    private val gmailEmail = MutableStateFlow<String?>(null)
+    private val gmailAuto = MutableStateFlow(true)
+    private val gmailLastCheck = MutableStateFlow<Long?>(null)
+    private val gmailReconnect = MutableStateFlow(false)
+    private val gmailLastAppOpen = MutableStateFlow<Long?>(null)
+
+    override val gmailAccountEmail: Flow<String?> = gmailEmail
+    override val gmailAutoCheck: Flow<Boolean> = gmailAuto
+    override val gmailLastCheckEpochSeconds: Flow<Long?> = gmailLastCheck
+    override val gmailNeedsReconnect: Flow<Boolean> = gmailReconnect
+    override val gmailLastAppOpenCheckEpochSeconds: Flow<Long?> = gmailLastAppOpen
+
+    override suspend fun setGmailAccountEmail(email: String?) {
+        gmailEmail.value = email
+    }
+
+    override suspend fun setGmailAutoCheck(enabled: Boolean) {
+        gmailAuto.value = enabled
+    }
+
+    override suspend fun setGmailLastCheckEpochSeconds(value: Long?) {
+        gmailLastCheck.value = value
+    }
+
+    override suspend fun setGmailNeedsReconnect(value: Boolean) {
+        gmailReconnect.value = value
+    }
+
+    override suspend fun setGmailLastAppOpenCheckEpochSeconds(value: Long?) {
+        gmailLastAppOpen.value = value
+    }
 }
