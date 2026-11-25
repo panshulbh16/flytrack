@@ -75,4 +75,40 @@ class LaunchRequestTest {
         assertNull(resolveLaunchRequest(IncomingIntent(action = ACTION_SEND, mimeType = "video/mp4", streamUris = listOf("content://v/1"))))
         assertNull(resolveLaunchRequest(IncomingIntent(action = "android.intent.action.VIEW", mimeType = "application/pdf", streamUris = listOf("content://x"))))
     }
+
+    @Test
+    fun `gmail suggestion notification opens that suggestion`() {
+        assertEquals(
+            LaunchRequest.OpenGmailSuggestion("6E2341_2026-12-03"),
+            resolveLaunchRequest(IncomingIntent(gmailSuggestionId = "6E2341_2026-12-03")),
+        )
+        assertEquals(
+            LaunchRequest.OpenGmailSuggestion("AI101_2026-12-04"),
+            resolveLaunchRequest(IncomingIntent(action = "android.intent.action.MAIN", gmailSuggestionId = " AI101_2026-12-04 ")),
+        )
+    }
+
+    @Test
+    fun `a malformed suggestion id is ignored`() {
+        listOf(
+            "",
+            "6e2341_2026-12-03",
+            "6E 2341_2026-12-03",
+            "AB_2026-12-03",
+            "ABCDEFGHI_2026-12-03",
+            "6E2341_2026-12-3",
+            "6E2341_2026-12-03/../x",
+            "../../etc",
+        ).forEach { id ->
+            assertNull(id, resolveLaunchRequest(IncomingIntent(gmailSuggestionId = id)))
+        }
+    }
+
+    @Test
+    fun `a valid flight id wins over a suggestion id`() {
+        assertEquals(
+            LaunchRequest.OpenFlight(TestData.FLIGHT_ID),
+            resolveLaunchRequest(IncomingIntent(flightId = TestData.FLIGHT_ID, gmailSuggestionId = "6E2341_2026-12-03")),
+        )
+    }
 }

@@ -7,6 +7,10 @@ import app.flytrack.data.repo.AuthRepository
 import app.flytrack.data.repo.FlightRepository
 import app.flytrack.data.repo.ProfileRepository
 import app.flytrack.data.repo.SessionState
+import app.flytrack.feature.gmailimport.GmailNotifier
+import app.flytrack.feature.gmailimport.GmailSuggestion
+import app.flytrack.feature.gmailimport.GmailSuggestionStore
+import app.flytrack.feature.gmailimport.SuggestionStatus
 import app.flytrack.ui.nav.IncomingIntent
 import app.flytrack.ui.nav.LaunchRequest
 import app.flytrack.ui.nav.resolveLaunchRequest
@@ -22,6 +26,9 @@ import javax.inject.Inject
 sealed interface ShellDestination {
     data class Flight(val flightId: String) : ShellDestination
     data object ImportTicket : ShellDestination
+
+    /** Track on a Gmail suggestion notification: Add flight prefilled from the stored suggestion. */
+    data class AddFromGmail(val suggestion: GmailSuggestion) : ShellDestination
 }
 
 /** App-shell state: session bootstrap on launch and routing of incoming intents. */
@@ -31,6 +38,8 @@ class MainViewModel @Inject constructor(
     private val flights: FlightRepository,
     private val profile: ProfileRepository,
     private val sharedContent: SharedContentHolder,
+    private val gmailSuggestions: GmailSuggestionStore,
+    private val gmailNotifier: GmailNotifier,
 ) : ViewModel() {
 
     val session: StateFlow<SessionState> = auth.session
@@ -59,6 +68,17 @@ class MainViewModel @Inject constructor(
             is LaunchRequest.ImportShared -> {
                 sharedContent.offer(request.content)
                 _destinations.trySend(ShellDestination.ImportTicket)
+            }
+            is LaunchRequest.OpenGmailSuggestion -> {
+                // Notification action buttons do not auto-cancel, so Track removes its notification here.
+                gmailNotifier.cancel(listOf(request.suggestionId))
+                viewModelScope.launch {
+                    // Deleted, dismissed or already added since the notification was posted: just open the app.
+                    val suggestion = gmailSuggestions.get(request.suggestionId)
+                    if (suggestion?.status == SuggestionStatus.PENDING) {
+                        _destinations.trySend(ShellDestination.AddFromGmail(suggestion))
+                    }
+                }
             }
             null -> Unit
         }

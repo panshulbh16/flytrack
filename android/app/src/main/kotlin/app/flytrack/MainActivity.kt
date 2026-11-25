@@ -115,6 +115,7 @@ private fun FlyTrackShell(viewModel: MainViewModel) {
             when (destination) {
                 is ShellDestination.Flight -> navigator.openFlight(destination.flightId)
                 ShellDestination.ImportTicket -> navigator.openImportTicket()
+                is ShellDestination.AddFromGmail -> navigator.openAddFlightFromGmail(destination.suggestion)
             }
         }
     }
