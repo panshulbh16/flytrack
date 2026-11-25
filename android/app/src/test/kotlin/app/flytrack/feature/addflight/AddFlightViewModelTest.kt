@@ -13,6 +13,7 @@ import app.flytrack.core.result.TrackResult
 import app.flytrack.data.remote.BackendConfig
 import app.flytrack.data.repo.FlightRepository
 import app.flytrack.data.repo.SessionState
+import app.flytrack.feature.gmailimport.GmailSuggestionStore
 import app.flytrack.feature.gmailimport.SuggestionStatus
 import app.flytrack.testing.FakeAuthRepository
 import app.flytrack.testing.FakeClock
@@ -58,6 +59,7 @@ class AddFlightViewModelTest {
         prefill: AddFlightPrefill = AddFlightPrefill(),
         googleWebClientId: String = "web-client-id",
         auth: FakeAuthRepository = this.auth,
+        gmailSuggestions: GmailSuggestionStore = gmailStore,
     ) = AddFlightViewModel(
         prefill = prefill,
         flights = flights,
@@ -66,7 +68,7 @@ class AddFlightViewModelTest {
         clock = clock,
         homeTimeZone = HomeTimeZone { "Asia/Kolkata" },
         backendConfig = BackendConfig("https://example.supabase.co", "anon-key", googleWebClientId),
-        gmailSuggestions = gmailStore,
+        gmailSuggestions = gmailSuggestions,
         gmailNotifier = gmailNotifier,
     )
 
@@ -540,6 +542,68 @@ class AddFlightViewModelTest {
 
         assertEquals(TrackSource.GMAIL, fake.trackCalls.single().second.source)
         assertEquals(SuggestionStatus.ADDED, gmailStore.get(suggestion.id)?.status)
+        assertEquals(listOf(suggestion.id), gmailNotifier.cancelled)
+    }
+
+    @Test
+    fun `tracking another date than the gmail suggestion's leaves the suggestion pending`() = runTest {
+        fake.searchResult = SearchResult.Found(listOf(delBom))
+        val suggestion = GmailFixtures.suggestion("6E 2341", LocalDate(2026, 11, 25))
+        gmailStore.insert(listOf(suggestion))
+        val vm = viewModel(
+            AddFlightPrefill("6E 2341", "2026-11-25", null, source = TrackSource.GMAIL, gmailSuggestionId = suggestion.id),
+        )
+        vm.onDateChange(LocalDate(2026, 11, 26))
+        vm.onSearch()
+
+        vm.events.test {
+            vm.onTrack(delBom.id)
+            assertEquals(AddFlightEvent.Finished(delBom.id), awaitItem())
+        }
+
+        assertEquals(SuggestionStatus.PENDING, gmailStore.get(suggestion.id)?.status)
+        assertTrue(gmailNotifier.cancelled.isEmpty())
+    }
+
+    @Test
+    fun `tracking another flight than the gmail suggestion's leaves the suggestion pending`() = runTest {
+        fake.searchResult = SearchResult.Found(listOf(delBom))
+        val suggestion = GmailFixtures.suggestion("6E 2341", LocalDate(2026, 11, 25))
+        gmailStore.insert(listOf(suggestion))
+        val vm = viewModel(
+            AddFlightPrefill("6E 2341", "2026-11-25", null, source = TrackSource.GMAIL, gmailSuggestionId = suggestion.id),
+        )
+        vm.onFlightInputChange("6E 2342")
+        vm.onSearch()
+
+        vm.events.test {
+            vm.onTrack(delBom.id)
+            assertEquals(AddFlightEvent.Finished(delBom.id), awaitItem())
+        }
+
+        assertEquals(SuggestionStatus.PENDING, gmailStore.get(suggestion.id)?.status)
+        assertTrue(gmailNotifier.cancelled.isEmpty())
+    }
+
+    @Test
+    fun `a failing suggestion store does not stop add flight from finishing`() = runTest {
+        fake.searchResult = SearchResult.Found(listOf(delBom))
+        val suggestion = GmailFixtures.suggestion("6E 2341", LocalDate(2026, 11, 25))
+        gmailStore.insert(listOf(suggestion))
+        val failing = object : GmailSuggestionStore by gmailStore {
+            override suspend fun setStatus(ids: List<String>, status: SuggestionStatus) =
+                throw IllegalStateException("disk full")
+        }
+        val vm = viewModel(
+            AddFlightPrefill("6E 2341", "2026-11-25", null, source = TrackSource.GMAIL, gmailSuggestionId = suggestion.id),
+            gmailSuggestions = failing,
+        )
+
+        vm.events.test {
+            vm.onTrack(delBom.id)
+            assertEquals(AddFlightEvent.Finished(delBom.id), awaitItem())
+        }
+
         assertEquals(listOf(suggestion.id), gmailNotifier.cancelled)
     }
 
