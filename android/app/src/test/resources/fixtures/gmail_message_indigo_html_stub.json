@@ -1,0 +1,38 @@
+{
+  "id": "18c1f0a2b3c4d505",
+  "threadId": "18c1f0a2b3c4d505",
+  "labelIds": ["INBOX"],
+  "snippet": "View this email in your browser",
+  "internalDate": "1763985600000",
+  "payload": {
+    "partId": "",
+    "mimeType": "multipart/alternative",
+    "filename": "",
+    "headers": [
+      { "name": "From", "value": "Synthetic IndiGo <bookings@example.com>" },
+      { "name": "Subject", "value": "Your IndiGo itinerary" },
+      { "name": "Content-Type", "value": "multipart/alternative; boundary=\"000000000000e1f2a3\"" }
+    ],
+    "body": { "size": 0 },
+    "parts": [
+      {
+        "partId": "0",
+        "mimeType": "text/plain",
+        "filename": "",
+        "headers": [{ "name": "Content-Type", "value": "text/plain; charset=\"UTF-8\"" }],
+        "body": { "size": 32, "data": "VmlldyB0aGlzIGVtYWlsIGluIHlvdXIgYnJvd3Nlcgo=" }
+      },
+      {
+        "partId": "1",
+        "mimeType": "text/html",
+        "filename": "",
+        "headers": [{ "name": "Content-Type", "value": "text/html; charset=\"UTF-8\"" }],
+        "body": {
+          "size": 305,
+          "data": "PGh0bWw-PGJvZHk-PHA-PGEgaHJlZj0iaHR0cHM6Ly9leGFtcGxlLmNvbS92aWV3Ij5WaWV3IHRoaXMgZW1haWwgaW4geW91ciBicm93c2VyPC9hPjwvcD4KPHRhYmxlPgo8dHI-PHRkPlBOUjwvdGQ-PHRkPlE3SzJMTTwvdGQ-PC90cj4KPHRyPjx0ZD5GbGlnaHQ8L3RkPjx0ZD42RSA1MTIzPC90ZD48L3RyPgo8dHI-PHRkPkRhdGU8L3RkPjx0ZD5Nb24sIDE0IERlYyAyMDI2PC90ZD48L3RyPgo8dHI-PHRkPlJvdXRlPC90ZD48dGQ-REVMJm5ic3A7JnJhcnI7Jm5ic3A7R09JPC90ZD48L3RyPgo8L3RhYmxlPgo8L2JvZHk-PC9odG1sPgo"
+        }
+      }
+    ]
+  },
+  "sizeEstimate": 1720
+}

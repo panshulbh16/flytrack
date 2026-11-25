@@ -1,0 +1,22 @@
+{
+  "id": "18c1f0a2b3c4d502",
+  "threadId": "18c1f0a2b3c4d502",
+  "labelIds": ["INBOX"],
+  "snippet": "Dear Passenger, Your Air India booking is confirmed.",
+  "internalDate": "1763974800000",
+  "payload": {
+    "partId": "",
+    "mimeType": "text/html",
+    "filename": "",
+    "headers": [
+      { "name": "From", "value": "Synthetic Air India <bookings@example.com>" },
+      { "name": "subject", "value": "Your Air India e-ticket itinerary" },
+      { "name": "Content-Type", "value": "text/html; charset=\"UTF-8\"" }
+    ],
+    "body": {
+      "size": 386,
+      "data": "PGh0bWw-PGhlYWQ-PHN0eWxlPnRkIHsgZm9udC1mYW1pbHk6IEFyaWFsOyB9PC9zdHlsZT48L2hlYWQ-PGJvZHk-CjxwPkRlYXIgUGFzc2VuZ2VyLDwvcD4KPHA-WW91ciBBaXIgSW5kaWEgYm9va2luZyBpcyBjb25maXJtZWQuPC9wPgo8dGFibGU-Cjx0cj48dGQ-UE5SPC90ZD48dGQ-QTFCMkMzPC90ZD48L3RyPgo8dHI-PHRkPkZsaWdodDwvdGQ-PHRkPkFJIDY2NTwvdGQ-PC90cj4KPHRyPjx0ZD5EYXRlPC90ZD48dGQ-RnJpLCAxMiBEZWMgMjAyNjwvdGQ-PC90cj4KPHRyPjx0ZD5Sb3V0ZTwvdGQ-PHRkPkJPTSZuYnNwOyZyYXJyOyZuYnNwO0RFTDwvdGQ-PC90cj4KPC90YWJsZT4KPHA-RmFyZSAmYW1wOyB0YXhlczogJiM4Mzc3OzYsMjQwPC9wPgo8L2JvZHk-PC9odG1sPgo"
+    }
+  },
+  "sizeEstimate": 1490
+}
