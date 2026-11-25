@@ -102,7 +102,7 @@ class AndroidGmailNotifier @Inject constructor(
         )
         return Notification.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
-            .setColor(context.getColor(R.color.plum))
+            .setColor(context.getColor(R.color.forest))
             .setContentTitle(title)
             .setContentText(context.getString(R.string.gmail_notification_body))
             .setContentIntent(track)
@@ -118,7 +118,7 @@ class AndroidGmailNotifier @Inject constructor(
         val count = tags.size
         val summary = Notification.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
-            .setColor(context.getColor(R.color.plum))
+            .setColor(context.getColor(R.color.forest))
             .setContentTitle(context.resources.getQuantityString(R.plurals.gmail_notification_summary, count, count))
             .setGroup(GROUP)
             .setGroupSummary(true)
