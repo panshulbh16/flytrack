@@ -20,6 +20,24 @@ class GmailAutoCheckTest {
     }
 
     @Test
+    fun `with the release switch off nothing checks gmail`() {
+        assertFalse(gmailAutoCheckEnabled(email, autoCheck = true, needsReconnect = false, importEnabled = false))
+        assertFalse(
+            gmailAppOpenCheckDue(
+                email, autoCheck = true, needsReconnect = false, lastAppOpenCheckEpochSeconds = null,
+                nowEpochSeconds = now, importEnabled = false,
+            ),
+        )
+    }
+
+    @Test
+    fun `with the release switch off a stored account is wiped`() {
+        assertTrue(gmailLeftoversNeedWipe(email, importEnabled = false))
+        assertFalse(gmailLeftoversNeedWipe(null, importEnabled = false))
+        assertFalse(gmailLeftoversNeedWipe(email, importEnabled = true))
+    }
+
+    @Test
     fun `app-open check runs at most once an hour`() {
         fun due(last: Long?) = gmailAppOpenCheckDue(email, autoCheck = true, needsReconnect = false, lastAppOpenCheckEpochSeconds = last, nowEpochSeconds = now)
 

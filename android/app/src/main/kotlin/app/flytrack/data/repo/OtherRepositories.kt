@@ -213,7 +213,8 @@ class RoomLocalUserData @Inject constructor(
     private val profileDao: ProfileDao,
     private val settings: SettingsStore,
     private val transactions: TransactionRunner,
-    private val gmail: GmailConnection,
+    // Lazy: a build with Gmail import off never needs its HTTP client until someone signs out.
+    private val gmail: dagger.Lazy<GmailConnection>,
 ) : LocalUserData {
     override suspend fun clear() {
         transactions.inTransaction {
@@ -225,6 +226,6 @@ class RoomLocalUserData @Inject constructor(
         settings.setLastDeviceRegistration(null)
         // Gmail access was granted by the user who is leaving: revoke it, and drop suggestions, seen ids,
         // Gmail settings, the background check and its notifications.
-        gmail.disconnect()
+        gmail.get().disconnect()
     }
 }

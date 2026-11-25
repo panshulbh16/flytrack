@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ProcessLifecycleOwner
@@ -22,6 +23,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -157,6 +159,11 @@ class GmailSuggestionActionReceiver : BroadcastReceiver() {
         deps.scope().launch {
             try {
                 deps.store().setStatus(listOf(id), SuggestionStatus.DISMISSED)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // A disk error leaves the suggestion on the card instead of crashing the app. Class name only.
+                Log.w(GMAIL_LOG_TAG, "not now failed: ${e.javaClass.simpleName}")
             } finally {
                 pending.finish()
             }

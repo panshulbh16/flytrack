@@ -50,7 +50,8 @@ class MainActivity : ComponentActivity() {
 
     @Inject lateinit var settings: SettingsStore
 
-    @Inject lateinit var gmailAppOpenCheck: GmailAppOpenCheck
+    // Lazy: a build with Gmail import off never builds the scanner or its HTTP client.
+    @Inject lateinit var gmailAppOpenCheck: dagger.Lazy<GmailAppOpenCheck>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -93,7 +94,7 @@ class MainActivity : ComponentActivity() {
     // Launch and every return to the foreground; GmailAppOpenCheck throttles itself to once an hour.
     override fun onStart() {
         super.onStart()
-        gmailAppOpenCheck.onForeground()
+        if (BuildConfig.GMAIL_IMPORT_ENABLED) gmailAppOpenCheck.get().onForeground()
     }
 
     private fun Intent.toIncomingIntent(): IncomingIntent {

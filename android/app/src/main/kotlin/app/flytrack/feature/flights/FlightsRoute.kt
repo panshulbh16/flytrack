@@ -166,7 +166,7 @@ fun FlightsScreen(
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             topContent()
-            if (state.gmailSuggestions.isNotEmpty()) {
+            if (isGmailImportAvailable && state.gmailSuggestions.isNotEmpty()) {
                 FoundInGmailCard(state.gmailSuggestions, onAddGmailSuggestion, onDismissGmailSuggestion)
             }
             PullToRefreshBox(

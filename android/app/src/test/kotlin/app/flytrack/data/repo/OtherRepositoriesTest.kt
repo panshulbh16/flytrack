@@ -195,7 +195,7 @@ class OtherRepositoriesTest {
         settings.setGmailAccountEmail("me@gmail.com")
         gmailStore.insert(listOf(GmailFixtures.suggestion()))
 
-        RoomLocalUserData(db.flightDao, db.trackedDao, db.profileDao, settings, db.transactions, gmail).clear()
+        RoomLocalUserData(db.flightDao, db.trackedDao, db.profileDao, settings, db.transactions, { gmail }).clear()
 
         assertTrue(db.flights.value.isEmpty())
         assertTrue(db.tracked.value.isEmpty())
