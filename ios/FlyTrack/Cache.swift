@@ -37,6 +37,50 @@ final class CachedProfileRecord {
     }
 }
 
+/// A Gmail find. Local-only state (not a cache of server data): flight, date, route, PNR and subject, never the body.
+@Model
+final class GmailSuggestionRecord {
+    @Attribute(.unique) var id: String
+    var messageId: String
+    var flight: String
+    var date: String
+    var fromIata: String?
+    var toIata: String?
+    var pnr: String?
+    var subject: String
+    var status: String
+    var foundAt: Int64
+
+    init(_ suggestion: GmailSuggestion) {
+        id = suggestion.id
+        messageId = suggestion.messageId
+        flight = suggestion.flight
+        date = suggestion.date.iso
+        fromIata = suggestion.fromIata
+        toIata = suggestion.toIata
+        pnr = suggestion.pnr
+        subject = suggestion.subject
+        status = suggestion.status.rawValue
+        foundAt = suggestion.foundAt
+    }
+
+    var suggestion: GmailSuggestion? {
+        guard let day = LocalDate.parse(date) else { return nil }
+        return GmailSuggestion(
+            id: id, messageId: messageId, flight: flight, date: day, fromIata: fromIata, toIata: toIata, pnr: pnr,
+            subject: subject, status: GmailSuggestionStatus(rawValue: status) ?? .pending, foundAt: foundAt
+        )
+    }
+}
+
+/// A Gmail message already read (or skipped), so later scans do not fetch it again.
+@Model
+final class GmailSeenMessageRecord {
+    @Attribute(.unique) var messageId: String
+
+    init(messageId: String) { self.messageId = messageId }
+}
+
 enum LocalCache {
     @MainActor
     static func save(flight: Flight, in context: ModelContext) {
@@ -112,12 +156,31 @@ enum LocalCache {
         return FlyTrackCore.profile(from: object)
     }
 
+    /// Sign-out or a switch to another HeyGate user. Gmail suggestions and seen ids belong to that user too.
     @MainActor
     static func wipeUserData(in context: ModelContext) {
+        wipeGmail(in: context)
         for row in (try? context.fetch(FetchDescriptor<CachedTrackingRecord>())) ?? [] { context.delete(row) }
         for row in (try? context.fetch(FetchDescriptor<CachedFlightRecord>())) ?? [] { context.delete(row) }
         for row in (try? context.fetch(FetchDescriptor<CachedProfileRecord>())) ?? [] { context.delete(row) }
         try? context.save()
+    }
+
+    @MainActor
+    static func wipeGmail(in context: ModelContext) {
+        for row in (try? context.fetch(FetchDescriptor<GmailSuggestionRecord>())) ?? [] { context.delete(row) }
+        for row in (try? context.fetch(FetchDescriptor<GmailSeenMessageRecord>())) ?? [] { context.delete(row) }
+        try? context.save()
+    }
+
+    /// Every tracked flight as flight number + date, archived included: Gmail should not suggest those again.
+    @MainActor
+    static func trackedKeys(in context: ModelContext) -> Set<TrackedKey> {
+        Set(trackingRows(in: context).compactMap { tracking in
+            flight(id: tracking.flightId, in: context).map {
+                TrackedKey(flightCompact: GmailSuggestions.compact($0.carrierIata + $0.flightNumber), date: $0.flightDate)
+            }
+        })
     }
 
     @MainActor

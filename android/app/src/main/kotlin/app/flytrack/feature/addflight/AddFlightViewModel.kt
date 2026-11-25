@@ -18,11 +18,16 @@ import app.flytrack.data.repo.AuthRepository
 import app.flytrack.data.repo.FlightRepository
 import app.flytrack.data.repo.ProfileRepository
 import app.flytrack.data.repo.SessionState
+import app.flytrack.feature.gmailimport.GmailNotifier
+import app.flytrack.feature.gmailimport.GmailSuggestionStore
+import app.flytrack.feature.gmailimport.GmailSuggestions
+import app.flytrack.feature.gmailimport.SuggestionStatus
 import app.flytrack.feature.settings.DefaultAlertPreferences
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -51,6 +56,8 @@ class AddFlightViewModel @AssistedInject constructor(
     private val clock: Clock,
     homeTimeZone: HomeTimeZone,
     backendConfig: BackendConfig,
+    private val gmailSuggestions: GmailSuggestionStore,
+    private val gmailNotifier: GmailNotifier,
     private val defaultAlerts: DefaultAlertPreferences = DefaultAlertPreferences.AllOn,
 ) : ViewModel() {
 
@@ -67,6 +74,7 @@ class AddFlightViewModel @AssistedInject constructor(
 
     // A prefill without a source is a share (the route did not say which). An empty form was typed.
     private val source = prefill.source ?: if (prefill.isEmpty) TrackSource.MANUAL else TrackSource.SHARE
+    private val gmailSuggestionId = prefill.gmailSuggestionId
 
     private var searchJob: Job? = null
     private var trackedByFlightId: Map<String, TrackedFlight> = emptyMap()
@@ -271,6 +279,24 @@ class AddFlightViewModel @AssistedInject constructor(
     }
 
     private suspend fun finish(flightId: String) {
+        // The flight is tracked now, so the Gmail suggestion it came from is done, but only when the user tracked
+        // that suggestion's flight and date: after an edit it stays pending (scan cleanup marks it added if that
+        // flight gets tracked later). Editing the form resets the search, so this query is the tracked leg's.
+        // Backing out never gets here.
+        val query = (_uiState.value.search as? SearchUiState.Results)?.query
+        val id = gmailSuggestionId?.takeIf {
+            query != null && it == GmailSuggestions.suggestionId(GmailSuggestions.compact(query.flight), query.date)
+        }
+        if (id != null) {
+            try {
+                gmailSuggestions.setStatus(listOf(id), SuggestionStatus.ADDED)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // The flight is tracked: finish anyway. The next scan's cleanup marks the suggestion added.
+            }
+            gmailNotifier.cancel(listOf(id))
+        }
         // trackingFlightId stays set: the screen is about to close, and a late tap must not start a second request.
         _events.send(AddFlightEvent.Finished(flightId))
     }

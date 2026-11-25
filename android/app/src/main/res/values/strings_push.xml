@@ -12,4 +12,17 @@
     <string name="push_permission_blocked_title">Alerts are blocked</string>
     <string name="push_permission_blocked_message">Notifications for FlyTrack are turned off in system settings, so gate changes will not appear.</string>
     <string name="push_permission_open_settings">Notification settings</string>
+
+    <!-- Gmail import: channel ticket_suggestions and its notifications. -->
+    <string name="gmail_channel_name">Found in your email</string>
+    <string name="gmail_channel_description">Flight bookings found in your Gmail. Each one asks whether to track the flight.</string>
+    <string name="gmail_notification_title">Track %1$s on %2$s?</string>
+    <string name="gmail_notification_title_route">Track %1$s on %2$s, %3$s?</string>
+    <string name="gmail_notification_body">Found in your Gmail.</string>
+    <string name="gmail_notification_track">Track</string>
+    <string name="gmail_notification_not_now">Not now</string>
+    <plurals name="gmail_notification_summary">
+        <item quantity="one">%d flight found in your Gmail</item>
+        <item quantity="other">%d flights found in your Gmail</item>
+    </plurals>
 </resources>

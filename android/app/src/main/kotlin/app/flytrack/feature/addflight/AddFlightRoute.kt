@@ -60,6 +60,7 @@ fun AddFlightRoute(
     onBack: () -> Unit,
     prefillSource: String? = null,
     prefillSeat: String? = null,
+    prefillGmailSuggestionId: String? = null,
 ) {
     val prefill = AddFlightPrefill(
         flight = prefillFlight,
@@ -67,6 +68,7 @@ fun AddFlightRoute(
         pnr = prefillPnr,
         source = prefillSource?.let { raw -> TrackSource.entries.firstOrNull { it.wire == raw } },
         seat = prefillSeat,
+        gmailSuggestionId = prefillGmailSuggestionId,
     )
     val viewModel = hiltViewModel<AddFlightViewModel, AddFlightViewModel.Factory>(
         creationCallback = { factory -> factory.create(prefill) },

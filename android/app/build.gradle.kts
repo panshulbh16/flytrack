@@ -42,7 +42,12 @@ android {
     }
 
     buildTypes {
+        // Gmail import needs Google's restricted-scope verification: off in release until it passes.
+        debug {
+            buildConfigField("boolean", "GMAIL_IMPORT_ENABLED", "true")
+        }
         release {
+            buildConfigField("boolean", "GMAIL_IMPORT_ENABLED", "false")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
@@ -58,6 +63,11 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+
+    // MigrationTestHelper reads Room's exported schemas from the test APK's assets.
+    sourceSets {
+        getByName("androidTest").assets.srcDir("$projectDir/schemas")
     }
 }
 
@@ -115,6 +125,7 @@ dependencies {
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play)
     implementation(libs.googleid)
+    implementation(libs.play.services.auth)
 
     implementation(libs.mlkit.text.recognition)
     implementation(libs.play.services.code.scanner)
@@ -124,4 +135,9 @@ dependencies {
     testImplementation(libs.turbine)
     testImplementation(libs.ktor.client.mock)
     testImplementation(libs.room.testing)
+
+    androidTestImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.room.testing)
 }

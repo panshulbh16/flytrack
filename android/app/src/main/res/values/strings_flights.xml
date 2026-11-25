@@ -221,4 +221,13 @@
     <string name="flights_alert_disruption_description">When the flight is cancelled, put back on, or sent to another airport</string>
     <string name="flights_alert_inbound">Incoming plane running late</string>
     <string name="flights_alert_inbound_description">An early warning before the airline announces a delay</string>
+
+    <!-- Found in Gmail card -->
+    <string name="flights_gmail_title">Found in Gmail</string>
+    <string name="flights_gmail_row">%1$s on %2$s</string>
+    <string name="flights_gmail_row_route">%1$s on %2$s, %3$s→%4$s</string>
+    <string name="flights_gmail_add">Add</string>
+    <string name="flights_gmail_dismiss">Dismiss</string>
+    <string name="flights_gmail_add_description">Add %1$s on %2$s</string>
+    <string name="flights_gmail_dismiss_description">Dismiss %1$s on %2$s</string>
 </resources>

@@ -15,6 +15,7 @@ import app.flytrack.data.remote.dto.RegisterDeviceParams
 import app.flytrack.data.remote.toDomain
 import app.flytrack.data.remote.toEntity
 import app.flytrack.di.IoDispatcher
+import app.flytrack.feature.gmailimport.GmailConnection
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -212,6 +213,8 @@ class RoomLocalUserData @Inject constructor(
     private val profileDao: ProfileDao,
     private val settings: SettingsStore,
     private val transactions: TransactionRunner,
+    // Lazy: a build with Gmail import off never needs its HTTP client until someone signs out.
+    private val gmail: dagger.Lazy<GmailConnection>,
 ) : LocalUserData {
     override suspend fun clear() {
         transactions.inTransaction {
@@ -221,5 +224,8 @@ class RoomLocalUserData @Inject constructor(
             flightDao.clear()
         }
         settings.setLastDeviceRegistration(null)
+        // Gmail access was granted by the user who is leaving: revoke it, and drop suggestions, seen ids,
+        // Gmail settings, the background check and its notifications.
+        gmail.get().disconnect()
     }
 }

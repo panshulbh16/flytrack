@@ -1,0 +1,54 @@
+{
+  "id": "18c1f0a2b3c4d504",
+  "threadId": "18c1f0a2b3c4d504",
+  "labelIds": ["INBOX"],
+  "snippet": "Hello, Your IndiGo e-ticket is attached to this email.",
+  "internalDate": "1763982000000",
+  "payload": {
+    "partId": "",
+    "mimeType": "multipart/mixed",
+    "filename": "",
+    "headers": [
+      { "name": "From", "value": "Synthetic IndiGo <bookings@example.com>" },
+      { "name": "Subject", "value": "IndiGo e-Ticket - PNR Q7K2LM" },
+      { "name": "Content-Type", "value": "multipart/mixed; boundary=\"000000000000d4e5f6\"" }
+    ],
+    "body": { "size": 0 },
+    "parts": [
+      {
+        "partId": "0",
+        "mimeType": "multipart/alternative",
+        "filename": "",
+        "headers": [{ "name": "Content-Type", "value": "multipart/alternative; boundary=\"000000000000a7b8c9\"" }],
+        "body": { "size": 0 },
+        "parts": [
+          {
+            "partId": "0.0",
+            "mimeType": "text/plain",
+            "filename": "",
+            "headers": [{ "name": "Content-Type", "value": "text/plain; charset=\"UTF-8\"" }],
+            "body": { "size": 55, "data": "SGVsbG8sCllvdXIgSW5kaUdvIGUtdGlja2V0IGlzIGF0dGFjaGVkIHRvIHRoaXMgZW1haWwuCg==" }
+          },
+          {
+            "partId": "0.1",
+            "mimeType": "text/html",
+            "filename": "",
+            "headers": [{ "name": "Content-Type", "value": "text/html; charset=\"UTF-8\"" }],
+            "body": { "size": 67, "data": "PHA-SGVsbG8sPC9wPjxwPllvdXIgSW5kaUdvIGUtdGlja2V0IGlzIGF0dGFjaGVkIHRvIHRoaXMgZW1haWwuPC9wPg" }
+          }
+        ]
+      },
+      {
+        "partId": "1",
+        "mimeType": "application/pdf",
+        "filename": "Itinerary_Q7K2LM.pdf",
+        "headers": [
+          { "name": "Content-Type", "value": "application/pdf; name=\"Itinerary_Q7K2LM.pdf\"" },
+          { "name": "Content-Disposition", "value": "attachment; filename=\"Itinerary_Q7K2LM.pdf\"" }
+        ],
+        "body": { "attachmentId": "ANGjdJ8syntheticPdfAttachment01", "size": 48213 }
+      }
+    ]
+  },
+  "sizeEstimate": 66120
+}

@@ -1,6 +1,8 @@
 package app.flytrack.data.local
 
 import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
@@ -100,4 +102,39 @@ interface ProfileDao {
 
     @Query("DELETE FROM profiles")
     suspend fun clear()
+}
+
+@Dao
+interface GmailDao {
+    @Query("SELECT * FROM gmail_suggestions ORDER BY date, id")
+    fun observeSuggestions(): Flow<List<GmailSuggestionEntity>>
+
+    @Query("SELECT * FROM gmail_suggestions ORDER BY date, id")
+    suspend fun suggestions(): List<GmailSuggestionEntity>
+
+    @Query("SELECT * FROM gmail_suggestions WHERE id = :id")
+    suspend fun suggestion(id: String): GmailSuggestionEntity?
+
+    /** A stored row wins, so a later scan can never bring back a dismissed or added suggestion. */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertSuggestions(rows: List<GmailSuggestionEntity>)
+
+    @Query("UPDATE gmail_suggestions SET status = :status WHERE id IN (:ids)")
+    suspend fun setStatus(ids: List<String>, status: String)
+
+    @Query("DELETE FROM gmail_suggestions WHERE id IN (:ids)")
+    suspend fun deleteSuggestions(ids: List<String>)
+
+    @Query("DELETE FROM gmail_suggestions")
+    suspend fun clearSuggestions()
+
+    /** The ids of [messageIds] already seen. */
+    @Query("SELECT message_id FROM gmail_seen_messages WHERE message_id IN (:messageIds)")
+    suspend fun seen(messageIds: List<String>): List<String>
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun markSeen(rows: List<GmailSeenMessageEntity>)
+
+    @Query("DELETE FROM gmail_seen_messages")
+    suspend fun clearSeen()
 }

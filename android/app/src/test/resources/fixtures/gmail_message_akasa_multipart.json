@@ -1,0 +1,41 @@
+{
+  "id": "18c1f0a2b3c4d503",
+  "threadId": "18c1f0a2b3c4d503",
+  "labelIds": ["INBOX"],
+  "snippet": "Akasa Air booking confirmed PNR: K8M3QZ",
+  "internalDate": "1763978400000",
+  "payload": {
+    "partId": "",
+    "mimeType": "multipart/alternative",
+    "filename": "",
+    "headers": [
+      { "name": "From", "value": "Synthetic Akasa Air <bookings@example.com>" },
+      { "name": "Subject", "value": "Akasa Air booking confirmation" },
+      { "name": "Content-Type", "value": "multipart/alternative; boundary=\"000000000000a1b2c3\"" }
+    ],
+    "body": { "size": 0 },
+    "parts": [
+      {
+        "partId": "0",
+        "mimeType": "text/plain",
+        "filename": "",
+        "headers": [{ "name": "Content-Type", "value": "text/plain; charset=\"UTF-8\"" }],
+        "body": {
+          "size": 104,
+          "data": "QWthc2EgQWlyIGJvb2tpbmcgY29uZmlybWVkClBOUjogSzhNM1FaClFQIDEzNzIgQmVuZ2FsdXJ1IChCTFIpIHRvIE11bWJhaSAoQk9NKQpUaHUsIDE4IERlYyAyMDI2LCAwNjoxNQo="
+        }
+      },
+      {
+        "partId": "1",
+        "mimeType": "text/html",
+        "filename": "",
+        "headers": [{ "name": "Content-Type", "value": "text/html; charset=\"UTF-8\"" }],
+        "body": {
+          "size": 225,
+          "data": "PGh0bWw-PGJvZHk-PHA-PGEgaHJlZj0iaHR0cHM6Ly9leGFtcGxlLmNvbS92aWV3Ij5WaWV3IGluIGJyb3dzZXI8L2E-PC9wPgo8cD5Ba2FzYSBBaXIgYm9va2luZyBjb25maXJtZWQ8L3A-PHA-UE5SOiA8Yj5LOE0zUVo8L2I-PC9wPgo8cD5RUCAxMzcyIEJlbmdhbHVydSAoQkxSKSB0byBNdW1iYWkgKEJPTSk8L3A-PHA-VGh1LCAxOCBEZWMgMjAyNiwgMDY6MTU8L3A-PC9ib2R5PjwvaHRtbD4K"
+        }
+      }
+    ]
+  },
+  "sizeEstimate": 2310
+}

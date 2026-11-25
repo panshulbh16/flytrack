@@ -5,6 +5,7 @@ import app.flytrack.core.result.ActionResult
 import app.flytrack.core.result.AuthResult
 import app.flytrack.data.remote.BackendConfig
 import app.flytrack.data.repo.DeviceRegistration
+import app.flytrack.feature.gmailimport.GmailConnection
 import app.flytrack.push.ChannelHealth
 import app.flytrack.push.DeviceMaker
 import app.flytrack.push.NotificationHealth
@@ -15,8 +16,14 @@ import app.flytrack.push.PushInitializer
 import app.flytrack.testing.FakeAuthRepository
 import app.flytrack.testing.FakeClock
 import app.flytrack.testing.FakeDeviceRepository
+import app.flytrack.testing.FakeGmailApi
+import app.flytrack.testing.FakeGmailAuth
+import app.flytrack.testing.FakeGmailNotifier
+import app.flytrack.testing.FakeGmailSuggestionStore
 import app.flytrack.testing.FakeProfileRepository
 import app.flytrack.testing.FakeSettingsStore
+import app.flytrack.testing.FakeWorkScheduler
+import app.flytrack.testing.GmailFixtures
 import app.flytrack.testing.MainDispatcherRule
 import app.flytrack.testing.TestData
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,6 +44,11 @@ class SettingsViewModelTest {
     private val devices = FakeDeviceRepository()
     private val health = FakeHealth()
     private val push = FakePush(devices, settings)
+    private val gmailAuth = FakeGmailAuth()
+    private val gmailStore = FakeGmailSuggestionStore()
+    private val gmailNotifier = FakeGmailNotifier()
+    private val gmailWork = FakeWorkScheduler()
+    private val gmailConnection = GmailConnection(gmailAuth, FakeGmailApi(), gmailStore, settings, gmailNotifier, gmailWork)
 
     private fun viewModel(google: Boolean = true) = SettingsViewModel(
         auth = auth,
@@ -47,6 +59,8 @@ class SettingsViewModelTest {
         push = push,
         config = BackendConfig("https://example.supabase.co", "anon", if (google) "web-client" else ""),
         clock = FakeClock(),
+        gmailConnection = gmailConnection,
+        gmailWork = gmailWork,
         version = version,
     )
 
@@ -105,6 +119,8 @@ class SettingsViewModelTest {
             push = FakePush(orderingDevices, settings),
             config = BackendConfig("https://example.supabase.co", "anon", "web"),
             clock = FakeClock(),
+            gmailConnection = gmailConnection,
+            gmailWork = gmailWork,
             version = version,
         )
         vm.signOut()
@@ -137,6 +153,8 @@ class SettingsViewModelTest {
             push = push,
             config = BackendConfig("https://example.supabase.co", "anon", "web"),
             clock = FakeClock(),
+            gmailConnection = gmailConnection,
+            gmailWork = gmailWork,
             version = version,
         )
         vm.uiState.value
@@ -144,6 +162,52 @@ class SettingsViewModelTest {
         assertEquals(setOf(AlertType.BOARDING), alerts.muted.value)
         vm.setAlertGroup(app.flytrack.feature.flights.presentation.AlertGroup.INBOUND_AIRCRAFT, enabled = false)
         assertEquals(setOf(AlertType.BOARDING), alerts.muted.value)
+    }
+
+    // ---- Gmail --------------------------------------------------------------------------------
+
+    @Test
+    fun `the gmail section appears once connected and says when access was lost`() = runTest {
+        val vm = viewModel()
+        assertNull(vm.uiState.value.gmail)
+
+        settings.setGmailAccountEmail("me@gmail.com")
+        assertEquals(GmailSettingsUi("me@gmail.com", autoCheck = true, needsReconnect = false), vm.uiState.value.gmail)
+
+        settings.setGmailNeedsReconnect(true)
+        assertEquals(true, vm.uiState.value.gmail?.needsReconnect)
+    }
+
+    @Test
+    fun `turning auto-check off cancels the background check and turning it on schedules it`() = runTest {
+        settings.setGmailAccountEmail("me@gmail.com")
+        val vm = viewModel()
+
+        vm.setGmailAutoCheck(false)
+        assertFalse(settings.gmailAutoCheck.first())
+        assertEquals(false, vm.uiState.value.gmail?.autoCheck)
+        assertEquals(1, gmailWork.cancelled)
+        assertEquals(0, gmailWork.scheduled)
+
+        vm.setGmailAutoCheck(true)
+        assertTrue(settings.gmailAutoCheck.first())
+        assertEquals(1, gmailWork.scheduled)
+        assertEquals(1, gmailWork.cancelled)
+    }
+
+    @Test
+    fun `disconnecting gmail revokes access, deletes suggestions and hides the section`() = runTest {
+        settings.setGmailAccountEmail("me@gmail.com")
+        gmailStore.insert(listOf(GmailFixtures.suggestion()))
+        val vm = viewModel()
+
+        vm.disconnectGmail()
+
+        assertEquals(listOf("me@gmail.com"), gmailAuth.revokedEmails)
+        assertTrue(gmailStore.all().isEmpty())
+        assertEquals(1, gmailWork.cancelled)
+        assertEquals(1, gmailNotifier.cancelAllCalls)
+        assertNull(vm.uiState.value.gmail)
     }
 }
 

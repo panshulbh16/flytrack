@@ -13,9 +13,14 @@ import app.flytrack.core.result.TrackResult
 import app.flytrack.data.remote.BackendConfig
 import app.flytrack.data.repo.FlightRepository
 import app.flytrack.data.repo.SessionState
+import app.flytrack.feature.gmailimport.GmailSuggestionStore
+import app.flytrack.feature.gmailimport.SuggestionStatus
 import app.flytrack.testing.FakeAuthRepository
 import app.flytrack.testing.FakeClock
 import app.flytrack.testing.FakeFlightRepository
+import app.flytrack.testing.FakeGmailNotifier
+import app.flytrack.testing.FakeGmailSuggestionStore
+import app.flytrack.testing.GmailFixtures
 import app.flytrack.testing.FakeProfileRepository
 import app.flytrack.testing.MainDispatcherRule
 import app.flytrack.testing.TestData
@@ -38,6 +43,8 @@ class AddFlightViewModelTest {
     private val auth = FakeAuthRepository()
     private val profiles = FakeProfileRepository()
     private val clock = FakeClock() // 22 Nov 2026, 15:30 in India
+    private val gmailStore = FakeGmailSuggestionStore()
+    private val gmailNotifier = FakeGmailNotifier()
 
     private val today = LocalDate.parse("2026-11-22")
     private val delBom = TestData.flight()
@@ -52,6 +59,7 @@ class AddFlightViewModelTest {
         prefill: AddFlightPrefill = AddFlightPrefill(),
         googleWebClientId: String = "web-client-id",
         auth: FakeAuthRepository = this.auth,
+        gmailSuggestions: GmailSuggestionStore = gmailStore,
     ) = AddFlightViewModel(
         prefill = prefill,
         flights = flights,
@@ -60,6 +68,8 @@ class AddFlightViewModelTest {
         clock = clock,
         homeTimeZone = HomeTimeZone { "Asia/Kolkata" },
         backendConfig = BackendConfig("https://example.supabase.co", "anon-key", googleWebClientId),
+        gmailSuggestions = gmailSuggestions,
+        gmailNotifier = gmailNotifier,
     )
 
     /** A view model showing [legs] as the result of a search for 6E 2341 today. */
@@ -99,6 +109,7 @@ class AddFlightViewModelTest {
         val vm = AddFlightViewModel(
             AddFlightPrefill(), flights, auth, profiles, clock, HomeTimeZone { "Pacific/Kiritimati" },
             BackendConfig("https://example.supabase.co", "anon-key", ""),
+            gmailStore, gmailNotifier,
         )
 
         assertEquals(LocalDate.parse("2026-11-23"), vm.state.today)
@@ -516,6 +527,104 @@ class AddFlightViewModelTest {
     }
 
     @Test
+    fun `tracking a gmail suggestion records gmail and marks the suggestion added`() = runTest {
+        fake.searchResult = SearchResult.Found(listOf(delBom))
+        val suggestion = GmailFixtures.suggestion("6E 2341", LocalDate(2026, 11, 25))
+        gmailStore.insert(listOf(suggestion))
+        val vm = viewModel(
+            AddFlightPrefill("6E 2341", "2026-11-25", "ABC123", source = TrackSource.GMAIL, gmailSuggestionId = suggestion.id),
+        )
+
+        vm.events.test {
+            vm.onTrack(delBom.id)
+            assertEquals(AddFlightEvent.Finished(delBom.id), awaitItem())
+        }
+
+        assertEquals(TrackSource.GMAIL, fake.trackCalls.single().second.source)
+        assertEquals(SuggestionStatus.ADDED, gmailStore.get(suggestion.id)?.status)
+        assertEquals(listOf(suggestion.id), gmailNotifier.cancelled)
+    }
+
+    @Test
+    fun `tracking another date than the gmail suggestion's leaves the suggestion pending`() = runTest {
+        fake.searchResult = SearchResult.Found(listOf(delBom))
+        val suggestion = GmailFixtures.suggestion("6E 2341", LocalDate(2026, 11, 25))
+        gmailStore.insert(listOf(suggestion))
+        val vm = viewModel(
+            AddFlightPrefill("6E 2341", "2026-11-25", null, source = TrackSource.GMAIL, gmailSuggestionId = suggestion.id),
+        )
+        vm.onDateChange(LocalDate(2026, 11, 26))
+        vm.onSearch()
+
+        vm.events.test {
+            vm.onTrack(delBom.id)
+            assertEquals(AddFlightEvent.Finished(delBom.id), awaitItem())
+        }
+
+        assertEquals(SuggestionStatus.PENDING, gmailStore.get(suggestion.id)?.status)
+        assertTrue(gmailNotifier.cancelled.isEmpty())
+    }
+
+    @Test
+    fun `tracking another flight than the gmail suggestion's leaves the suggestion pending`() = runTest {
+        fake.searchResult = SearchResult.Found(listOf(delBom))
+        val suggestion = GmailFixtures.suggestion("6E 2341", LocalDate(2026, 11, 25))
+        gmailStore.insert(listOf(suggestion))
+        val vm = viewModel(
+            AddFlightPrefill("6E 2341", "2026-11-25", null, source = TrackSource.GMAIL, gmailSuggestionId = suggestion.id),
+        )
+        vm.onFlightInputChange("6E 2342")
+        vm.onSearch()
+
+        vm.events.test {
+            vm.onTrack(delBom.id)
+            assertEquals(AddFlightEvent.Finished(delBom.id), awaitItem())
+        }
+
+        assertEquals(SuggestionStatus.PENDING, gmailStore.get(suggestion.id)?.status)
+        assertTrue(gmailNotifier.cancelled.isEmpty())
+    }
+
+    @Test
+    fun `a failing suggestion store does not stop add flight from finishing`() = runTest {
+        fake.searchResult = SearchResult.Found(listOf(delBom))
+        val suggestion = GmailFixtures.suggestion("6E 2341", LocalDate(2026, 11, 25))
+        gmailStore.insert(listOf(suggestion))
+        val failing = object : GmailSuggestionStore by gmailStore {
+            override suspend fun setStatus(ids: List<String>, status: SuggestionStatus) =
+                throw IllegalStateException("disk full")
+        }
+        val vm = viewModel(
+            AddFlightPrefill("6E 2341", "2026-11-25", null, source = TrackSource.GMAIL, gmailSuggestionId = suggestion.id),
+            gmailSuggestions = failing,
+        )
+
+        vm.events.test {
+            vm.onTrack(delBom.id)
+            assertEquals(AddFlightEvent.Finished(delBom.id), awaitItem())
+        }
+
+        assertEquals(listOf(suggestion.id), gmailNotifier.cancelled)
+    }
+
+    @Test
+    fun `a failed track leaves the gmail suggestion pending`() = runTest {
+        fake.searchResult = SearchResult.Found(listOf(delBom))
+        fake.trackResult = TrackResult.Offline
+        val suggestion = GmailFixtures.suggestion("6E 2341", LocalDate(2026, 11, 25))
+        gmailStore.insert(listOf(suggestion))
+        val vm = viewModel(
+            AddFlightPrefill("6E 2341", "2026-11-25", null, source = TrackSource.GMAIL, gmailSuggestionId = suggestion.id),
+        )
+
+        vm.onTrack(delBom.id)
+
+        assertEquals(TrackProblem.Offline, vm.state.trackNotice?.problem)
+        assertEquals(SuggestionStatus.PENDING, gmailStore.get(suggestion.id)?.status)
+        assertTrue(gmailNotifier.cancelled.isEmpty())
+    }
+
+    @Test
     fun `a pdf import is stored as pdf and default mutes are applied`() = runTest {
         fake.searchResult = SearchResult.Found(listOf(delBom))
         val defaults = object : app.flytrack.feature.settings.DefaultAlertPreferences {
@@ -530,6 +639,8 @@ class AddFlightViewModelTest {
             clock = clock,
             homeTimeZone = HomeTimeZone { "Asia/Kolkata" },
             backendConfig = app.flytrack.data.remote.BackendConfig("https://example.supabase.co", "anon-key", "web"),
+            gmailSuggestions = gmailStore,
+            gmailNotifier = gmailNotifier,
             defaultAlerts = defaults,
         )
 

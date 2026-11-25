@@ -1,0 +1,22 @@
+{
+  "id": "18c1f0a2b3c4d501",
+  "threadId": "18c1f0a2b3c4d501",
+  "labelIds": ["INBOX", "CATEGORY_UPDATES"],
+  "snippet": "Dear Customer, Thank you for booking with IndiGo.",
+  "internalDate": "1763971200000",
+  "payload": {
+    "partId": "",
+    "mimeType": "text/plain",
+    "filename": "",
+    "headers": [
+      { "name": "From", "value": "Synthetic IndiGo <bookings@example.com>" },
+      { "name": "Subject", "value": "IndiGo booking confirmation - PNR Q7K2LM" },
+      { "name": "Content-Type", "value": "text/plain; charset=\"UTF-8\"" }
+    ],
+    "body": {
+      "size": 214,
+      "data": "RGVhciBDdXN0b21lciwKClRoYW5rIHlvdSBmb3IgYm9va2luZyB3aXRoIEluZGlHby4KCkJvb2tpbmcgUmVmZXJlbmNlOiBRN0syTE0KCkZsaWdodCA2RSAyMzQxCkRlbGhpIChERUwpIHRvIE11bWJhaSAoQk9NKQpXZWQsIDMgRGVjIDIwMjYKRGVwYXJ0cyAxODo1MCwgYXJyaXZlcyAyMTowNQoKV2ViIGNoZWNrLWluIG9wZW5zIDQ4IGhvdXJzIGJlZm9yZSBkZXBhcnR1cmUuCg=="
+    }
+  },
+  "sizeEstimate": 1180
+}

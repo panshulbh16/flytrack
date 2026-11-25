@@ -202,6 +202,48 @@ cd ios && fastlane archive
 
 Details, the files that were not compiled on Linux, and the TestFlight checklist are in `ios/ARCHITECTURE.md`.
 
+## Gmail ticket import
+
+"Import a ticket" offers two options on both apps (FlyTrack on Android, HeyGate on iOS): **From a file or screenshot** (the import described above, unchanged) and **From Gmail**. From Gmail searches the user's mail for booking emails with the read-only scope `https://www.googleapis.com/auth/gmail.readonly`. It reads each email, or its PDF ticket, with the same on-device parser and lists the flights it finds as suggestions. Nothing is tracked until the user confirms it on Add flight.
+
+After connecting, new mail is checked automatically: on app open (at most once an hour), every 6 hours on Android (WorkManager), and through background app refresh on iOS (`app.heygate.gmail-check`, whenever iOS allows). Each new find shows on a **Found in Gmail** card on the Flights screen. When the app is not in the foreground it also raises a notification with **Track** and **Not now** (Android channel `ticket_suggestions`). The first scan looks back 180 days (`newer_than:180d`).
+
+### On the phone only
+
+* The app calls the Gmail API directly from the phone. The Google token never reaches a FlyTrack/HeyGate server. Gmail calls use their own HTTP client and send only the Google bearer token.
+* Nothing from the mailbox reaches the server: no mail, no attachment, no text taken from them. The Gmail path never calls `parse-ticket`, even when cloud reading is allowed. On iOS, PDF tickets are read in memory with `PDFDocument(data:)`.
+* Stored on the phone only: the connected Gmail address, the ids of messages already read, and for each suggestion the flight, date, route, PNR and email subject. Email bodies are never stored, and email content is never logged.
+* The server receives only what the user confirms on Add flight (flight, date, PNR, source `gmail`), the same fields as a manual add.
+* **Settings → Gmail → Disconnect Gmail** revokes access, deletes suggestions, seen ids and Gmail settings, cancels the background check and removes pending Gmail notifications. Signing out clears the same data. Android also revokes access on sign out. iOS revokes only while the Google account signed in on the phone is still the connected Gmail address; otherwise the user can remove the grant at myaccount.google.com.
+
+Code: Android `android/app/src/main/kotlin/app/flytrack/feature/gmailimport`; iOS core `ios/FlyTrackCore/Sources/FlyTrackCore/Gmail*.swift`.
+
+### Release switch
+
+`GMAIL_IMPORT_ENABLED` is on in debug builds and off in release builds until Google's restricted-scope verification passes. While it is off, or when Google sign-in is not configured in the build, "From Gmail" is hidden.
+
+* Android: `BuildConfig.GMAIL_IMPORT_ENABLED`, set per build type in `android/app/build.gradle.kts`.
+* iOS: the `GMAIL_IMPORT_ENABLED` build setting in `ios/Config/Shared.xcconfig`, read into `Info.plist` as `GmailImportEnabled`.
+
+Turn it on for release only after you finish every step in `docs/gmail-release-checklist.md`.
+
+### Google Cloud setup
+
+No new keys. Use the Google Cloud project that already holds `GOOGLE_WEB_CLIENT_ID` and `GOOGLE_IOS_CLIENT_ID`.
+
+* Enable the **Gmail API** in that project (APIs & Services → Library).
+* Android uses Google Identity `AuthorizationClient`. Google matches it to the Android OAuth client for package `app.flytrack` and the app's signing-certificate SHA-1. Add the SHA-1 of every key you build with: debug, upload and Play app signing.
+* iOS uses the existing iOS OAuth client (`GOOGLE_IOS_CLIENT_ID`).
+
+### Adding test users
+
+Until verification passes, only test users can connect Gmail, up to 100 accounts.
+
+1. In the Google Cloud console, open **Google Auth Platform → Data access** and add `https://www.googleapis.com/auth/gmail.readonly`. You do this once.
+2. Open **Google Auth Platform → Audience**. Leave the publishing status on **Testing**. Under **Test users**, choose **Add users** and enter the tester's Gmail address.
+3. The tester installs a debug build, which has the switch on, and opens **Import a ticket → From Gmail → Connect Gmail**. They pick that account and continue past "Google hasn't verified this app".
+4. While the app is in Testing, Google can expire the grant after 7 days. The app then shows **Reconnect Gmail**.
+
 ## Going live with AeroDataBox
 
 1. Subscribe on RapidAPI or API.Market and put the key in `ADB_API_KEY`. On API.Market, set `ADB_BASE_URL` and `ADB_KEY_HEADER` from its dashboard.

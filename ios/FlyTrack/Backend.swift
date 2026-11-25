@@ -23,7 +23,15 @@ final class SupabaseStack {
 @MainActor
 final class LiveAuthRepository: AuthRepository {
     private let stack: SupabaseStack
+    /// Set by AppShell: Gmail revoke and state for the old HeyGate user. Runs before the cache wipe, so the
+    /// Gmail account is forgotten before its rows go and a running scan writes nothing back.
+    var onUserDataWiped: (@MainActor () async -> Void)?
     init(stack: SupabaseStack) { self.stack = stack }
+
+    private func wipeUserData() async {
+        await onUserDataWiped?()
+        LocalCache.wipeUserData(in: stack.context)
+    }
 
     func session() async -> SessionState {
         guard let client = stack.client else { return .notConfigured }
@@ -65,7 +73,7 @@ final class LiveAuthRepository: AuthRepository {
 
     func signInWithGoogle(idToken: String, nonce: String?) async -> AuthResult {
         let result = await google(idToken: idToken, nonce: nonce, link: false)
-        if result.isSuccess { LocalCache.wipeUserData(in: stack.context) }
+        if result.isSuccess { await wipeUserData() }
         return result
     }
 
@@ -73,7 +81,7 @@ final class LiveAuthRepository: AuthRepository {
         guard let client = stack.client else { return .notConfigured }
         do {
             try await client.auth.signOut()
-            LocalCache.wipeUserData(in: stack.context)
+            await wipeUserData()
             return await ensureSignedIn()
         } catch is URLError {
             return .offline
@@ -106,7 +114,7 @@ final class LiveAuthRepository: AuthRepository {
 }
 
 @MainActor
-final class LiveFlightRepository: FlightRepository {
+final class LiveFlightRepository: FlightRepository, TrackedKeysProviding {
     private let stack: SupabaseStack
     init(stack: SupabaseStack) { self.stack = stack }
 
@@ -124,6 +132,8 @@ final class LiveFlightRepository: FlightRepository {
     }
 
     func flight(id: String) async -> Flight? { LocalCache.flight(id: id, in: stack.context) }
+
+    func trackedKeys() async -> Set<TrackedKey> { LocalCache.trackedKeys(in: stack.context) }
 
     func search(flightText: String, date: LocalDate) async -> SearchResult {
         guard let number = parseFlightNumber(flightText) else { return .badInput(.flightNumber) }

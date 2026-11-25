@@ -6,13 +6,19 @@ public struct AddFlightPrefill: Hashable, Sendable {
     public var pnr: String?
     public var source: TrackSource?
     public var seat: String?
+    /// Set when Add flight was opened from a Gmail suggestion; marked added once the flight is tracked.
+    public var gmailSuggestionId: String?
 
-    public init(flight: String? = nil, date: String? = nil, pnr: String? = nil, source: TrackSource? = nil, seat: String? = nil) {
+    public init(
+        flight: String? = nil, date: String? = nil, pnr: String? = nil, source: TrackSource? = nil, seat: String? = nil,
+        gmailSuggestionId: String? = nil
+    ) {
         self.flight = flight
         self.date = date
         self.pnr = pnr
         self.source = source
         self.seat = seat
+        self.gmailSuggestionId = gmailSuggestionId
     }
 
     public var isEmpty: Bool {
@@ -154,6 +160,9 @@ public final class AddFlightModel {
     private let clock: FlyClock
     private let defaultAlerts: DefaultAlertPreferences
     private let source: TrackSource
+    private let gmailSuggestionId: String?
+    private let gmailStore: GmailSuggestionStoring?
+    private let gmailSystem: GmailSystem?
     private var trackedByFlightId: [String: TrackedFlight] = [:]
     private var profile: UserProfile?
     private var searchGeneration = 0
@@ -166,11 +175,16 @@ public final class AddFlightModel {
         backendConfigured: Bool,
         googleConfigured: Bool,
         isAnonymous: Bool,
-        defaultAlerts: DefaultAlertPreferences
+        defaultAlerts: DefaultAlertPreferences,
+        gmailStore: GmailSuggestionStoring? = nil,
+        gmailSystem: GmailSystem? = nil
     ) {
         self.flights = flights
         self.clock = clock
         self.defaultAlerts = defaultAlerts
+        gmailSuggestionId = prefill.gmailSuggestionId
+        self.gmailStore = gmailStore
+        self.gmailSystem = gmailSystem
         source = prefill.source ?? (prefill.isEmpty ? .manual : .share)
         let today = clock.today(tz: homeTimeZone)
         let selectable = selectableDates(today: today, now: clock.now())
@@ -289,7 +303,7 @@ public final class AddFlightModel {
         switch await flights.track(flightId: flightId, extras: extras) {
         case .tracked:
             await applyDefaultMutes(flightId)
-            finish(flightId)
+            await finish(flightId)
         case .alreadyTracked(let tracking):
             await saveDetailsAndFinish(tracking, extras)
         case .trackingLimitReached:
@@ -378,13 +392,13 @@ public final class AddFlightModel {
         let pnr = typed.pnr ?? existing.pnr
         let seat = typed.seat ?? existing.seat
         if pnr == existing.pnr && seat == existing.seat {
-            finish(existing.flightId)
+            await finish(existing.flightId)
             return
         }
         let merged = TrackExtras(pnr: pnr, seat: seat, cabin: existing.cabin, source: existing.source, note: existing.note)
         switch await flights.updateTrackingDetails(flightId: existing.flightId, extras: merged) {
         case .success:
-            finish(existing.flightId)
+            await finish(existing.flightId)
         case .invalidInput(let field):
             reject(existing.flightId, field)
         default:
@@ -400,9 +414,25 @@ public final class AddFlightModel {
         _ = await flights.updateNotifyPrefs(flightId: flightId, prefs: prefs)
     }
 
-    private func finish(_ flightId: String) {
+    /// The flight is tracked. A Gmail suggestion that opened this screen is now added and its notification goes,
+    /// but only when the tracked flight is the suggestion's own (same flight and date). After an edit it stays
+    /// pending; the scanner's cleanup marks it added if that flight is tracked later.
+    private func finish(_ flightId: String) async {
+        if let id = gmailSuggestionId, let gmailStore, trackedSuggestionId(flightId) == id {
+            await gmailStore.setStatus([id], .added)
+            await gmailSystem?.cancelNotifications([id])
+        }
         state.finishedFlightId = flightId
         publish()
+    }
+
+    /// The suggestion id of the tracked leg: from the search result that holds it, else from the form.
+    private func trackedSuggestionId(_ flightId: String) -> String {
+        if case .results(_, let legs) = state.search, let leg = legs.first(where: { $0.id == flightId }) {
+            return GmailSuggestions.suggestionId(flightCompact: GmailSuggestions.compact(leg.carrierIata + leg.flightNumber), date: leg.flightDate)
+        }
+        let flight = parseFlightNumber(state.flightInput)?.display ?? state.flightInput
+        return GmailSuggestions.suggestionId(flightCompact: GmailSuggestions.compact(flight), date: state.date)
     }
 
     private func fail(_ flightId: String, _ problem: TrackProblem) {

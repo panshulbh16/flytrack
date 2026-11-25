@@ -16,6 +16,8 @@ data class AddFlightPrefill(
     val source: TrackSource? = null,
     /** Seat from a boarding pass. */
     val seat: String? = null,
+    /** The Gmail suggestion this form came from: marked added (and its notification cleared) once the flight is tracked. */
+    val gmailSuggestionId: String? = null,
 ) {
     val isEmpty: Boolean get() = flight.isNullOrBlank() && date.isNullOrBlank() && pnr.isNullOrBlank()
 }

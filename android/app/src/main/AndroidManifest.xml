@@ -74,6 +74,11 @@
             </intent-filter>
         </activity>
 
+        <!-- "Not now" on a Gmail suggestion notification. Only the app's own PendingIntent reaches it. -->
+        <receiver
+            android:name=".feature.gmailimport.GmailSuggestionActionReceiver"
+            android:exported="false" />
+
         <service
             android:name=".push.FlyTrackMessagingService"
             android:exported="false">

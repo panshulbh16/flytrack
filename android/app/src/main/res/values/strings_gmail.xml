@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="gmail_chooser_title">Import a ticket</string>
+    <string name="gmail_chooser_file">From a file or screenshot</string>
+    <string name="gmail_chooser_file_detail">A ticket PDF or a screenshot on this phone</string>
+    <string name="gmail_chooser_gmail">From Gmail</string>
+    <string name="gmail_chooser_gmail_detail">Find bookings in your email</string>
+    <string name="gmail_title">Import from Gmail</string>
+    <string name="gmail_disclosure">FlyTrack reads your booking emails (read-only Gmail access) to find tickets to import. It reads them on this phone only. Nothing from your mail is sent to FlyTrack.</string>
+    <string name="gmail_action_connect">Connect Gmail</string>
+    <string name="gmail_reconnect_title">FlyTrack can no longer read your Gmail</string>
+    <string name="gmail_action_reconnect">Reconnect Gmail</string>
+    <string name="gmail_scanning">Looking for booking emails…</string>
+    <string name="gmail_results_title">Found in your email</string>
+    <string name="gmail_flight_row">%1$s, %2$s</string>
+    <string name="gmail_route">%1$s to %2$s</string>
+    <string name="gmail_empty_title">No upcoming flights in your recent booking emails</string>
+    <string name="gmail_more_to_read">Some booking emails are still unread. Scan again to keep looking.</string>
+    <string name="gmail_action_scan_again">Scan again</string>
+    <string name="gmail_action_import_manually">Import manually</string>
+    <string name="gmail_action_type">Type it instead</string>
+    <string name="gmail_notice_offline">You\'re offline. Connect to the internet and try again.</string>
+    <string name="gmail_notice_not_configured">Gmail import isn\'t set up in this build.</string>
+    <string name="gmail_notice_failed">Couldn\'t connect to Gmail. Try again.</string>
+</resources>

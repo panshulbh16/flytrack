@@ -12,6 +12,8 @@ import app.flytrack.data.repo.SessionState
 import app.flytrack.data.repo.SettingsStore
 import app.flytrack.feature.flights.presentation.AlertGroup
 import app.flytrack.feature.flights.presentation.AlertToggleUiModel
+import app.flytrack.feature.gmailimport.GmailConnection
+import app.flytrack.feature.gmailimport.GmailWorkScheduler
 import app.flytrack.push.NotificationHealth
 import app.flytrack.push.NotificationHealthSource
 import app.flytrack.push.PushAvailability
@@ -39,7 +41,11 @@ data class SettingsUiState(
     val message: SettingsMessage? = null,
     /** Held so "this Google account already has a FlyTrack user" can offer a real sign-in. */
     val pendingGoogleToken: String? = null,
+    /** Null while Gmail is not connected: the Gmail section is hidden. */
+    val gmail: GmailSettingsUi? = null,
 )
+
+data class GmailSettingsUi(val email: String, val autoCheck: Boolean, val needsReconnect: Boolean)
 
 sealed interface AccountUi {
     data object Loading : AccountUi
@@ -69,6 +75,8 @@ class SettingsViewModel @Inject constructor(
     private val push: PushInitializer,
     private val config: BackendConfig,
     private val clock: Clock,
+    private val gmailConnection: GmailConnection,
+    private val gmailWork: GmailWorkScheduler,
     version: AppVersion,
 ) : ViewModel() {
 
@@ -103,7 +111,13 @@ class SettingsViewModel @Inject constructor(
         Transient(healthNow, pushNow, isLinking, msg, token)
     }
 
-    val uiState: StateFlow<SettingsUiState> = combine(stored, transient) { storedNow, transientNow ->
+    private val gmail = combine(
+        settings.gmailAccountEmail,
+        settings.gmailAutoCheck,
+        settings.gmailNeedsReconnect,
+    ) { email, autoCheck, needsReconnect -> email?.let { GmailSettingsUi(it, autoCheck, needsReconnect) } }
+
+    val uiState: StateFlow<SettingsUiState> = combine(stored, transient, gmail) { storedNow, transientNow, gmailNow ->
         val isPro = storedNow.profile?.isPro(clock.now()) == true
         SettingsUiState(
             account = storedNow.session.toAccount(),
@@ -116,6 +130,7 @@ class SettingsViewModel @Inject constructor(
             versionName = version.name,
             message = transientNow.message,
             pendingGoogleToken = transientNow.token,
+            gmail = gmailNow,
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, SettingsUiState(versionName = version.name))
 
@@ -177,6 +192,19 @@ class SettingsViewModel @Inject constructor(
 
     fun setCloudConsent(granted: Boolean) {
         viewModelScope.launch { settings.setCloudTicketParsingConsent(granted) }
+    }
+
+    /** Off cancels the background check; on schedules it again. */
+    fun setGmailAutoCheck(enabled: Boolean) {
+        viewModelScope.launch {
+            settings.setGmailAutoCheck(enabled)
+            if (enabled) gmailWork.schedule() else gmailWork.cancel()
+        }
+    }
+
+    /** Revokes Gmail access; deletes suggestions, seen ids and Gmail settings; stops the check; removes notifications. */
+    fun disconnectGmail() {
+        viewModelScope.launch { gmailConnection.disconnect() }
     }
 
     val appearance: StateFlow<Appearance> =

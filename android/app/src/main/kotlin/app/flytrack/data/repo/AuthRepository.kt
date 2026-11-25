@@ -69,7 +69,7 @@ interface AuthRepository {
     suspend fun signOut(): AuthResult
 }
 
-/** Wipes everything cached for the signed-in user (tracked flights, profile, flight cache). */
+/** Wipes everything cached for the signed-in user (tracked flights, profile, flight cache, Gmail import state). */
 fun interface LocalUserData {
     suspend fun clear()
 }
