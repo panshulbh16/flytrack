@@ -103,3 +103,32 @@ data class TrackedFlightWithFlight(
     @Relation(parentColumn = "flight_id", entityColumn = "id", entity = FlightEntity::class)
     val flight: FlightWithAirports,
 )
+
+/**
+ * A flight found in the user's Gmail. Local-only state, never sent to the server. No email body
+ * is stored, only what the suggestion shows.
+ */
+@Entity(tableName = "gmail_suggestions")
+data class GmailSuggestionEntity(
+    /** "6E2341_2026-12-03": compact flight number and date. */
+    @PrimaryKey val id: String,
+    @ColumnInfo(name = "message_id") val messageId: String,
+    /** Display form, e.g. "6E 2341". */
+    val flight: String,
+    /** ISO date "2026-12-03". */
+    val date: String,
+    @ColumnInfo(name = "from_iata") val fromIata: String?,
+    @ColumnInfo(name = "to_iata") val toIata: String?,
+    val pnr: String?,
+    val subject: String,
+    /** SuggestionStatus wire value: "pending", "dismissed" or "added". */
+    val status: String,
+    /** Epoch milliseconds. */
+    @ColumnInfo(name = "found_at") val foundAt: Long,
+)
+
+/** A Gmail message id already read (or skipped), so later scans do not fetch it again. */
+@Entity(tableName = "gmail_seen_messages")
+data class GmailSeenMessageEntity(
+    @PrimaryKey @ColumnInfo(name = "message_id") val messageId: String,
+)
