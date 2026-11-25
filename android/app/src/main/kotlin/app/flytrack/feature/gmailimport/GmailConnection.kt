@@ -3,7 +3,11 @@ package app.flytrack.feature.gmailimport
 import app.flytrack.data.repo.SettingsStore
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
+
+private val REVOKE_TIMEOUT = 10.seconds
 
 /** Starts and stops the periodic background check (WorkManager in production). */
 interface GmailWorkScheduler {
@@ -36,19 +40,26 @@ class GmailConnection @Inject constructor(
         if (settings.gmailAutoCheck.first()) work.schedule()
     }
 
-    /** Disconnect Gmail (Settings) and HeyGate sign-out: revokes Google's grant, then [clearLocal]. */
+    /**
+     * Disconnect Gmail (Settings) and HeyGate sign-out: [clearLocal] first, so the wipe is immediate and leaving
+     * Settings cannot cancel it, then a best-effort revoke of Google's grant, bounded so sign-out (which holds the
+     * auth lock) never waits long on the network.
+     */
     suspend fun disconnect() {
-        settings.gmailAccountEmail.first()?.let { email ->
-            try {
-                auth.revoke(email)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                // Offline or already revoked: still forget everything here. The user can remove
-                // the grant at myaccount.google.com.
+        val email = settings.gmailAccountEmail.first()
+        clearLocal()
+        email?.let {
+            withTimeoutOrNull(REVOKE_TIMEOUT) {
+                try {
+                    auth.revoke(it)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    // Offline or already revoked: everything here is forgotten already. The user can remove
+                    // the grant at myaccount.google.com.
+                }
             }
         }
-        clearLocal()
     }
 
     /** Forgets the account, suggestions, seen ids and Gmail settings, stops the check and removes Gmail notifications. No network. */

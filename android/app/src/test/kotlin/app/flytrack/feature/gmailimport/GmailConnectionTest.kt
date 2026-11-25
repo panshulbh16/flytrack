@@ -7,6 +7,7 @@ import app.flytrack.testing.FakeGmailSuggestionStore
 import app.flytrack.testing.FakeSettingsStore
 import app.flytrack.testing.FakeWorkScheduler
 import app.flytrack.testing.GmailFixtures.suggestion
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -87,6 +88,35 @@ class GmailConnectionTest {
 
         connection.disconnect()
 
+        assertCleared()
+    }
+
+    @Test
+    fun `disconnect forgets everything before it revokes`() = runTest {
+        fillState()
+        var emailAtRevoke: String? = "not called"
+        var suggestionsAtRevoke = -1
+        auth.onRevoke = {
+            emailAtRevoke = settings.gmailAccountEmail.first()
+            suggestionsAtRevoke = store.all().size
+        }
+
+        connection.disconnect()
+
+        assertEquals(listOf("traveller@gmail.com"), auth.revokedEmails)
+        assertNull(emailAtRevoke)
+        assertEquals(0, suggestionsAtRevoke)
+        assertCleared()
+    }
+
+    @Test
+    fun `disconnect returns with everything forgotten when revoking never finishes`() = runTest {
+        fillState()
+        auth.onRevoke = { awaitCancellation() }
+
+        connection.disconnect()
+
+        assertEquals(listOf("traveller@gmail.com"), auth.revokedEmails)
         assertCleared()
     }
 

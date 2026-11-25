@@ -98,6 +98,8 @@ class FakeGmailAuth : GmailAuth {
     var silentResults: List<GmailAuthResult> = listOf(GmailAuthResult.Granted("token-1"))
     var connectResult: GmailAuthResult = GmailAuthResult.Granted("token-1")
     var revokeError: Exception? = null
+    /** Runs at the start of every [revoke] call, e.g. to check what was cleared first or to hang forever. */
+    var onRevoke: suspend () -> Unit = {}
 
     val silentEmails = mutableListOf<String>()
     val clearedTokens = mutableListOf<String>()
@@ -123,6 +125,7 @@ class FakeGmailAuth : GmailAuth {
 
     override suspend fun revoke(email: String) {
         revokedEmails += email
+        onRevoke()
         revokeError?.let { throw it }
     }
 }
