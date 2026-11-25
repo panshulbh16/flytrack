@@ -82,6 +82,9 @@ targets:
         NSCameraUsageDescription: HeyGate reads the barcode on your boarding pass to add the flight.
         UIBackgroundModes:
           - remote-notification
+          - fetch
+        BGTaskSchedulerPermittedIdentifiers:
+          - app.heygate.gmail-check
         NSSupportsLiveActivities: true
         UIAppFonts:
           - InstrumentSerif-Regular.ttf

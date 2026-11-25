@@ -1,6 +1,7 @@
 import FlyTrackCore
 import SwiftData
 import SwiftUI
+import UserNotifications
 #if canImport(FirebaseMessaging)
 import FirebaseMessaging
 #endif
@@ -8,6 +9,7 @@ import FirebaseMessaging
 @main
 struct FlyTrackApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var delegate
+    @Environment(\.scenePhase) private var scenePhase
     @State private var shell: AppShell
     /// Kept for the app's lifetime. A ModelContext does not retain its container, and a fetch on a
     /// context whose container was released crashes.
@@ -29,6 +31,10 @@ struct FlyTrackApp: App {
             RootView(shell: shell)
                 .onOpenURL { url in shell.open(url) }
         }
+        .onChange(of: scenePhase, initial: true) { _, phase in
+            guard phase == .active else { return }
+            Task { await GmailBackground.appOpened(shell: shell) }
+        }
     }
 }
 
@@ -37,7 +43,12 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     var shell: AppShell?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
-        true
+        // Set here, unconditionally: a tap or action that launched the app must reach PushBridge with or
+        // without Firebase, and AppShell.bootstrap() does not run on a background launch.
+        UNUserNotificationCenter.current().delegate = PushBridge.shared
+        GmailNotifications.registerCategory()
+        if let shell { GmailBackground.register(shell: shell) }
+        return true
     }
 
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
@@ -128,6 +139,7 @@ final class AppShell: ObservableObject {
             Task { @MainActor in await self.handlePush(data) }
         }
         PushBridge.shared.onFlight = { [weak self] id in self?.openFlight(id) }
+        PushBridge.shared.onGmailSuggestion = { [weak self] id, dismiss in self?.openGmailSuggestion(id, dismiss: dismiss) }
         auth.onUserDataWiped = { [weak self] in await self?.clearGmail() }
     }
 
@@ -145,6 +157,8 @@ final class AppShell: ObservableObject {
     /// It revokes only while GoogleSignIn still holds the Gmail account, then drops suggestions, seen ids and
     /// Gmail settings.
     func clearGmail() async {
+        GmailBackground.cancel()
+        await GmailNotifications.cancelAll()
         await gmailAuth.disconnect()
         // Before the store is wiped, so a scan still running fails its account check and writes nothing.
         await settings.setGmailAccountEmail(nil)
@@ -184,6 +198,23 @@ final class AppShell: ObservableObject {
     func openFlight(_ id: String) {
         path.append(Route.detail(id))
         Task { _ = await flights.applyServerSync(flightId: id, compactFlightJSON: nil) }
+    }
+
+    /// Track (or a tap on the body) opens Add flight pre-filled; the suggestion stays pending until Add flight
+    /// tracks it. Not now marks it dismissed without opening the app.
+    func openGmailSuggestion(_ id: String, dismiss: Bool) {
+        GmailNotifications.cancel([id])
+        // Not now runs with the app in the background: keep it alive until the dismissal is saved.
+        let background = UIApplication.shared.beginBackgroundTask()
+        Task {
+            defer { UIApplication.shared.endBackgroundTask(background) }
+            if dismiss {
+                await gmailStore.setStatus([id], .dismissed)
+                return
+            }
+            guard let prefill = GmailNotice.trackPrefill(await gmailStore.get(id)) else { return }
+            path.append(Route.add(prefill))
+        }
     }
 
     func handlePush(_ data: [String: String]) async {

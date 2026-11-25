@@ -104,7 +104,6 @@ final class LivePush: PushControlling {
         guard AppConfig.pushPlistPresent else { return }
         #if canImport(FirebaseCore) && canImport(FirebaseMessaging)
         if FirebaseApp.app() == nil { FirebaseApp.configure() }
-        UNUserNotificationCenter.current().delegate = PushBridge.shared
         UIApplication.shared.registerForRemoteNotifications()
         Messaging.messaging().delegate = PushBridge.shared
         #endif
@@ -158,14 +157,24 @@ final class PushBridge: NSObject, UNUserNotificationCenterDelegate {
     var onData: (([String: String]) -> Void)?
     var onFlight: ((String) -> Void)?
     var onToken: ((String) -> Void)?
+    /// Suggestion id, and true for Not now (dismiss) or false for Track and a tap on the body.
+    var onGmailSuggestion: ((String, Bool) -> Void)?
 
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
-        [.banner, .list, .sound]
+        // While the app is open the Found in Gmail card shows these finds instead.
+        if notification.request.content.categoryIdentifier == GmailNotice.category { return [] }
+        return [.banner, .list, .sound]
     }
 
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
-        let info = response.notification.request.content.userInfo
-        guard let id = info[PushContract.keyFlightId] as? String, isFlightUUID(id) else { return }
+        let content = response.notification.request.content
+        if content.categoryIdentifier == GmailNotice.category {
+            guard let id = content.userInfo[GmailNotice.keySuggestionId] as? String, GmailNotice.isValidSuggestionId(id) else { return }
+            let dismiss = response.actionIdentifier == GmailNotice.actionNotNow
+            await MainActor.run { PushBridge.shared.onGmailSuggestion?(id, dismiss) }
+            return
+        }
+        guard let id = content.userInfo[PushContract.keyFlightId] as? String, isFlightUUID(id) else { return }
         await MainActor.run { PushBridge.shared.onFlight?(id) }
     }
 }
