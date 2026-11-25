@@ -13,6 +13,13 @@ import app.flytrack.feature.flights.presentation.FlightCardUiModel
 import app.flytrack.feature.flights.presentation.FlightChangeTracker
 import app.flytrack.feature.flights.presentation.NextFlightUiModel
 import app.flytrack.feature.flights.presentation.buildFlightSections
+import app.flytrack.feature.gmailimport.GmailNotifier
+import app.flytrack.feature.gmailimport.GmailSuggestion
+import app.flytrack.feature.gmailimport.GmailSuggestionStore
+import app.flytrack.feature.gmailimport.GmailSuggestions
+import app.flytrack.feature.gmailimport.SuggestionStatus
+import app.flytrack.feature.gmailimport.TrackedKeysSource
+import app.flytrack.feature.importticket.ImportToday
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -57,6 +64,8 @@ data class FlightsUiState(
     val upcoming: List<FlightCardUiModel> = emptyList(),
     val past: List<FlightCardUiModel> = emptyList(),
     val message: FlightsMessage? = null,
+    /** The "Found in Gmail" card: pending, upcoming, not tracked; soonest first. Empty hides the card. */
+    val gmailSuggestions: List<GmailSuggestion> = emptyList(),
 ) {
     val isEmpty: Boolean get() = !isLoading && upcoming.isEmpty() && past.isEmpty()
 }
@@ -75,6 +84,10 @@ class FlightsViewModel @Inject constructor(
     auth: AuthRepository,
     private val clock: Clock,
     private val changes: FlightChangeTracker,
+    private val gmailStore: GmailSuggestionStore,
+    private val gmailNotifier: GmailNotifier,
+    private val trackedKeys: TrackedKeysSource,
+    private val today: ImportToday,
 ) : ViewModel() {
 
     private data class Transient(val isRefreshing: Boolean = false, val message: FlightsMessage? = null)
@@ -92,7 +105,8 @@ class FlightsViewModel @Inject constructor(
         auth.session,
         clock.ticks(),
         transient,
-    ) { tracked, session, now, transient ->
+        gmailStore.observeAll(),
+    ) { tracked, session, now, transient, gmail ->
         val sections = buildFlightSections(tracked, now) { changes.record(it, now) }
         FlightsUiState(
             isLoading = false,
@@ -102,6 +116,8 @@ class FlightsViewModel @Inject constructor(
             upcoming = sections.upcoming,
             past = sections.past,
             message = transient.message,
+            // Checked on every emission and tick: a flight tracked another way, or a new day, hides a suggestion.
+            gmailSuggestions = GmailSuggestions.visible(gmail, today.today(), trackedKeys.current()),
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), FlightsUiState())
 
@@ -170,6 +186,14 @@ class FlightsViewModel @Inject constructor(
     /** The snackbar of [message] is gone. */
     fun messageShown(message: FlightsMessage) {
         transient.update { if (it.message == message) it.copy(message = null) else it }
+    }
+
+    /** "Dismiss" on the Found in Gmail card: it is never offered again, and its notification goes. */
+    fun dismissGmailSuggestion(suggestionId: String) {
+        viewModelScope.launch {
+            gmailStore.setStatus(listOf(suggestionId), SuggestionStatus.DISMISSED)
+            gmailNotifier.cancel(listOf(suggestionId))
+        }
     }
 
     private suspend fun trackAgain(flightId: String) {

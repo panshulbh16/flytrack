@@ -38,6 +38,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.flytrack.BuildConfig
 import app.flytrack.R
 import app.flytrack.core.push.PushContract
 import app.flytrack.data.repo.Appearance
@@ -52,6 +53,7 @@ import app.flytrack.ui.components.HairlineDivider
 import app.flytrack.ui.components.PrimaryButton
 import app.flytrack.ui.components.SecondaryButton
 import app.flytrack.ui.components.SectionCaption
+import app.flytrack.ui.nav.LocalAppNavigator
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -69,6 +71,7 @@ fun SettingsRoute(onBack: () -> Unit, viewModel: SettingsViewModel = hiltViewMod
     }
     val activity = context as? Activity
     val scope = rememberCoroutineScope()
+    val navigator = LocalAppNavigator.current
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.refreshHealth() }
 
     SettingsScreen(
@@ -90,6 +93,9 @@ fun SettingsRoute(onBack: () -> Unit, viewModel: SettingsViewModel = hiltViewMod
         onMessageShown = viewModel::messageShown,
         appearance = appearance,
         onAppearance = viewModel::setAppearance,
+        onGmailAutoCheck = viewModel::setGmailAutoCheck,
+        onReconnectGmail = navigator::openGmailImport,
+        onDisconnectGmail = viewModel::disconnectGmail,
     )
 }
 
@@ -115,6 +121,9 @@ fun SettingsScreen(
     onMessageShown: () -> Unit,
     appearance: Appearance,
     onAppearance: (Appearance) -> Unit,
+    onGmailAutoCheck: (Boolean) -> Unit,
+    onReconnectGmail: () -> Unit,
+    onDisconnectGmail: () -> Unit,
 ) {
     val snackbars = remember { SnackbarHostState() }
     val message = state.message?.let { settingsMessage(it) }
@@ -162,10 +171,24 @@ fun SettingsScreen(
             HairlineDivider()
             Spacer(Modifier.height(16.dp))
             SectionCaption(stringResource(R.string.settings_section_tickets))
-            ConsentSwitch(state.cloudConsent, onCloudConsent)
+            LabeledSwitch(
+                title = stringResource(R.string.settings_cloud_title),
+                message = stringResource(R.string.settings_cloud_message),
+                checked = state.cloudConsent,
+                onChange = onCloudConsent,
+            )
             Spacer(Modifier.height(12.dp))
             HairlineDivider()
             Spacer(Modifier.height(16.dp))
+            val gmail = state.gmail
+            // Hidden while the release switch is off, and until Gmail is connected.
+            if (BuildConfig.GMAIL_IMPORT_ENABLED && gmail != null) {
+                SectionCaption(stringResource(R.string.settings_section_gmail))
+                GmailSection(gmail, onGmailAutoCheck, onReconnectGmail, onDisconnectGmail)
+                Spacer(Modifier.height(12.dp))
+                HairlineDivider()
+                Spacer(Modifier.height(16.dp))
+            }
             SectionCaption(stringResource(R.string.settings_section_notifications))
             NotificationSection(state, onOpenNotifications, onOpenCriticalChannel, onOpenUpdatesChannel, onOpenBattery)
             Spacer(Modifier.height(16.dp))
@@ -284,26 +307,65 @@ private fun AlertSwitch(toggle: AlertToggleUiModel, onAlertGroup: (AlertGroup, B
 }
 
 @Composable
-private fun ConsentSwitch(granted: Boolean, onChange: (Boolean) -> Unit) {
-    val description = stringResource(R.string.settings_cloud_title)
+private fun LabeledSwitch(title: String, message: String, checked: Boolean, onChange: (Boolean) -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 48.dp).padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f).padding(end = 12.dp)) {
-            Text(description, style = MaterialTheme.typography.bodyLarge)
+            Text(title, style = MaterialTheme.typography.bodyLarge)
             Text(
-                stringResource(R.string.settings_cloud_message),
+                message,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         Switch(
-            checked = granted,
+            checked = checked,
             onCheckedChange = onChange,
-            modifier = Modifier.semantics { contentDescription = description },
+            modifier = Modifier.semantics { contentDescription = title },
         )
     }
+}
+
+@Composable
+private fun GmailSection(
+    gmail: GmailSettingsUi,
+    onAutoCheck: (Boolean) -> Unit,
+    onReconnect: () -> Unit,
+    onDisconnect: () -> Unit,
+) {
+    Text(
+        text = stringResource(R.string.settings_gmail_connected, gmail.email),
+        style = MaterialTheme.typography.bodyLarge,
+        color = MaterialTheme.colorScheme.onBackground,
+        modifier = Modifier.padding(vertical = 8.dp),
+    )
+    if (gmail.needsReconnect) {
+        Text(
+            text = stringResource(R.string.settings_gmail_needs_reconnect),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.error,
+            modifier = Modifier.padding(bottom = 8.dp),
+        )
+        PrimaryButton(
+            text = stringResource(R.string.settings_gmail_reconnect),
+            onClick = onReconnect,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+    LabeledSwitch(
+        title = stringResource(R.string.settings_gmail_auto_check),
+        message = stringResource(R.string.settings_gmail_auto_check_message),
+        checked = gmail.autoCheck,
+        onChange = onAutoCheck,
+    )
+    Spacer(Modifier.height(8.dp))
+    SecondaryButton(
+        text = stringResource(R.string.settings_gmail_disconnect),
+        onClick = onDisconnect,
+        modifier = Modifier.fillMaxWidth(),
+    )
 }
 
 @Composable

@@ -11,10 +11,17 @@ import app.flytrack.data.remote.dto.AirportDto
 import app.flytrack.data.remote.dto.ProfileDto
 import app.flytrack.data.remote.dto.RegisterDeviceParams
 import app.flytrack.data.remote.toEntity
+import app.flytrack.feature.gmailimport.GmailConnection
 import app.flytrack.testing.FakeAuthRepository
 import app.flytrack.testing.FakeBackendApi
+import app.flytrack.testing.FakeGmailApi
+import app.flytrack.testing.FakeGmailAuth
+import app.flytrack.testing.FakeGmailNotifier
+import app.flytrack.testing.FakeGmailSuggestionStore
 import app.flytrack.testing.FakeSettingsStore
+import app.flytrack.testing.FakeWorkScheduler
 import app.flytrack.testing.Fixtures
+import app.flytrack.testing.GmailFixtures
 import app.flytrack.testing.InMemoryDatabase
 import app.flytrack.testing.TestData
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -173,20 +180,33 @@ class OtherRepositoriesTest {
     // ---- local wipe -------------------------------------------------------------------------------
 
     @Test
-    fun `wiping local user data clears flights, tracking, profile and the device registration but keeps airports`() = scope.runTest {
+    fun `wiping local user data clears flights, tracking, profile, the device registration and gmail but keeps airports`() = scope.runTest {
         val flight = FakeBackendApi.fixtureFlights()[0]
         db.flightDao.upsert(listOf(flight.toEntity()))
         db.airportDao.upsert(fixtureAirports.map { it.toEntity() })
         db.trackedDao.upsert(FakeBackendApi.fixtureUserFlights().map { it.toEntity() })
         db.profileDao.upsert(ProfileEntity(TestData.USER_ID, null, "free", null))
         settings.setLastDeviceRegistration(DeviceRegistration(token, TestData.USER_ID))
+        val gmailAuth = FakeGmailAuth()
+        val gmailStore = FakeGmailSuggestionStore()
+        val gmailNotifier = FakeGmailNotifier()
+        val gmailWork = FakeWorkScheduler()
+        val gmail = GmailConnection(gmailAuth, FakeGmailApi(), gmailStore, settings, gmailNotifier, gmailWork)
+        settings.setGmailAccountEmail("me@gmail.com")
+        gmailStore.insert(listOf(GmailFixtures.suggestion()))
 
-        RoomLocalUserData(db.flightDao, db.trackedDao, db.profileDao, settings, db.transactions).clear()
+        RoomLocalUserData(db.flightDao, db.trackedDao, db.profileDao, settings, db.transactions, gmail).clear()
 
         assertTrue(db.flights.value.isEmpty())
         assertTrue(db.tracked.value.isEmpty())
         assertTrue(db.profiles.value.isEmpty())
         assertEquals(2, db.airports.value.size)
         assertNull(settings.lastDeviceRegistration.first())
+        // Sign-out and a user switch both go through clear(): the stored Gmail account is revoked and local Gmail state is gone.
+        assertEquals(listOf("me@gmail.com"), gmailAuth.revokedEmails)
+        assertTrue(gmailStore.all().isEmpty())
+        assertNull(settings.gmailAccountEmail.first())
+        assertEquals(1, gmailWork.cancelled)
+        assertEquals(1, gmailNotifier.cancelAllCalls)
     }
 }

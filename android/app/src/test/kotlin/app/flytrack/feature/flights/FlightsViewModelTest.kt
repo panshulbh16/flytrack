@@ -9,12 +9,18 @@ import app.flytrack.core.result.TrackResult
 import app.flytrack.core.time.RelativeDay
 import app.flytrack.core.time.RelativeTime
 import app.flytrack.core.time.RelativeUnit
+import app.flytrack.data.repo.AuthRepository
 import app.flytrack.feature.flights.presentation.Countdown
 import app.flytrack.feature.flights.presentation.FlightChangeTracker
 import app.flytrack.feature.flights.presentation.FlightField
+import app.flytrack.feature.gmailimport.SuggestionStatus
+import app.flytrack.feature.gmailimport.TrackedKey
 import app.flytrack.testing.FakeAuthRepository
 import app.flytrack.testing.FakeClock
 import app.flytrack.testing.FakeFlightRepository
+import app.flytrack.testing.FakeGmailNotifier
+import app.flytrack.testing.FakeGmailSuggestionStore
+import app.flytrack.testing.GmailFixtures
 import app.flytrack.testing.MainDispatcherRule
 import app.flytrack.testing.TestData
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -25,6 +31,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -49,7 +56,20 @@ class FlightsViewModelTest {
     private val schedDep = Instant.parse("2026-11-25T12:55:00Z")
     private val schedArr = Instant.parse("2026-11-25T15:10:00Z")
 
-    private fun viewModel() = FlightsViewModel(flights, auth, clock, changes)
+    private val gmailStore = FakeGmailSuggestionStore()
+    private val gmailNotifier = FakeGmailNotifier()
+    private var trackedKeys = emptySet<TrackedKey>()
+
+    /** The phone's date at [app.flytrack.testing.TestData.NOW]. */
+    private val today = LocalDate(2026, 11, 22)
+
+    private fun viewModel(auth: AuthRepository = this.auth) = FlightsViewModel(
+        flights, auth, clock, changes,
+        gmailStore = gmailStore,
+        gmailNotifier = gmailNotifier,
+        trackedKeys = { trackedKeys },
+        today = { today },
+    )
 
     /** Keeps [FlightsViewModel.uiState] subscribed and returns a reader of its current value. */
     private fun TestScope.observe(vm: FlightsViewModel): () -> FlightsUiState {
@@ -98,7 +118,7 @@ class FlightsViewModelTest {
 
     @Test
     fun `a build without backend keys is flagged`() = runTest {
-        val vm = FlightsViewModel(flights, FakeAuthRepository.notConfigured(), clock, changes)
+        val vm = viewModel(FakeAuthRepository.notConfigured())
 
         assertFalse(observe(vm)().isBackendConfigured)
     }
@@ -348,5 +368,45 @@ class FlightsViewModelTest {
 
         assertNull(state().message)
         assertTrue(flights.trackCalls.isEmpty())
+    }
+
+    // ---- Found in Gmail -----------------------------------------------------------------------
+
+    @Test
+    fun `the gmail card lists pending upcoming suggestions that are not tracked, soonest first`() = runTest {
+        val later = GmailFixtures.suggestion(flight = "AI 865", date = LocalDate(2026, 12, 20))
+        val sooner = GmailFixtures.suggestion(flight = "6E 2341", date = LocalDate(2026, 12, 3))
+        gmailStore.insert(
+            listOf(
+                later,
+                sooner,
+                GmailFixtures.suggestion(flight = "QP 1102", date = LocalDate(2026, 11, 21)),
+                GmailFixtures.suggestion(flight = "UK 955", date = LocalDate(2026, 12, 5), status = SuggestionStatus.DISMISSED),
+                GmailFixtures.suggestion(flight = "6E 6001", date = LocalDate(2026, 12, 9)),
+            ),
+        )
+        trackedKeys = setOf(TrackedKey("6E6001", LocalDate(2026, 12, 9)))
+
+        assertEquals(listOf(sooner, later), observe(viewModel())().gmailSuggestions)
+    }
+
+    @Test
+    fun `no suggestions means no gmail card`() = runTest {
+        assertTrue(observe(viewModel())().gmailSuggestions.isEmpty())
+    }
+
+    @Test
+    fun `dismissing a suggestion hides it for good and cancels its notification`() = runTest {
+        val suggestion = GmailFixtures.suggestion(flight = "6E 2341", date = LocalDate(2026, 12, 3))
+        gmailStore.insert(listOf(suggestion))
+        val vm = viewModel()
+        val state = observe(vm)
+        assertEquals(listOf(suggestion), state().gmailSuggestions)
+
+        vm.dismissGmailSuggestion(suggestion.id)
+
+        assertTrue(state().gmailSuggestions.isEmpty())
+        assertEquals(SuggestionStatus.DISMISSED, gmailStore.get(suggestion.id)?.status)
+        assertEquals(listOf(suggestion.id), gmailNotifier.cancelled)
     }
 }

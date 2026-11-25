@@ -55,4 +55,12 @@
     <string name="settings_appearance_system">System</string>
     <string name="settings_appearance_light">Light</string>
     <string name="settings_appearance_dark">Dark</string>
+
+    <string name="settings_section_gmail">Gmail</string>
+    <string name="settings_gmail_connected">Connected as %1$s</string>
+    <string name="settings_gmail_auto_check">Auto-check for new bookings</string>
+    <string name="settings_gmail_auto_check_message">Looks for new booking emails every few hours, on this phone only, and asks before tracking anything.</string>
+    <string name="settings_gmail_needs_reconnect">Gmail access was lost. Reconnect to keep finding bookings.</string>
+    <string name="settings_gmail_reconnect">Reconnect Gmail</string>
+    <string name="settings_gmail_disconnect">Disconnect Gmail</string>
 </resources>

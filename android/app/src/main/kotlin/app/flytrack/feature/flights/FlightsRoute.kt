@@ -1,12 +1,16 @@
 package app.flytrack.feature.flights
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -23,6 +27,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -36,6 +41,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -43,10 +51,12 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.flytrack.R
+import app.flytrack.core.time.FlightTimeFormat
 import app.flytrack.feature.flights.presentation.FlightCardUiModel
 import app.flytrack.feature.flights.ui.FlightCard
 import app.flytrack.feature.flights.ui.NextFlightCard
 import app.flytrack.feature.flights.ui.PreviewFlights
+import app.flytrack.feature.gmailimport.GmailSuggestion
 import app.flytrack.feature.gmailimport.ImportChooserSheet
 import app.flytrack.feature.gmailimport.isGmailImportAvailable
 import app.flytrack.feature.importticket.ScanBoardingPassButton
@@ -56,6 +66,7 @@ import app.flytrack.ui.components.EmptyState
 import app.flytrack.ui.components.FlyTrackTopBar
 import app.flytrack.ui.components.IconAction
 import app.flytrack.ui.components.LoadingState
+import app.flytrack.ui.components.PrimaryButton
 import app.flytrack.ui.components.SecondaryButton
 import app.flytrack.ui.components.SectionCaption
 import app.flytrack.ui.nav.LocalAppNavigator
@@ -95,6 +106,8 @@ fun FlightsRoute(
         onUntrack = viewModel::untrack,
         onUndo = viewModel::undo,
         onMessageShown = viewModel::messageShown,
+        onAddGmailSuggestion = navigator::openAddFlightFromGmail,
+        onDismissGmailSuggestion = viewModel::dismissGmailSuggestion,
         topContent = { NotificationPermissionPrompt() },
     )
 }
@@ -112,6 +125,8 @@ fun FlightsScreen(
     onUntrack: (flightId: String) -> Unit,
     onUndo: (FlightsMessage) -> Unit,
     onMessageShown: (FlightsMessage) -> Unit,
+    onAddGmailSuggestion: (GmailSuggestion) -> Unit = {},
+    onDismissGmailSuggestion: (suggestionId: String) -> Unit = {},
     topContent: @Composable () -> Unit = {},
 ) {
     val snackbars = remember { SnackbarHostState() }
@@ -151,6 +166,9 @@ fun FlightsScreen(
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             topContent()
+            if (state.gmailSuggestions.isNotEmpty()) {
+                FoundInGmailCard(state.gmailSuggestions, onAddGmailSuggestion, onDismissGmailSuggestion)
+            }
             PullToRefreshBox(
             isRefreshing = state.isRefreshing,
             onRefresh = onRefresh,
@@ -304,6 +322,70 @@ private fun FlightCardMenu(designator: String, onArchive: () -> Unit, onUntrack:
                 leadingIcon = { Icon(painterResource(R.drawable.ic_bell_off), contentDescription = null) },
             )
         }
+    }
+}
+
+/** Pending bookings found in Gmail. "Add" opens Add flight filled in; nothing is tracked without confirming there. */
+@Composable
+private fun FoundInGmailCard(
+    suggestions: List<GmailSuggestion>,
+    onAdd: (GmailSuggestion) -> Unit,
+    onDismiss: (suggestionId: String) -> Unit,
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+    ) {
+        // ponytail: scrolls inside a capped height; add a "see all" link to the Gmail screen if long lists show up.
+        Column(Modifier.heightIn(max = 280.dp).verticalScroll(rememberScrollState()).padding(16.dp)) {
+            SectionCaption(stringResource(R.string.flights_gmail_title))
+            suggestions.forEach { suggestion ->
+                Spacer(Modifier.height(12.dp))
+                GmailSuggestionRow(suggestion, onAdd, onDismiss)
+            }
+        }
+    }
+}
+
+@Composable
+private fun GmailSuggestionRow(
+    suggestion: GmailSuggestion,
+    onAdd: (GmailSuggestion) -> Unit,
+    onDismiss: (suggestionId: String) -> Unit,
+) {
+    val date = FlightTimeFormat.dayMonth(suggestion.date)
+    val from = suggestion.fromIata
+    val to = suggestion.toIata
+    val headline = if (from != null && to != null) {
+        stringResource(R.string.flights_gmail_row_route, suggestion.flight, date, from, to)
+    } else {
+        stringResource(R.string.flights_gmail_row, suggestion.flight, date)
+    }
+    // Every row has "Add" and "Dismiss": name the flight so TalkBack users know which one.
+    val addDescription = stringResource(R.string.flights_gmail_add_description, suggestion.flight, date)
+    val dismissDescription = stringResource(R.string.flights_gmail_dismiss_description, suggestion.flight, date)
+    Text(headline, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onBackground)
+    Text(
+        text = suggestion.subject,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+    )
+    Spacer(Modifier.height(8.dp))
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        PrimaryButton(
+            text = stringResource(R.string.flights_gmail_add),
+            onClick = { onAdd(suggestion) },
+            modifier = Modifier.weight(1f).semantics { contentDescription = addDescription },
+        )
+        SecondaryButton(
+            text = stringResource(R.string.flights_gmail_dismiss),
+            onClick = { onDismiss(suggestion.id) },
+            modifier = Modifier.weight(1f).semantics { contentDescription = dismissDescription },
+        )
     }
 }
 
