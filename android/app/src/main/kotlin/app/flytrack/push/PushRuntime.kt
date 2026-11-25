@@ -16,6 +16,7 @@ import androidx.core.content.ContextCompat
 import app.flytrack.BuildConfig
 import app.flytrack.R
 import app.flytrack.core.push.PushContract
+import app.flytrack.feature.gmailimport.AndroidGmailNotifier
 import app.flytrack.ui.nav.openFlightIntent
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.Locale
@@ -23,7 +24,10 @@ import java.util.TimeZone
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/** Creates the two channels the backend addresses by id. Safe to call on every process start. */
+/**
+ * Creates the two channels the backend addresses by id, plus the local Gmail suggestions channel when
+ * that feature is built in. Safe to call on every process start.
+ */
 internal object NotificationChannels {
     fun create(context: Context) {
         val manager = context.getSystemService(NotificationManager::class.java)
@@ -46,6 +50,17 @@ internal object NotificationChannels {
         }
         manager.createNotificationChannel(critical)
         manager.createNotificationChannel(updates)
+        // Not created while the release switch is off, so system settings do not list an unreleased feature.
+        if (BuildConfig.GMAIL_IMPORT_ENABLED) {
+            val suggestions = NotificationChannel(
+                AndroidGmailNotifier.CHANNEL_ID,
+                context.getString(R.string.gmail_channel_name),
+                NotificationManager.IMPORTANCE_DEFAULT,
+            ).apply {
+                description = context.getString(R.string.gmail_channel_description)
+            }
+            manager.createNotificationChannel(suggestions)
+        }
     }
 }
 

@@ -32,7 +32,9 @@ import app.flytrack.core.push.PushContract
 import app.flytrack.data.repo.Appearance
 import app.flytrack.data.repo.SessionState
 import app.flytrack.data.repo.SettingsStore
+import app.flytrack.feature.gmailimport.GmailAppOpenCheck
 import app.flytrack.ui.components.BackendNotConfiguredBanner
+import app.flytrack.ui.nav.EXTRA_GMAIL_SUGGESTION_ID
 import app.flytrack.ui.nav.FlyTrackNavHost
 import app.flytrack.ui.nav.IncomingIntent
 import app.flytrack.ui.nav.NavControllerNavigator
@@ -47,6 +49,8 @@ class MainActivity : ComponentActivity() {
     private val viewModel: MainViewModel by viewModels()
 
     @Inject lateinit var settings: SettingsStore
+
+    @Inject lateinit var gmailAppOpenCheck: GmailAppOpenCheck
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -86,6 +90,12 @@ class MainActivity : ComponentActivity() {
         viewModel.onIntent(intent.toIncomingIntent())
     }
 
+    // Launch and every return to the foreground; GmailAppOpenCheck throttles itself to once an hour.
+    override fun onStart() {
+        super.onStart()
+        gmailAppOpenCheck.onForeground()
+    }
+
     private fun Intent.toIncomingIntent(): IncomingIntent {
         val streams: List<Uri> = when (action) {
             Intent.ACTION_SEND ->
@@ -100,6 +110,7 @@ class MainActivity : ComponentActivity() {
             flightId = getStringExtra(PushContract.KEY_FLIGHT_ID),
             text = getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString(),
             streamUris = streams.map(Uri::toString),
+            gmailSuggestionId = getStringExtra(EXTRA_GMAIL_SUGGESTION_ID),
         )
     }
 }
