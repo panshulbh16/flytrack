@@ -6,13 +6,19 @@ public struct AddFlightPrefill: Hashable, Sendable {
     public var pnr: String?
     public var source: TrackSource?
     public var seat: String?
+    /// Set when Add flight was opened from a Gmail suggestion; marked added once the flight is tracked.
+    public var gmailSuggestionId: String?
 
-    public init(flight: String? = nil, date: String? = nil, pnr: String? = nil, source: TrackSource? = nil, seat: String? = nil) {
+    public init(
+        flight: String? = nil, date: String? = nil, pnr: String? = nil, source: TrackSource? = nil, seat: String? = nil,
+        gmailSuggestionId: String? = nil
+    ) {
         self.flight = flight
         self.date = date
         self.pnr = pnr
         self.source = source
         self.seat = seat
+        self.gmailSuggestionId = gmailSuggestionId
     }
 
     public var isEmpty: Bool {
