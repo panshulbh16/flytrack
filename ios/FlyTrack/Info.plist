@@ -60,6 +60,8 @@
 	<array>
 		<string>whatsapp</string>
 	</array>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>HeyGate looks through your calendar for flights so you can add them in one tap. Nothing is uploaded or changed.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>HeyGate reads the barcode on your boarding pass to add the flight.</string>
 	<key>NSSupportsLiveActivities</key>

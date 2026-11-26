@@ -23,7 +23,7 @@
     <string name="flights_message_offline">You\'re offline. Showing the last saved details.</string>
     <string name="flights_message_refresh_failed">Couldn\'t refresh. Please try again in a moment.</string>
     <string name="flights_message_action_failed">That didn\'t work. Please try again.</string>
-    <string name="flights_message_tracking_limit">You\'ve reached the number of flights your plan can track. Archive one first.</string>
+    <string name="flights_message_tracking_limit">You\'re following the most flights one account can follow at once. Archive one first.</string>
 
     <!-- Next-flight card: "NEXT TAKEOFF · IN 3 DAYS", "IN THE AIR · LANDS IN 35 MIN" -->
     <string name="flights_next_takeoff">Next takeoff</string>

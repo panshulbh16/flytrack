@@ -78,6 +78,22 @@ export function evaluateAlerts(
   // Generation counter in every value-based dedupe key: a value that COMES BACK (gate 12→15→12→15)
   // gets a new key, while two racing ingests of the same snapshot still collide (exactly-once).
   const gen = st.alertSeq ?? 0;
+
+  // State written before P3 has no aircraftReg key (snapshotState and this function always set it now). For
+  // such a flight the block-time milestones it has already passed are history, not news: no TAKEOFF / AT_GATE
+  // for a flight that was airborne or on the ground when this shipped.
+  if (!("aircraftReg" in state)) {
+    if (has("DEPARTED")) {
+      mark("GATE_CLOSED");
+      if (next.depRunwayAt) mark("TAKEOFF");
+    }
+    if (has("LANDED")) {
+      mark("TAKEOFF");
+      if (next.arrOnblockAt) mark("AT_GATE");
+    }
+    st.aircraftReg = null;
+    st.aircraftModel = null;
+  }
   const done = () => {
     if (events.length) st.alertSeq = gen + 1;
     return { events, state: st };
@@ -135,6 +151,26 @@ export function evaluateAlerts(
     // gate disappearing (null) is NOT an alert — providers flap. State keeps last told gate.
   }
 
+  // --- Aircraft swap (Pro): a DIFFERENT tail before departure. The first tail we learn is not a swap. ---
+  if (!departed && next.aircraftReg) {
+    if (st.aircraftReg && !sameValue(st.aircraftReg, next.aircraftReg)) {
+      push({
+        type: "AIRCRAFT_SWAP", severity: "critical", proOnly: true, oldValue: st.aircraftReg, newValue: next.aircraftReg,
+        dedupeKey: `${flightId}:AIRCRAFT_SWAP:${gen}:${normalize(st.aircraftReg)}>${normalize(next.aircraftReg)}`,
+        payload: {
+          old_reg: st.aircraftReg, new_reg: next.aircraftReg,
+          old_model: st.aircraftModel ?? null, new_model: next.aircraftModel ?? null,
+        },
+      });
+    }
+    if (!sameValue(st.aircraftReg, next.aircraftReg)) {
+      st.aircraftReg = next.aircraftReg;
+      st.aircraftModel = next.aircraftModel ?? null;
+    } else if (next.aircraftModel && !st.aircraftModel) {
+      st.aircraftModel = next.aircraftModel; // the type often shows up after the tail
+    }
+  }
+
   // --- Airline retime / reschedule: the SCHEDULED time itself moved (no "delay" would show) ---
   if (!departed && next.schedDep) {
     const shift = st.schedDep ? minutesBetween(next.schedDep, st.schedDep) ?? 0 : 0;
@@ -183,6 +219,15 @@ export function evaluateAlerts(
       dedupeKey: `${flightId}:BOARDING`, payload: { gate: next.depGate, terminal: next.depTerminal },
     });
   }
+  if (!departed && next.status === "gate_closed" && !has("GATE_CLOSED")) {
+    mark("GATE_CLOSED");
+    push({
+      type: "GATE_CLOSED", severity: "info", oldValue: null, newValue: next.status,
+      dedupeKey: `${flightId}:GATE_CLOSED`,
+      payload: { gate: next.depGate, terminal: next.depTerminal, estDep: next.estDep ?? next.schedDep },
+    });
+  }
+  if (departed) mark("GATE_CLOSED"); // never a late "gate closed" after pushback
   if (departed && !has("DEPARTED")) {
     mark("DEPARTED");
     mark("BOARDING"); // don't send a late "boarding" after takeoff
@@ -211,12 +256,32 @@ export function evaluateAlerts(
       payload: { origArr: planned, newArr: next.arrIata, estArr: next.estArr },
     });
   }
+  if (next.depRunwayAt && !has("TAKEOFF")) {
+    mark("TAKEOFF");
+    // A runway time that only shows up after landing is history, not news.
+    if (!isLanded(next)) {
+      push({
+        type: "TAKEOFF", severity: "info", oldValue: null, newValue: next.depRunwayAt,
+        dedupeKey: `${flightId}:TAKEOFF`,
+        payload: { runwayAt: next.depRunwayAt, estArr: next.estArr ?? next.schedArr },
+      });
+    }
+  }
   if (isLanded(next) && !has("LANDED")) {
     mark("LANDED");
     push({
       type: "LANDED", severity: "info", oldValue: null, newValue: next.actArr,
       dedupeKey: `${flightId}:LANDED`,
       payload: { actArr: next.actArr, arrTerminal: next.arrTerminal, arrGate: next.arrGate, belt: next.baggageBelt },
+    });
+  }
+
+  if (next.arrOnblockAt && !has("AT_GATE")) {
+    mark("AT_GATE");
+    push({
+      type: "AT_GATE", severity: "info", oldValue: null, newValue: next.arrOnblockAt,
+      dedupeKey: `${flightId}:AT_GATE`,
+      payload: { onblockAt: next.arrOnblockAt, arrGate: next.arrGate, arrTerminal: next.arrTerminal, belt: next.baggageBelt },
     });
   }
 
@@ -240,9 +305,12 @@ export function snapshotState(s: FlightSnapshot): AlertState {
   const milestones: string[] = [];
   if (s.status === "cancelled") milestones.push("CANCELLED");
   if (s.status === "boarding" || s.status === "gate_closed") milestones.push("BOARDING");
-  if (isDeparted(s)) milestones.push("BOARDING", "DEPARTED");
+  if (s.status === "gate_closed") milestones.push("GATE_CLOSED");
+  if (isDeparted(s)) milestones.push("BOARDING", "GATE_CLOSED", "DEPARTED");
+  if (s.depRunwayAt || isLanded(s)) milestones.push("TAKEOFF");
   if (s.status === "diverted") milestones.push("DIVERTED");
   if (isLanded(s)) milestones.push("LANDED");
+  if (s.arrOnblockAt) milestones.push("AT_GATE");
   const delay = s.estDep && s.schedDep ? Math.max(0, minutesBetween(s.estDep, s.schedDep) ?? 0) : 0;
   return {
     depGate: s.depGate,
@@ -251,6 +319,8 @@ export function snapshotState(s: FlightSnapshot): AlertState {
     depDelayMin: delay,
     schedDep: s.schedDep,
     plannedArr: s.status === "diverted" ? null : s.arrIata,
+    aircraftReg: s.aircraftReg ?? null, // always present: marks the state as written after P3 (see evaluateAlerts)
+    aircraftModel: s.aircraftModel ?? null,
     milestones: [...new Set(milestones)],
     alertSeq: 0,
   };

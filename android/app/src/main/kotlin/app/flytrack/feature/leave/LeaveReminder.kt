@@ -21,6 +21,7 @@ import app.flytrack.feature.airporthealth.AirportHealthRepository
 import app.flytrack.feature.airporthealth.AirportHealthResult
 import app.flytrack.feature.billing.FlightProAccess
 import app.flytrack.feature.billing.ProRepository
+import app.flytrack.feature.social.ProfileFlagsRepository
 import app.flytrack.push.notificationIdFor
 import app.flytrack.ui.nav.openFlightIntent
 import dagger.assisted.Assisted
@@ -130,6 +131,7 @@ class LeaveReminderWorker @AssistedInject constructor(
     private val auth: AuthRepository,
     private val scheduler: LeaveReminderScheduler,
     private val clock: Clock,
+    private val profileFlags: ProfileFlagsRepository,
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
@@ -140,6 +142,8 @@ class LeaveReminderWorker @AssistedInject constructor(
             val flight = tracked.flight
             // Cold start: Pro comes from the signed-in user's cached profile, so the session must be read first.
             if (!awaitSessionKnown(auth.session)) return Result.retry()
+            // P3 B12: crew mode mutes when-to-leave reminders (crew report times are not passenger times).
+            if (profileFlags.crewMode.first()) return Result.success()
             val eligible = pro.observe().first().accessFor(flightId) != FlightProAccess.LOCKED
             val fog = (health.health(flight.depIata) as? AirportHealthResult.Loaded)?.health?.slowsDeparture() == true
             val minutes = travel.travelMinutes(flight.depIata).first()

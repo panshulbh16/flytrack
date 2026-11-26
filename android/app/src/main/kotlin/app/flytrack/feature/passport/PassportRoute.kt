@@ -53,7 +53,9 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.flytrack.R
 import app.flytrack.core.time.FlightTimeFormat
+import app.flytrack.feature.billing.ui.LocalCrewMode
 import app.flytrack.feature.billing.ui.LocalPaywallLauncher
+import app.flytrack.feature.billing.ui.LocalUpsellsHidden
 import app.flytrack.feature.billing.ui.LocalProState
 import app.flytrack.feature.share.ShareTarget
 import app.flytrack.ui.components.BackendNotConfiguredState
@@ -249,7 +251,7 @@ private fun Section(content: @Composable () -> Unit) {
 
 @Composable
 private fun StatGrid(passport: Passport, numbers: NumberFormat) {
-    val tiles = passport.statTiles()
+    val tiles = passport.statTiles(crewMode = LocalCrewMode.current)
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         tiles.chunked(3).forEach { row ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -273,6 +275,7 @@ private fun statLabel(kind: StatKind): String = stringResource(
         StatKind.FLIGHTS -> R.string.passport_tile_flights
         StatKind.DISTANCE_KM -> R.string.passport_tile_km
         StatKind.HOURS -> R.string.passport_tile_hours
+        StatKind.BLOCK_HOURS -> R.string.social_passport_tile_block_hours
         StatKind.AIRPORTS -> R.string.passport_tile_airports
         StatKind.COUNTRIES -> R.string.passport_tile_countries
         StatKind.AIRLINES -> R.string.passport_tile_airlines
@@ -402,6 +405,8 @@ private fun Co2Block(passport: Passport, numbers: NumberFormat) {
 
 @Composable
 private fun ProUpsell(onUpgrade: () -> Unit, modifier: Modifier = Modifier) {
+    // P3 B12: crew mode hides every upsell.
+    if (LocalUpsellsHidden.current) return
     Surface(
         onClick = onUpgrade,
         modifier = modifier.fillMaxWidth(),

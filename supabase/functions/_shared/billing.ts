@@ -459,6 +459,38 @@ export interface EntitlementResponse {
   plan: "pro" | "free";
   pro_until: string | null;
   trial_flight_id: string | null;
+  /**
+   * P3 B13: set when the user is Pro only through a family (public.family_pro_source); the apps show
+   * "Pro via {owner_name}'s family". Absent / null for own Pro and for free users.
+   */
+  via_family?: { owner_name: string | null } | null;
+}
+
+/** public.family_pro_source(user): the family owner whose Pro the user shares, or null. */
+export interface FamilyProSource {
+  owner_id: string;
+  owner_name: string | null;
+  pro_until: string | null;
+}
+
+/**
+ * Own Pro wins; otherwise a family's Pro makes the response Pro until the owner's end (null = no end).
+ * A member's Pro is never passed on further: family_pro_source only ever names an owner with own Pro.
+ */
+export function applyFamilyPro(
+  resp: EntitlementResponse,
+  family: FamilyProSource | null,
+  now: Date,
+): EntitlementResponse {
+  if (resp.plan === "pro" || !family) return { ...resp, via_family: null };
+  const until = family.pro_until ? Date.parse(family.pro_until) : null;
+  if (until !== null && (Number.isNaN(until) || until <= now.getTime())) return { ...resp, via_family: null };
+  return {
+    ...resp,
+    plan: "pro",
+    pro_until: until === null ? null : new Date(until).toISOString(),
+    via_family: { owner_name: family.owner_name ?? null },
+  };
 }
 
 export function entitlementResponse(p: ProfileBilling, now: Date): EntitlementResponse {

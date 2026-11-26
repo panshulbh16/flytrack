@@ -45,8 +45,8 @@ struct PaywallScreen: View {
                     String(localized: "A push when the incoming plane will make your flight late, often before the airline says so."))
             benefit("lock.iphone", String(localized: "Live Activity"),
                     String(localized: "Your flight on the Lock Screen, from check-in to the baggage belt."))
-            benefit("list.bullet", String(localized: "More flights at once"),
-                    String(localized: "Track up to \(UserProfile.proTrackingLimit) flights at the same time (free: \(UserProfile.freeTrackingLimit))."))
+            benefit("person.3", String(localized: "Family sharing"),
+                    String(localized: "On a yearly plan, share Pro with up to five family members."))
         }
     }
 
@@ -216,6 +216,11 @@ struct ProStatusView: View {
 }
 
 func proUntilText(_ state: ProState) -> String {
+    // P3 B13: a family's Pro runs as long as the owner's plan.
+    if state.isViaFamily {
+        guard let owner = state.familyOwnerName else { return String(localized: "Pro via your family") }
+        return String(localized: "Pro via \(owner)'s family")
+    }
     guard let until = state.proUntil else { return String(localized: "Pro, with no end date") }
     let date = until.formatted(date: .abbreviated, time: .shortened)
     return state.source == .tripPass ? String(localized: "Trip pass until \(date)") : String(localized: "Pro until \(date)")

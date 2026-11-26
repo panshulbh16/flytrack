@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -24,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
@@ -36,6 +38,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.liveRegion
@@ -87,6 +90,7 @@ internal fun AddFlightForm(
     onSeatInputChange: (String) -> Unit,
     onSearch: () -> Unit,
     modifier: Modifier = Modifier,
+    onPastFlightChange: ((Boolean) -> Unit)? = null,
 ) {
     val editable = !state.isTracking
     Column(modifier = modifier.fillMaxWidth()) {
@@ -97,6 +101,11 @@ internal fun AddFlightForm(
 
         FlightNumberField(state, editable, onFlightInputChange, onSearch)
         Spacer(Modifier.height(20.dp))
+
+        if (onPastFlightChange != null) {
+            PastFlightSwitch(checked = state.pastFlight, enabled = editable, onChange = onPastFlightChange)
+            Spacer(Modifier.height(12.dp))
+        }
 
         DateSection(state, editable, onDateChange, onPickDate)
         Spacer(Modifier.height(20.dp))
@@ -122,12 +131,35 @@ internal fun AddFlightForm(
 }
 
 @Composable
-private fun FieldLabel(text: String) {
+internal fun FieldLabel(text: String) {
     Text(text = text, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
+/** P3 B6: "Add a past flight (for Passport)". */
 @Composable
-private fun PrefillNoticeRow(notice: PrefillNotice, state: AddFlightUiState) {
+private fun PastFlightSwitch(checked: Boolean, enabled: Boolean, onChange: (Boolean) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .toggleable(value = checked, enabled = enabled, role = Role.Switch, onValueChange = onChange)
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(stringResource(R.string.search_past_title), style = MaterialTheme.typography.bodyLarge)
+            Text(
+                stringResource(R.string.search_past_message),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Spacer(Modifier.width(12.dp))
+        Switch(checked = checked, onCheckedChange = null, enabled = enabled)
+    }
+}
+
+@Composable
+internal fun PrefillNoticeRow(notice: PrefillNotice, state: AddFlightUiState) {
     val text = when (notice) {
         PrefillNotice.CheckDetails -> stringResource(R.string.addflight_prefill_ok)
         PrefillNotice.FlightUnreadable -> stringResource(R.string.addflight_prefill_flight_unreadable)
@@ -137,6 +169,12 @@ private fun PrefillNoticeRow(notice: PrefillNotice, state: AddFlightUiState) {
             FlightTimeFormat.fullDate(notice.ticketDate),
             FlightTimeFormat.fullDate(state.firstSelectableDate),
             FlightTimeFormat.fullDate(state.lastSelectableDate),
+        )
+        PrefillNotice.FromCalendar -> stringResource(R.string.search_prefill_calendar)
+        is PrefillNotice.RouteDateTooFar -> stringResource(
+            R.string.search_prefill_route_too_far,
+            FlightTimeFormat.fullDate(notice.eventDate),
+            FlightTimeFormat.fullDate(notice.lastSearchable),
         )
     }
     NoticeSurface(
@@ -329,7 +367,7 @@ private fun DateSection(
 
 /** One choice of the date row. The filled chip is also announced as selected, so colour is not the only cue. */
 @Composable
-private fun DayChip(
+internal fun DayChip(
     text: String,
     selected: Boolean,
     enabled: Boolean,

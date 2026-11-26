@@ -105,7 +105,15 @@ class PassportTest {
             listOf(14, 18234, 30, 3, 3, 3),
             pro.statTiles().map { it.value },
         )
-        assertEquals(StatKind.entries.toList(), pro.statTiles().map { it.kind })
+        assertEquals(StatKind.entries.filterNot { it == StatKind.BLOCK_HOURS }, pro.statTiles().map { it.kind })
+    }
+
+    @Test
+    fun `crew mode counts block hours instead of hours in the air`() {
+        val crew = pro.copy(blockMinutes = 2_130).statTiles(crewMode = true) // 35.5 h
+        assertEquals(StatKind.BLOCK_HOURS, crew[2].kind)
+        assertEquals(36, crew[2].value)
+        assertEquals(StatKind.HOURS, pro.statTiles(crewMode = false)[2].kind)
     }
 
     @Test

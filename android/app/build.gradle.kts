@@ -136,6 +136,8 @@ dependencies {
     implementation(libs.revenuecat.purchases)
     implementation(libs.glance.appwidget)
     implementation(libs.glance.material3)
+    // P3 B9: publishes /next_flight to the Wear OS app over the Data Layer.
+    implementation(libs.play.services.wearable)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

@@ -794,3 +794,38 @@ disable "Link Google account" then.
   deep links are untested on hardware.
 * Default alert toggles in Settings apply to flights tracked afterwards. They do not rewrite
   alerts on flights the user already changed.
+
+## 21. P3 search and social (android-search-social)
+
+Contracts other features can rely on (docs/P3_CONTRACTS.md A1, A3, B5, B6, B10, B12, B13):
+
+* **Tracking cap (A1).** `UserProfile.FREE_TRACKING_LIMIT = 100`, `PRO_TRACKING_LIMIT = 300` (the server's
+  anti-abuse `tracking_cap`). Nothing in the app sells Pro against a flight count any more;
+  `TrackProblem.LimitReached(limit)` only says "archive some flights".
+* **Searches.** `FlightRepository.searchPast(flightText, date)` (search-flight `mode: "past"`,
+  `PastSearchWindow`) and `searchRoute(RouteSearchQuery)` (search-route, `RouteSearchWindow`) return the
+  same `SearchResult` as `search`. `TrackExtras(archived = true)` inserts a past flight with
+  `archived_at = now()` and never touches an existing row.
+* **Bundled airports.** `assets/airports.json` (4,000 scheduled airports, compact rows
+  `[iata, name, city, country, lat, lon, tz]`, HeyTurbulence's catalog). Inject
+  `feature.airports.AirportCatalog`; `AirportList.search(query)` ranks code, city, name.
+* **Calendar import (A3).** `feature.calendarimport.CalendarFlightParser` is the Kotlin port of
+  HeyTurbulence `calendar-parser.js`; its fixtures `src/test/resources/fixtures/calendar_events.json` are
+  shared with iOS. READ_CALENDAR is requested only from the import screen's "Scan my calendar".
+* **Crew mode (B12).** `feature.social.ProfileFlagsRepository.crewMode: Flow<Boolean>` (device-cached
+  `profiles.crew_mode`). In Compose: `LocalCrewMode` (crew wording: block times, block hours) and
+  `LocalUpsellsHidden` (every Pro teaser or "See plans" returns early when true). Both are provided by
+  `ProStateProvider`. New upsell composables must check `LocalUpsellsHidden`.
+* **Family (B13).** `ProState.source == ProSource.FAMILY` / `isViaFamily` / `familyOwnerName`; show
+  `familyProText(ownerName)` ("Pro via Asha's family"). The grant is cached from `my_family()` and from
+  `sync-entitlement`'s `via_family`.
+* Routes: `CalendarImport`, `FriendPassport(friendId, friendName)`, `Family(prefillCode)`;
+  `AddFlight(prefillFrom, prefillTo)` opens the "By route" tab. Navigator: `openCalendarImport`,
+  `openAddFlightFromCalendar`, `openFriendPassport`, `openFamily`.
+
+## 22. P3 Wear OS (android-wear, contract B9)
+
+* **Module `:wear`** (`android/wear`, Kotlin package `app.flytrack.wear`, minSdk 30). The `applicationId` is `app.flytrack`, the same as the phone: the Wearable Data Layer only connects apps with the same package name and signing key, and Play pairs the watch build with the phone listing by package. Watch `versionCode`s live in the `1xxxxx` range so they never collide with the phone's.
+* **Phone side:** `feature/wear/WearNextFlight` (the payload: the sync push's compact keys plus `dtz`/`atz`, the widget's status word `sw`, delay `dm`, `tone`, `est`) and `NextFlightPublisher` (`DataLayerNextFlightPublisher`, Hilt-bound). `LiveCoordinator.apply` calls it after the widget, so Room changes, FCM syncs and the tick all reach the watch. The flight is the widget's (`LiveFlightSelector.selectWidget`); `WearPublishGate` writes only when the payload changes, and an empty state deletes the item. The logic lives in `WearNextFlightSync` over a `WearDataWriter` (Play services: `DataLayerWearWriter`), unit-tested with a fake: every write is bounded with `withTimeoutOrNull` (10 s) because a `withTimeout` failure is a `CancellationException` and, rethrown, would silently end `LiveCoordinator`'s Room collector; failures are logged and retried on the next update.
+* **Watch side:** `data/NextFlightRepository` reads `/next_flight` from the local Data Layer store; `ui/WatchFlightFormatter` (pure, tested) builds what is drawn and drops a stale flight with the phone's own relevance rule; `tile/NextFlightTileService` (protolayout Material 3), `complication/NextFlightComplicationService` (SHORT_TEXT, LONG_TEXT), `sync/NextFlightListenerService` (redraw requests on change) and `NextFlightActivity` (plain views).
+* The payload's JSON is pinned on both sides by the same golden string (`WearNextFlightTest.GOLDEN_JSON`, `NextFlightPayloadTest.PHONE_JSON`): change both together.

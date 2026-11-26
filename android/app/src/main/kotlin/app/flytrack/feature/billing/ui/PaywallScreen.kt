@@ -44,7 +44,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.flytrack.R
-import app.flytrack.core.model.UserProfile
 import app.flytrack.feature.billing.ActivityPurchaseHost
 import app.flytrack.feature.billing.BillingContract
 import app.flytrack.feature.billing.PlanKind
@@ -157,11 +156,7 @@ private fun Benefits() {
         Benefit(R.drawable.ic_plane, stringResource(R.string.billing_benefit_inbound_title), stringResource(R.string.billing_benefit_inbound_body))
         Benefit(R.drawable.ic_bell, stringResource(R.string.billing_benefit_late_title), stringResource(R.string.billing_benefit_late_body))
         Benefit(R.drawable.ic_clock, stringResource(R.string.billing_benefit_live_title), stringResource(R.string.billing_benefit_live_body))
-        Benefit(
-            R.drawable.ic_ticket,
-            stringResource(R.string.billing_benefit_limit_title),
-            stringResource(R.string.billing_benefit_limit_body, UserProfile.PRO_TRACKING_LIMIT, UserProfile.FREE_TRACKING_LIMIT),
-        )
+        // P3 A1: tracking is unlimited for everyone, so the number of flights is no longer a Pro benefit.
     }
 }
 
@@ -329,6 +324,7 @@ private fun LegalLinks() {
 /** "Pro until 3 Dec 2026" / "Trip pass until …" / "Pro, with no end date", in the phone's zone. */
 @Composable
 internal fun proUntilText(pro: ProState): String {
+    if (pro.isViaFamily) return familyProText(pro.familyOwnerName)
     val until = pro.proUntil ?: return stringResource(R.string.billing_pro_no_end)
     val date = formatProDate(until)
     return if (pro.source == ProSource.TRIP_PASS) {

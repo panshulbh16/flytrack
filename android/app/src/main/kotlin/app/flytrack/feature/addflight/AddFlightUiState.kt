@@ -1,7 +1,9 @@
 package app.flytrack.feature.addflight
 
 import app.flytrack.core.model.Flight
+import app.flytrack.core.model.RouteSearchQuery
 import app.flytrack.core.model.TrackSource
+import app.flytrack.feature.airports.CatalogAirport
 import kotlinx.datetime.LocalDate
 
 /** Values handed over by the ticket importer (all optional, all untrusted OCR output). */
@@ -18,12 +20,62 @@ data class AddFlightPrefill(
     val seat: String? = null,
     /** The Gmail suggestion this form came from: marked added (and its notification cleared) once the flight is tracked. */
     val gmailSuggestionId: String? = null,
+    /** P3 A3: a calendar suggestion without a flight number opens the "By route" tab from this airport (IATA). */
+    val routeFrom: String? = null,
+    /** Arrival airport (IATA) of that suggestion, when the calendar named one. */
+    val routeTo: String? = null,
 ) {
     val isEmpty: Boolean get() = flight.isNullOrBlank() && date.isNullOrBlank() && pnr.isNullOrBlank()
+
+    /** Opens the route tab: a departure airport without a flight number. */
+    val isRoutePrefill: Boolean get() = !routeFrom.isNullOrBlank() && flight.isNullOrBlank()
 }
 
-/** What one search asked for: the normalised flight number ("6E 2341") and the departure date. */
-data class SearchQuery(val flight: String, val date: LocalDate)
+/**
+ * What one search asked for: the normalised flight number ("6E 2341") and the departure date.
+ * [route] is set for a "By route" search (B5); [flight] is then only a label ("DEL → BOM").
+ * [past] marks a past-flight search (B6).
+ */
+data class SearchQuery(
+    val flight: String,
+    val date: LocalDate,
+    val route: RouteSearchQuery? = null,
+    val past: Boolean = false,
+)
+
+/** The two tabs of add-flight. */
+enum class AddFlightMode {
+    /** Flight number and date (the original form). */
+    FLIGHT_NUMBER,
+
+    /** P3 B5: departure airport, optional arrival airport and airline, date. */
+    ROUTE,
+}
+
+/** Why the route form cannot be searched. */
+enum class RouteInputError {
+    /** No departure airport chosen. */
+    FROM_REQUIRED,
+
+    /** Departure and arrival are the same airport. */
+    SAME_AIRPORT,
+
+    /** The airline field holds one character. */
+    AIRLINE_INCOMPLETE,
+}
+
+/** The "By route" form (B5). Dates are limited to what `search-route` accepts. */
+data class RouteForm(
+    val from: CatalogAirport? = null,
+    val to: CatalogAirport? = null,
+    val airlineInput: String = "",
+    val date: LocalDate,
+    val firstSelectableDate: LocalDate,
+    val lastSelectableDate: LocalDate,
+    val error: RouteInputError? = null,
+) {
+    fun isSelectable(day: LocalDate): Boolean = day in firstSelectableDate..lastSelectableDate
+}
 
 /** Why the flight-number field shows an error. */
 enum class FlightInputError {
@@ -38,6 +90,12 @@ enum class FlightInputError {
 sealed interface PrefillNotice {
     /** Everything was readable; the search already runs. */
     data object CheckDetails : PrefillNotice
+
+    /** P3 A3: filled in from a calendar event; check it before tracking. */
+    data object FromCalendar : PrefillNotice
+
+    /** P3 A3: a calendar flight without a number, further ahead than route search reaches (30 days). */
+    data class RouteDateTooFar(val eventDate: LocalDate, val lastSearchable: LocalDate) : PrefillNotice
 
     data object FlightUnreadable : PrefillNotice
 
@@ -75,8 +133,11 @@ sealed interface SearchUiState {
 
 /** Why tapping "Track" (or "Open") on a leg did not finish. */
 sealed interface TrackProblem {
-    /** [limit] active flights are allowed on the user's plan; [proLimit] is non-null for free users. */
-    data class LimitReached(val limit: Int, val proLimit: Int?) : TrackProblem
+    /**
+     * The anti-abuse cap of active flights (P3 A1: 100 free, 300 Pro) is reached. Tracking is otherwise
+     * unlimited, so this is never an upsell: the way forward is archiving old flights.
+     */
+    data class LimitReached(val limit: Int) : TrackProblem
 
     data object Offline : TrackProblem
 
@@ -130,6 +191,13 @@ data class AddFlightUiState(
     val isBackendConfigured: Boolean = true,
     /** True for an anonymous user who could link Google, which raises the daily search limit. */
     val canRaiseSearchLimit: Boolean = false,
+
+    /** P3 B5: which tab is shown. */
+    val mode: AddFlightMode = AddFlightMode.FLIGHT_NUMBER,
+    /** P3 B5: the "By route" form; null hides the tab (previews). */
+    val route: RouteForm? = null,
+    /** P3 B6: "Add a past flight (for Passport)": dates up to a year back, tracked straight into Passport. */
+    val pastFlight: Boolean = false,
 ) {
     val isSearching: Boolean get() = search is SearchUiState.Searching
     val isTracking: Boolean get() = trackingFlightId != null

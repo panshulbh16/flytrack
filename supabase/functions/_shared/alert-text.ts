@@ -136,6 +136,18 @@ function inbound(c: Ctx): { flight: string | null; from: string | null } {
   return { flight: text(ib.flight), from: text(ib.from) };
 }
 
+/** "Airbus A320neo VT-ISR", "VT-ISR" or null (AIRCRAFT_SWAP). */
+function plane(c: Ctx, side: "old" | "new"): string | null {
+  const reg = c.str(`${side}_reg`) ?? (side === "old" ? c.oldV : c.newV), model = c.str(`${side}_model`);
+  return join(model, reg) || null;
+}
+
+/** Minutes the connection is short of the minimum connection time (positive), or null. */
+function shortBy(c: Ctx): number | null {
+  const b = c.num("buffer_min");
+  return b != null && b < 0 ? Math.abs(Math.round(b)) : null;
+}
+
 type Templates = Record<EventType, (c: Ctx) => Rendered>;
 
 // ---------------------------------------------------------------- English
@@ -265,6 +277,49 @@ const EN: Templates = {
       body: c.p.side === "arr"
         ? (c.f ? `Arrival delays or holding likely for ${c.f}.` : "Arrival delays or holding likely.")
         : (c.f ? `Delays likely for ${c.f}.` : "Delays likely."),
+    };
+  },
+  GATE_CLOSED: (c) => {
+    const g = c.str("gate"), t = c.str("terminal");
+    return {
+      title: `Gate closed: ${c.f}`,
+      body: g ? `Boarding at gate ${g}${t ? ` (T${t})` : ""} has closed.` : `Boarding for ${c.route} has closed.`,
+    };
+  },
+  TAKEOFF: (c) => {
+    const up = c.depTime("runwayAt"), eta = c.arrTime("estArr");
+    return {
+      title: `${c.f} took off`,
+      body: join(up && `Wheels up ${up}.`, eta ? `Expected at ${c.arr ?? ""} ${eta}.` : `Heading to ${c.arr ?? ""}.`),
+    };
+  },
+  AT_GATE: (c) => {
+    const on = c.arrTime("onblockAt"), g = c.str("arrGate"), belt = c.str("belt");
+    return {
+      title: `${c.f} is at the gate${c.arr ? ` in ${c.arr}` : ""}`,
+      body: join(g ? `Gate ${g}${on ? `, ${on}` : ""}.` : on && `Parked ${on}.`, belt && `Baggage belt ${belt}.`) ||
+        "You can get off soon.",
+    };
+  },
+  AIRCRAFT_SWAP: (c) => {
+    const nw = plane(c, "new"), old = plane(c, "old");
+    return {
+      title: `Aircraft change: ${c.f}`,
+      body: join(
+        nw ? `${c.route} will now fly on ${nw}${old ? ` (was ${old})` : ""}.` : `${c.route} has a different aircraft.`,
+        "Check your seat in the airline app.",
+      ),
+    };
+  },
+  CONNECTION_AT_RISK: (c) => {
+    const out = c.str("out_flight"), ap = c.str("airport") ?? c.arr, d = c.arrTime("out_dep"), short = shortBy(c);
+    return {
+      title: out ? `Connection at risk: ${c.f} → ${out}` : `Connection at risk after ${c.f}`,
+      body: join(
+        `${c.f} is running late${ap ? ` into ${ap}` : ""}.`,
+        out && `${out}${d ? ` departs ${d}` : " departs soon"}${short ? `, ${short} min short of the minimum connection time` : ""}.`,
+        "Talk to the airline about your options.",
+      ),
     };
   },
 };
@@ -410,6 +465,52 @@ const HI: Templates = {
       body: c.p.side === "arr"
         ? (c.f ? `${c.f} की लैंडिंग में देरी हो सकती है।` : "लैंडिंग में देरी हो सकती है।")
         : (c.f ? `${c.f} में देरी हो सकती है।` : "उड़ानों में देरी हो सकती है।"),
+    };
+  },
+  GATE_CLOSED: (c) => {
+    const g = c.str("gate"), t = c.str("terminal");
+    return {
+      title: `गेट बंद: ${c.f}`,
+      body: g ? `गेट ${g}${t ? ` (T${t})` : ""} पर बोर्डिंग बंद हो गई है।` : `${c.route} की बोर्डिंग बंद हो गई है।`,
+    };
+  },
+  TAKEOFF: (c) => {
+    const up = c.depTime("runwayAt"), eta = c.arrTime("estArr");
+    return {
+      title: `${c.f} ने उड़ान भरी`,
+      body: join(
+        up && `${up} बजे टेक-ऑफ़ हुआ।`,
+        eta ? `${c.arr ?? ""} ${eta} बजे पहुँचने की उम्मीद।` : `${c.arr ?? ""} की ओर जा रही है।`,
+      ),
+    };
+  },
+  AT_GATE: (c) => {
+    const on = c.arrTime("onblockAt"), g = c.str("arrGate"), belt = c.str("belt");
+    return {
+      title: `${c.f} गेट पर पहुँच गई`,
+      body: join(g ? `गेट ${g}${on ? `, ${on} बजे` : ""}।` : on && `${on} बजे गेट पर पहुँची।`, belt && `बैगेज बेल्ट ${belt}।`) ||
+        "जल्द ही विमान से उतर सकेंगे।",
+    };
+  },
+  AIRCRAFT_SWAP: (c) => {
+    const nw = plane(c, "new"), old = plane(c, "old");
+    return {
+      title: `विमान बदला: ${c.f}`,
+      body: join(
+        nw ? `${c.route} अब ${nw} से जाएगी${old ? ` (पहले ${old})` : ""}।` : `${c.route} का विमान बदल गया है।`,
+        "एयरलाइन ऐप में अपनी सीट जाँच लें।",
+      ),
+    };
+  },
+  CONNECTION_AT_RISK: (c) => {
+    const out = c.str("out_flight"), ap = c.str("airport") ?? c.arr, d = c.arrTime("out_dep"), short = shortBy(c);
+    return {
+      title: out ? `कनेक्शन खतरे में: ${c.f} → ${out}` : `${c.f} के बाद का कनेक्शन खतरे में`,
+      body: join(
+        `${c.f}${ap ? ` ${ap}` : ""} देर से पहुँच रही है।`,
+        out && `${out}${d ? ` ${d} बजे` : " जल्द"} रवाना होगी${short ? `, न्यूनतम कनेक्शन समय से ${short} मिनट कम` : ""}।`,
+        "विकल्पों के लिए एयरलाइन से बात करें।",
+      ),
     };
   },
 };
@@ -563,6 +664,52 @@ const HINGLISH: Templates = {
       body: c.p.side === "arr"
         ? (c.f ? `${c.f} ki landing mein der ho sakti hai.` : "Landing mein der ho sakti hai.")
         : (c.f ? `${c.f} late ho sakti hai.` : "Flights late ho sakti hain."),
+    };
+  },
+  GATE_CLOSED: (c) => {
+    const g = c.str("gate"), t = c.str("terminal");
+    return {
+      title: `Gate band: ${c.f}`,
+      body: g ? `Gate ${g}${t ? ` (T${t})` : ""} par boarding band ho gayi hai.` : `${c.route} ki boarding band ho gayi hai.`,
+    };
+  },
+  TAKEOFF: (c) => {
+    const up = c.depTime("runwayAt"), eta = c.arrTime("estArr");
+    return {
+      title: `${c.f} ka take-off ho gaya`,
+      body: join(
+        up && `${up} baje wheels up.`,
+        eta ? `${c.arr ?? ""} ${eta} baje pahunchne ki ummeed.` : `${c.arr ?? ""} ki taraf ja rahi hai.`,
+      ),
+    };
+  },
+  AT_GATE: (c) => {
+    const on = c.arrTime("onblockAt"), g = c.str("arrGate"), belt = c.str("belt");
+    return {
+      title: `${c.f} gate par pahunch gayi`,
+      body: join(g ? `Gate ${g}${on ? `, ${on} baje` : ""}.` : on && `${on} baje gate par pahunchi.`, belt && `Baggage belt ${belt}.`) ||
+        "Jaldi hi utar payenge.",
+    };
+  },
+  AIRCRAFT_SWAP: (c) => {
+    const nw = plane(c, "new"), old = plane(c, "old");
+    return {
+      title: `Aircraft change: ${c.f}`,
+      body: join(
+        nw ? `${c.route} ab ${nw} se jayegi${old ? ` (pehle ${old} tha)` : ""}.` : `${c.route} ka aircraft badal gaya hai.`,
+        "Airline app mein apni seat check kar lein.",
+      ),
+    };
+  },
+  CONNECTION_AT_RISK: (c) => {
+    const out = c.str("out_flight"), ap = c.str("airport") ?? c.arr, d = c.arrTime("out_dep"), short = shortBy(c);
+    return {
+      title: out ? `Connection khatre mein: ${c.f} → ${out}` : `${c.f} ke baad ka connection khatre mein`,
+      body: join(
+        `${c.f}${ap ? ` ${ap}` : ""} late pahunch rahi hai.`,
+        out && `${out}${d ? ` ${d} baje` : " jaldi"} udegi${short ? `, minimum connection time se ${short} min kam` : ""}.`,
+        "Options ke liye airline se baat karein.",
+      ),
     };
   },
 };

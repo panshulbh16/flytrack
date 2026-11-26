@@ -1,5 +1,11 @@
 import type { FlightKey, FlightSnapshot, FlightStatus } from "../types.ts";
-import { type FlightDataProvider, ProviderError, type ProviderCallInfo, type WebhookSubscription } from "./provider.ts";
+import {
+  type AircraftInfo,
+  type FlightDataProvider,
+  ProviderError,
+  type ProviderCallInfo,
+  type WebhookSubscription,
+} from "./provider.ts";
 
 /**
  * AeroDataBox adapter (RapidAPI or API.Market).
@@ -112,6 +118,12 @@ export function mapAdbFlight(f: AdbFlight): FlightSnapshot | null {
     actArr,
     arrTerminal: blank(arr.terminal), arrGate: blank(arr.gate), baggageBelt: blank(arr.baggageBelt),
     aircraftModel: blank(f.aircraft?.model), aircraftReg: blank(f.aircraft?.reg),
+    // Block times (P3 A2): ADB has no explicit off/on-block fields. Once a flight has departed its revised
+    // departure time is the off-block time; once Arrived its revised arrival time is the on-block time.
+    depOffblockAt: departed ? depRevised : null,
+    depRunwayAt: depRunway,
+    arrRunwayAt: arrRunway,
+    arrOnblockAt: arrived ? arrRevised : null,
     delayReason: null, // AeroDataBox doesn't provide reasons; we derive (inbound late) ourselves
     live: loc?.lat != null && loc?.lon != null
       ? {
@@ -132,6 +144,81 @@ export function mapAdbFlight(f: AdbFlight): FlightSnapshot | null {
 export function dedupeCodeshares(flights: AdbFlight[]): AdbFlight[] {
   const operators = flights.filter((f) => f.codeshareStatus !== "IsCodeshared");
   return operators.length ? operators : flights;
+}
+
+/** GET /aircrafts/reg/{reg} body (fields we use; UNVERIFIED beyond the OpenAPI mirror). */
+export interface AdbAircraft {
+  reg?: string;
+  model?: string;
+  modelCode?: string;
+  icaoCode?: string;
+  typeName?: string;
+  firstFlightDate?: string;
+  deliveryDate?: string;
+  rolloutDate?: string;
+  registrationDate?: string;
+  ageYears?: number;
+  numSeats?: number;
+  airlineName?: string;
+  airline?: { iata?: string; icao?: string; name?: string };
+}
+
+const isoDay = (v?: string) => (v && /^\d{4}-\d{2}-\d{2}/.test(v) ? v.slice(0, 10) : null);
+
+/** Years between a "YYYY-MM-DD" day and now, one decimal. */
+export function ageYearsSince(day: string | null, now: Date): number | null {
+  const t = day ? Date.parse(`${day}T00:00:00Z`) : NaN;
+  if (Number.isNaN(t) || t > now.getTime()) return null;
+  return Math.round(((now.getTime() - t) / (365.25 * 86400_000)) * 10) / 10;
+}
+
+export function mapAdbAircraft(a: AdbAircraft, reg: string, now: Date = new Date()): AircraftInfo {
+  const first = isoDay(a.firstFlightDate);
+  const delivery = isoDay(a.deliveryDate) ?? isoDay(a.registrationDate);
+  const age = typeof a.ageYears === "number" && Number.isFinite(a.ageYears)
+    ? Math.round(a.ageYears * 10) / 10
+    : ageYearsSince(first ?? delivery ?? isoDay(a.rolloutDate), now);
+  return {
+    reg: (blank(a.reg) ?? reg).toUpperCase(),
+    model: blank(a.typeName) ?? blank(a.model),
+    icaoType: blank(a.icaoCode)?.toUpperCase() ?? null,
+    firstFlightDate: first,
+    deliveryDate: delivery,
+    ageYears: age,
+    airlineIata: blank(a.airline?.iata)?.toUpperCase() ?? null,
+    seatConfig: typeof a.numSeats === "number" && a.numSeats > 0 ? `${a.numSeats} seats` : null,
+  };
+}
+
+const LOCAL_RE = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/;
+
+/** Naive local "YYYY-MM-DDTHH:mm" ↔ minutes since epoch (as if UTC; only differences matter). */
+function localMinutes(v: string): number | null {
+  const m = LOCAL_RE.exec(v);
+  if (!m) return null;
+  return Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]) / 60_000;
+}
+function localString(min: number): string {
+  return new Date(min * 60_000).toISOString().slice(0, 16);
+}
+
+/**
+ * Splits [from, to] (airport-local, inclusive) into windows of at most 12 h, the largest range the
+ * FIDS endpoint accepts. Throws on a malformed or reversed range.
+ */
+export function departureWindows(fromLocal: string, toLocal: string): [string, string][] {
+  const a = localMinutes(fromLocal), b = localMinutes(toLocal);
+  if (a == null || b == null || b < a) throw new ProviderError("bad local time range", null, false);
+  const out: [string, string][] = [];
+  for (let s = a; s <= b; s += 12 * 60) out.push([localString(s), localString(Math.min(b, s + 12 * 60 - 1))]);
+  return out;
+}
+
+/** One FIDS departure (withLeg=true) → a snapshot; the departure airport may be implied by the query. */
+export function mapAdbDeparture(f: AdbFlight, iata: string): FlightSnapshot | null {
+  const dep = { ...(f.departure ?? {}) };
+  if (!dep.airport?.iata) dep.airport = { ...(dep.airport ?? {}), iata };
+  return mapAdbFlight({ ...f, departure: dep });
 }
 
 export class AeroDataBoxProvider implements FlightDataProvider {
@@ -201,6 +288,36 @@ export class AeroDataBoxProvider implements FlightDataProvider {
       `/flights/reg/${encodeURIComponent(reg)}/${date}?withAircraftImage=false&withLocation=true&dateLocalRole=Both`,
     );
     return this.toSnapshots(body);
+  }
+
+  async getAirportDepartures(iata: string, fromLocal: string, toLocal: string): Promise<FlightSnapshot[]> {
+    const code = iata.trim().toUpperCase();
+    if (!/^[A-Z0-9]{3}$/.test(code)) throw new ProviderError("bad airport code", null, false);
+    const q = "withLeg=true&direction=Departure&withCancelled=true&withCodeshared=false&withCargo=false" +
+      "&withPrivate=false&withLocation=false";
+    const out = new Map<string, FlightSnapshot>();
+    for (const [from, to] of departureWindows(fromLocal, toLocal)) {
+      const body = await this.request(
+        "airport_departures",
+        `/flights/airports/iata/${code}/${from}/${to}?${q}`,
+      ) as { departures?: AdbFlight[] } | null;
+      const flights = dedupeCodeshares(body?.departures ?? []).filter((f) => !f.isCargo);
+      for (const f of flights) {
+        const s = mapAdbDeparture(f, code);
+        if (!s || s.depIata !== code) continue;
+        out.set(`${s.carrier}${s.number}:${s.date}:${s.depIata}`, s);
+      }
+    }
+    return [...out.values()].sort((a, b) => Date.parse(a.schedDep ?? "") - Date.parse(b.schedDep ?? ""));
+  }
+
+  async getAircraft(reg: string): Promise<AircraftInfo | null> {
+    const r = reg.trim().toUpperCase();
+    if (!/^[A-Z0-9-]{2,10}$/.test(r)) return null;
+    const body = await this.request("aircraft_by_registration", `/aircrafts/reg/${encodeURIComponent(r)}`) as
+      | AdbAircraft
+      | null;
+    return body && typeof body === "object" ? mapAdbAircraft(body, r) : null;
   }
 
   async subscribe(key: FlightKey, callbackUrl: string): Promise<WebhookSubscription> {

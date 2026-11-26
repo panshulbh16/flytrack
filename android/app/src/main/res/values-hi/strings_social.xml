@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hindi translation of values/strings_social.xml. -->
+<resources>
+    <!-- Settings -->
+    <string name="social_section">शेयरिंग और क्रू</string>
+    <string name="social_share_passport_title">मेरा पासपोर्ट दोस्तों के साथ शेयर करें</string>
+    <string name="social_share_passport_message">दोस्त अपनी फ़्लाइट्स के कुल आँकड़ों की तुलना आपके आँकड़ों से कर सकते हैं। वे आपकी फ़्लाइट्स या बुकिंग कभी नहीं देखते।</string>
+    <string name="social_crew_title">क्रू मोड</string>
+    <string name="social_crew_message">पायलट और केबिन क्रू के लिए: चेक-इन, बोर्डिंग और कब निकलें वाले अलर्ट म्यूट रहते हैं, Pro ऑफ़र छिप जाते हैं, फ़्लाइट्स में ब्लॉक टाइम दिखता है और पासपोर्ट ब्लॉक घंटे गिनता है।</string>
+    <string name="social_crew_muted">क्रू मोड में म्यूट: चेक-इन, बोर्डिंग और कब निकलें वाले अलर्ट। देरी, गेट और रद्द होने के अलर्ट आते रहेंगे।</string>
+    <string name="social_message_offline">आप ऑफ़लाइन हैं, इसलिए कुछ नहीं बदला। इंटरनेट से जुड़ने पर फिर से कोशिश करें।</string>
+    <string name="social_message_failed">कुछ नहीं बदला। कृपया फिर से कोशिश करें।</string>
+
+    <!-- Passport, crew mode -->
+    <string name="social_passport_tile_block_hours">ब्लॉक घंटे</string>
+
+    <!-- Compare Passports -->
+    <string name="social_compare_action">पासपोर्ट की तुलना करें</string>
+    <!-- %1$s is the friend's name -->
+    <string name="social_compare_title">आप बनाम %1$s</string>
+    <string name="social_compare_tab_overview">झलक</string>
+    <!-- %1$d is the current year -->
+    <string name="social_compare_tab_year">%1$d</string>
+    <string name="social_compare_you">आप</string>
+    <string name="social_compare_vs">बनाम</string>
+    <string name="social_compare_error">हम तुलना लोड नहीं कर पाए</string>
+    <!-- %1$s is the friend's name -->
+    <string name="social_compare_not_shared_title">%1$s अपना पासपोर्ट शेयर नहीं कर रहे</string>
+    <string name="social_compare_not_shared_message">%1$s सेटिंग्स में “मेरा पासपोर्ट दोस्तों के साथ शेयर करें” चालू कर सकते हैं। फिर आप तुलना कर पाएँगे।</string>
+    <string name="social_compare_last12_note">दोनों तरफ़ पिछले 12 महीने गिने जाते हैं। Pro अब तक की पूरी तुलना करता है।</string>
+    <string name="social_compare_flights">फ़्लाइट्स</string>
+    <string name="social_compare_km">किलोमीटर</string>
+    <string name="social_compare_airports">एयरपोर्ट</string>
+    <string name="social_compare_countries">देश</string>
+    <string name="social_compare_longest_km">सबसे लंबी फ़्लाइट, कि.मी.</string>
+    <!-- %1$s is "You" or the friend's name -->
+    <string name="social_compare_leader">आगे: %1$s</string>
+    <string name="social_compare_tie">बराबरी</string>
+    <!-- Read aloud for one row. %1$s label, %2$s "You", %3$s your value, %4$s friend's name, %5$s their value, %6$s who leads -->
+    <string name="social_compare_row_description">%1$s: %2$s %3$s, %4$s %5$s। %6$s।</string>
+    <plurals name="social_compare_shared_countries">
+        <item quantity="one">आप दोनों %1$d देश तक उड़ चुके हैं।</item>
+        <item quantity="other">आप दोनों %1$d देशों तक उड़ चुके हैं।</item>
+    </plurals>
+    <string name="social_compare_section_airlines">टॉप एयरलाइंस</string>
+    <string name="social_compare_section_longest">सबसे लंबी फ़्लाइट</string>
+    <!-- %1$s airline name, %2$d flights -->
+    <string name="social_compare_airline_row">%1$s · %2$d</string>
+    <!-- %1$s flight number, %2$s distance in km -->
+    <string name="social_compare_longest_detail">%1$s · %2$s कि.मी.</string>
+</resources>

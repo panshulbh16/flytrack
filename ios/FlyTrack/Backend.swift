@@ -115,8 +115,13 @@ final class LiveAuthRepository: AuthRepository {
 
 @MainActor
 final class LiveFlightRepository: FlightRepository, TrackedKeysProviding {
-    private let stack: SupabaseStack
+    /// Internal (not private) for the P3 route / past search in P3Services.swift.
+    let stack: SupabaseStack
     init(stack: SupabaseStack) { self.stack = stack }
+
+    /// Runs after the cached flights changed (refresh, sync push, track, untrack, archive). P3: the widget snapshot
+    /// in the App Group is rewritten here (docs/P3_CONTRACTS.md A4).
+    var onCacheChanged: (@MainActor () async -> Void)?
 
     func trackedFlights() async -> [TrackedFlightDetails] {
         LocalCache.trackingRows(in: stack.context).compactMap { tracking in
@@ -174,6 +179,7 @@ final class LiveFlightRepository: FlightRepository, TrackedKeysProviding {
                     .value
                 guard let row = rows.first, let tracking = row.tracking() else { return .failed("empty insert") }
                 LocalCache.save(tracking: tracking, in: stack.context)
+                await onCacheChanged?()
                 return .tracked(tracking)
             } catch let error as PostgrestError {
                 if error.code == "23505" { return await alreadyTracked(flightId: flightId, pnr: pnr, seat: seat) }
@@ -190,16 +196,18 @@ final class LiveFlightRepository: FlightRepository, TrackedKeysProviding {
 
     func untrack(flightId: String) async -> ActionResult {
         guard let tracking = await trackedFlight(flightId: flightId)?.tracking else { return .notFound }
-        return await command {
+        let result = await command {
             try await self.stack.client?.from("user_flights").delete().eq("id", value: tracking.id).execute()
             LocalCache.deleteTracking(id: tracking.id, in: self.stack.context)
         }
+        await onCacheChanged?()
+        return result
     }
 
     func archive(flightId: String, archived: Bool) async -> ActionResult {
         guard let tracking = LocalCache.trackingRows(in: stack.context).first(where: { $0.flightId == flightId }) else { return .notFound }
         let stamp = archived ? ISO8601DateFormatter().string(from: Date()) : nil
-        return await command {
+        let result = await command {
             let rows: [WireTracking] = try await self.stack.client!.from("user_flights")
                 .update(ArchivePatch(archived_at: stamp))
                 .eq("id", value: tracking.id)
@@ -207,6 +215,8 @@ final class LiveFlightRepository: FlightRepository, TrackedKeysProviding {
                 .value
             if let updated = rows.first?.tracking() { LocalCache.save(tracking: updated, in: self.stack.context) }
         }
+        await onCacheChanged?()
+        return result
     }
 
     func updateNotifyPrefs(flightId: String, prefs: [AlertType: Bool]) async -> ActionResult {
@@ -258,6 +268,7 @@ final class LiveFlightRepository: FlightRepository, TrackedKeysProviding {
             for row in rows {
                 if let tracking = row.tracking() { LocalCache.save(tracking: tracking, in: stack.context) }
             }
+            await onCacheChanged?()
             return .success
         } catch is URLError {
             return .offline
@@ -273,7 +284,10 @@ final class LiveFlightRepository: FlightRepository, TrackedKeysProviding {
             changed = true
         }
         let refreshed = await refreshOne(flightId)
-        if refreshed.isSuccess || changed { return .success }
+        if refreshed.isSuccess || changed {
+            await onCacheChanged?()
+            return .success
+        }
         return refreshed
     }
 
@@ -329,7 +343,7 @@ final class LiveFlightRepository: FlightRepository, TrackedKeysProviding {
         }
     }
 
-    private func searchFailure(_ error: FunctionsError) -> SearchResult {
+    func searchFailure(_ error: FunctionsError) -> SearchResult {
         guard case .httpError(let status, let data) = error else { return .providerError }
         let body = (try? JSONDecoder().decode(FunctionErrorBody.self, from: data))
         if body?.error == "not_found" { return .notFound }
@@ -552,7 +566,7 @@ private struct SearchRequest: Encodable { var flight: String; var date: String }
 private struct ParseRequest: Encodable { var text: String }
 struct FunctionErrorBody: Decodable { var error: String?; var message: String? }
 
-private struct SearchResponse: Decodable {
+struct SearchResponse: Decodable {
     var flights: [WireFlight]
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -612,7 +626,7 @@ private struct WireProfile: Decodable {
     }
 }
 
-private struct WireTracking: Decodable {
+struct WireTracking: Decodable {
     var id: String
     var user_id: String
     var flight_id: String
@@ -637,7 +651,7 @@ private struct WireTracking: Decodable {
     }
 }
 
-private struct WireFlight: Decodable {
+struct WireFlight: Decodable {
     var id: String
     var carrier_iata: String
     var flight_number: String
@@ -682,6 +696,13 @@ private struct WireFlight: Decodable {
     var inbound_flight_id: String?
     var has_pro_insight: Bool?
     var prediction: WirePrediction?
+    // P3 (flight_view tail columns, migration 23)
+    var dep_offblock_at: String?
+    var dep_runway_at: String?
+    var arr_runway_at: String?
+    var arr_onblock_at: String?
+    var aircraft_icao_type: String?
+    var aircraft_age_years: Double?
 
     func flight() -> Flight? {
         guard let date = LocalDate.parse(flight_date) else { return nil }
@@ -701,12 +722,15 @@ private struct WireFlight: Decodable {
             depAirport: airport(dep_iata, dep_name, dep_city, dep_tz, dep_lat, dep_lon),
             arrAirport: airport(arr_iata, arr_name, arr_city, arr_tz, arr_lat, arr_lon),
             inboundFlightId: inbound_flight_id, prediction: prediction?.prediction(),
-            hasProInsight: has_pro_insight ?? false
+            hasProInsight: has_pro_insight ?? false,
+            depOffblockAt: parseInstant(dep_offblock_at), depRunwayAt: parseInstant(dep_runway_at),
+            arrRunwayAt: parseInstant(arr_runway_at), arrOnblockAt: parseInstant(arr_onblock_at),
+            aircraftIcaoType: aircraft_icao_type, aircraftAgeYears: aircraft_age_years
         )
     }
 }
 
-private struct WirePrediction: Decodable {
+struct WirePrediction: Decodable {
     var computedAt: String?
     var predictedDep: String?
     var lateMin: Int?
@@ -720,7 +744,7 @@ private struct WirePrediction: Decodable {
     }
 }
 
-private struct WireInbound: Decodable {
+struct WireInbound: Decodable {
     var flight: String?
     var from: String?
     var status: String?

@@ -2442,16 +2442,6 @@
         }
       }
     },
-    "Free plan: up to %lld flights at once. Pro adds inbound-aircraft predictions, late-aircraft alerts and the Live Activity." : {
-      "localizations" : {
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "फ़्री प्लान: एक साथ %lld फ़्लाइट्स तक। Pro में आने वाले विमान का अनुमान, विमान लेट होने के अलर्ट और Live Activity भी मिलते हैं।"
-          }
-        }
-      }
-    },
     "Free shows your last 12 months and this year's review. HeyGate Pro counts every flight you have ever tracked." : {
       "localizations" : {
         "hi" : {
@@ -3703,16 +3693,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "मासिक"
-          }
-        }
-      }
-    },
-    "More flights at once" : {
-      "localizations" : {
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "एक साथ ज़्यादा फ़्लाइट्स"
           }
         }
       }
@@ -6069,16 +6049,6 @@
         }
       }
     },
-    "Track up to %lld flights at the same time (free: %lld)." : {
-      "localizations" : {
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "एक साथ %1$lld फ़्लाइट्स तक ट्रैक करें (फ़्री: %2$lld)।"
-          }
-        }
-      }
-    },
     "Tracked with HeyGate" : {
       "localizations" : {
         "hi" : {
@@ -6848,6 +6818,2026 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "आपकी ट्रैक की गई फ़्लाइट्स आपके कैलेंडर में दिखती हैं और हर घंटे अपडेट होती हैं। लिंक वाला कोई भी इन्हें देख सकता है, इसलिए ग़लती से शेयर हो गया हो तो इसे रीसेट कर दें।"
+          }
+        }
+      }
+    },
+    "Aircraft swap (Pro)" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "विमान बदलना (Pro)"
+          }
+        }
+      }
+    },
+    "Connection at risk (Pro)" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कनेक्शन ख़तरे में (Pro)"
+          }
+        }
+      }
+    },
+    "Prediction" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अनुमान"
+          }
+        }
+      }
+    },
+    "Pro predicts how late this flight will be, from its history, your plane's inbound flight, the weather and the airport." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pro इस फ़्लाइट के पिछले रिकॉर्ड, आपके विमान की आने वाली फ़्लाइट, मौसम और एयरपोर्ट के आधार पर अनुमान लगाता है कि यह फ़्लाइट कितनी लेट होगी।"
+          }
+        }
+      }
+    },
+    "Connections" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कनेक्शन"
+          }
+        }
+      }
+    },
+    "Delay trends at %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ पर देरी के रुझान"
+          }
+        }
+      }
+    },
+    "From the latest flight data on this phone." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इस फ़ोन पर मौजूद फ़्लाइट के ताज़ा डेटा से।"
+          }
+        }
+      }
+    },
+    "Timeline" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "टाइमलाइन"
+          }
+        }
+      }
+    },
+    "Expected %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अनुमानित %@"
+          }
+        }
+      }
+    },
+    "Check-in opens" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "चेक-इन खुलता है"
+          }
+        }
+      }
+    },
+    "Gate assigned" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "गेट तय हुआ"
+          }
+        }
+      }
+    },
+    "Pushback" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पुशबैक"
+          }
+        }
+      }
+    },
+    "Takeoff" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "टेक-ऑफ़"
+          }
+        }
+      }
+    },
+    "Landing" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "लैंडिंग"
+          }
+        }
+      }
+    },
+    "Gate %@, Terminal %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "गेट %1$@, टर्मिनल %2$@"
+          }
+        }
+      }
+    },
+    "Gate %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "गेट %@"
+          }
+        }
+      }
+    },
+    "%lld min late" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld मिनट लेट"
+          }
+        }
+      }
+    },
+    "%lld min early" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld मिनट पहले"
+          }
+        }
+      }
+    },
+    "Taxi out %lld min" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "टैक्सी आउट %lld मिनट"
+          }
+        }
+      }
+    },
+    "Taxi in %lld min" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "टैक्सी इन %lld मिनट"
+          }
+        }
+      }
+    },
+    "Belt %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बेल्ट %@"
+          }
+        }
+      }
+    },
+    "Closes %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बंद: %@"
+          }
+        }
+      }
+    },
+    "Diverted to %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ की ओर डायवर्ट हुई"
+          }
+        }
+      }
+    },
+    "New destination not announced yet" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "नई मंज़िल अभी घोषित नहीं हुई"
+          }
+        }
+      }
+    },
+    "Now" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अभी"
+          }
+        }
+      }
+    },
+    "Coming up" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आगे"
+          }
+        }
+      }
+    },
+    "About %lld min late" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "लगभग %lld मिनट लेट"
+          }
+        }
+      }
+    },
+    "Likely on time" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "समय पर रहने की संभावना"
+          }
+        }
+      }
+    },
+    "%lld%% chance of a delay of 15 min or more" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "15 मिनट या उससे ज़्यादा देरी की %lld%% संभावना"
+          }
+        }
+      }
+    },
+    "%lld%% chance of an hour or more" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "एक घंटे या उससे ज़्यादा की %lld%% संभावना"
+          }
+        }
+      }
+    },
+    "+%lld min" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+%lld मिनट"
+          }
+        }
+      }
+    },
+    "Confidence: %@. A prediction from past flights, not airline information." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "भरोसा: %@। यह पिछली फ़्लाइट्स पर आधारित अनुमान है, एयरलाइन की जानकारी नहीं।"
+          }
+        }
+      }
+    },
+    "low" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कम"
+          }
+        }
+      }
+    },
+    "medium" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मध्यम"
+          }
+        }
+      }
+    },
+    "high" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ज़्यादा"
+          }
+        }
+      }
+    },
+    "Gate prediction" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "गेट का अनुमान"
+          }
+        }
+      }
+    },
+    "Usually gate %@ (%lld of %lld)" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आम तौर पर गेट %1$@ (%3$lld में से %2$lld)"
+          }
+        }
+      }
+    },
+    "Terminal %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "टर्मिनल %@"
+          }
+        }
+      }
+    },
+    "%@ (%lld%%)" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ (%2$lld%%)"
+          }
+        }
+      }
+    },
+    "Other gates" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "दूसरे गेट"
+          }
+        }
+      }
+    },
+    "From the last 60 days. The airline has not assigned a gate yet." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पिछले 60 दिनों के आधार पर। एयरलाइन ने अभी गेट तय नहीं किया है।"
+          }
+        }
+      }
+    },
+    "Taxi times" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "टैक्सी का समय"
+          }
+        }
+      }
+    },
+    "Typical taxi out at %@: %lld min" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ पर आम टैक्सी आउट: %2$lld मिनट"
+          }
+        }
+      }
+    },
+    "Typical taxi in at %@: %lld min" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ पर आम टैक्सी इन: %2$lld मिनट"
+          }
+        }
+      }
+    },
+    "Median of the last 30 days." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पिछले 30 दिनों का मीडियन।"
+          }
+        }
+      }
+    },
+    "Registration %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रजिस्ट्रेशन %@"
+          }
+        }
+      }
+    },
+    "%@ years old" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ साल पुराना"
+          }
+        }
+      }
+    },
+    "Pro shows the aircraft's age and alerts you if the airline swaps it." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pro विमान की उम्र दिखाता है और एयरलाइन के विमान बदलने पर आपको अलर्ट करता है।"
+          }
+        }
+      }
+    },
+    "Aircraft changed: %@ → %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "विमान बदला: %1$@ → %2$@"
+          }
+        }
+      }
+    },
+    "Connection at %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ पर कनेक्शन"
+          }
+        }
+      }
+    },
+    "Layover %lld min, minimum connection time %lld min" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "लेओवर %1$lld मिनट, न्यूनतम कनेक्शन समय %2$lld मिनट"
+          }
+        }
+      }
+    },
+    "Terminal change %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "टर्मिनल बदलें: %@"
+          }
+        }
+      }
+    },
+    "The next flight leaves before this one lands." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अगली फ़्लाइट इस फ़्लाइट के लैंड होने से पहले रवाना हो जाती है।"
+          }
+        }
+      }
+    },
+    "%lld min short of the minimum" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "न्यूनतम से %lld मिनट कम"
+          }
+        }
+      }
+    },
+    "%lld min to spare" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld मिनट बचे रहेंगे"
+          }
+        }
+      }
+    },
+    "Comfortable" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आराम से"
+          }
+        }
+      }
+    },
+    "Tight" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कम समय"
+          }
+        }
+      }
+    },
+    "At risk" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ख़तरे में"
+          }
+        }
+      }
+    },
+    "Missed" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "छूट गया"
+          }
+        }
+      }
+    },
+    "Pro checks the time between your flights against the airport's minimum connection time and alerts you when a connection is at risk." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pro आपकी फ़्लाइट्स के बीच के समय को एयरपोर्ट के न्यूनतम कनेक्शन समय से मिलाता है और कनेक्शन ख़तरे में होने पर आपको अलर्ट करता है।"
+          }
+        }
+      }
+    },
+    "No connections. Track every flight of a trip and HeyGate checks the time between them." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कोई कनेक्शन नहीं। सफ़र की हर फ़्लाइट ट्रैक करें, HeyGate उनके बीच का समय जाँचेगा।"
+          }
+        }
+      }
+    },
+    "Minimum connection times are estimates. Check with your airline." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "न्यूनतम कनेक्शन समय अनुमान हैं। अपनी एयरलाइन से पक्का कर लें।"
+          }
+        }
+      }
+    },
+    "Period" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अवधि"
+          }
+        }
+      }
+    },
+    "7 days" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "7 दिन"
+          }
+        }
+      }
+    },
+    "14 days" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "14 दिन"
+          }
+        }
+      }
+    },
+    "30 days" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "30 दिन"
+          }
+        }
+      }
+    },
+    "Delay trends" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "देरी के रुझान"
+          }
+        }
+      }
+    },
+    "Pro shows which hours run late at this airport and how the last weeks went." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pro दिखाता है कि इस एयरपोर्ट पर किन घंटों में फ़्लाइट्स लेट होती हैं और पिछले हफ़्ते कैसे रहे।"
+          }
+        }
+      }
+    },
+    "Not enough flights at this airport yet." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इस एयरपोर्ट पर अभी पर्याप्त फ़्लाइट्स नहीं हैं।"
+          }
+        }
+      }
+    },
+    "Departures around %@ run %lld min late on average" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ के आसपास की रवानगी औसतन %2$lld मिनट लेट होती है"
+          }
+        }
+      }
+    },
+    "Average departure delay by hour" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "घंटे के हिसाब से रवानगी में औसत देरी"
+          }
+        }
+      }
+    },
+    "Hour" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "घंटा"
+          }
+        }
+      }
+    },
+    "Minutes late" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मिनट लेट"
+          }
+        }
+      }
+    },
+    "%lld min late, %lld%% delayed" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld मिनट लेट, %2$lld%% में देरी"
+          }
+        }
+      }
+    },
+    "Local time at the airport. Bars in orange average 15 min or more." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "एयरपोर्ट का स्थानीय समय। नारंगी बार में औसत देरी 15 मिनट या उससे ज़्यादा है।"
+          }
+        }
+      }
+    },
+    "Average departure delay by day" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "दिन के हिसाब से रवानगी में औसत देरी"
+          }
+        }
+      }
+    },
+    "Day" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "दिन"
+          }
+        }
+      }
+    },
+    "%lld min late, %lld cancelled" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld मिनट लेट, %2$lld रद्द"
+          }
+        }
+      }
+    },
+    "%lld cancelled in this period. Days with cancellations are red." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इस अवधि में %lld रद्द। जिन दिनों फ़्लाइट्स रद्द हुईं, वे लाल हैं।"
+          }
+        }
+      }
+    },
+    "From your calendar" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपके कैलेंडर से"
+          }
+        }
+      }
+    },
+    "Find flights in your calendar" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अपने कैलेंडर में फ़्लाइट्स ढूँढें"
+          }
+        }
+      }
+    },
+    "Calendar import is part of HeyGate Pro. It looks through the next year of your calendar for flights and lists them so you can add each with one tap." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कैलेंडर इंपोर्ट HeyGate Pro का हिस्सा है। यह आपके कैलेंडर में अगले एक साल की फ़्लाइट्स ढूँढकर उनकी सूची बनाता है, ताकि आप हर फ़्लाइट एक टैप में जोड़ सकें।"
+          }
+        }
+      }
+    },
+    "HeyGate reads the next 365 days of your calendar on this iPhone and suggests the flights it finds. Nothing is uploaded and nothing in your calendar is changed." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HeyGate इस iPhone पर आपके कैलेंडर के अगले 365 दिन पढ़ता है और मिली फ़्लाइट्स सुझाता है। कुछ भी अपलोड नहीं होता और आपके कैलेंडर में कुछ नहीं बदलता।"
+          }
+        }
+      }
+    },
+    "Scan my calendar" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मेरा कैलेंडर स्कैन करें"
+          }
+        }
+      }
+    },
+    "Calendar access is restricted on this iPhone." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इस iPhone पर कैलेंडर की अनुमति प्रतिबंधित है।"
+          }
+        }
+      }
+    },
+    "HeyGate needs full access to your calendar to find flights. You can allow it in Settings." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "फ़्लाइट्स ढूँढने के लिए HeyGate को आपके कैलेंडर की पूरी अनुमति चाहिए। आप इसे सेटिंग्स में दे सकते हैं।"
+          }
+        }
+      }
+    },
+    "Open Settings" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सेटिंग्स खोलें"
+          }
+        }
+      }
+    },
+    "Looking for flights…" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "फ़्लाइट्स ढूँढी जा रही हैं…"
+          }
+        }
+      }
+    },
+    "The calendar could not be read. Try again later." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कैलेंडर पढ़ा नहीं जा सका। बाद में फिर से कोशिश करें।"
+          }
+        }
+      }
+    },
+    "No flights found in your calendar." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपके कैलेंडर में कोई फ़्लाइट नहीं मिली।"
+          }
+        }
+      }
+    },
+    "Checked %lld calendar events." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कैलेंडर के %lld इवेंट देखे गए।"
+          }
+        }
+      }
+    },
+    "Your calendar is very full: only the first events were checked." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपका कैलेंडर बहुत भरा है: सिर्फ़ शुरुआती इवेंट देखे गए।"
+          }
+        }
+      }
+    },
+    "Leg %lld of %lld" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$lld में से %1$lld फ़्लाइट"
+          }
+        }
+      }
+    },
+    "Already tracked" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पहले से ट्रैक हो रही है"
+          }
+        }
+      }
+    },
+    "Find this flight" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "यह फ़्लाइट ढूँढें"
+          }
+        }
+      }
+    },
+    "Add details" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "जानकारी जोड़ें"
+          }
+        }
+      }
+    },
+    "Departure airport not found: check it before adding." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रवानगी एयरपोर्ट नहीं मिला: जोड़ने से पहले इसे जाँच लें।"
+          }
+        }
+      }
+    },
+    "Arrival airport not found: check it before adding." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आगमन एयरपोर्ट नहीं मिला: जोड़ने से पहले इसे जाँच लें।"
+          }
+        }
+      }
+    },
+    "The event names the same airport twice." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इवेंट में एक ही एयरपोर्ट दो बार लिखा है।"
+          }
+        }
+      }
+    },
+    "No departure time in the event." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इवेंट में रवानगी का समय नहीं है।"
+          }
+        }
+      }
+    },
+    "The event mentions different routes." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इवेंट में अलग-अलग रूट लिखे हैं।"
+          }
+        }
+      }
+    },
+    "This event covers several flights." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इस इवेंट में कई फ़्लाइट्स हैं।"
+          }
+        }
+      }
+    },
+    "Times in the event are shown for checking only." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इवेंट के समय सिर्फ़ जाँचने के लिए दिखाए गए हैं।"
+          }
+        }
+      }
+    },
+    "Overview" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सारांश"
+          }
+        }
+      }
+    },
+    "This year" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इस साल"
+          }
+        }
+      }
+    },
+    "You vs %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आप बनाम %@"
+          }
+        }
+      }
+    },
+    "You" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आप"
+          }
+        }
+      }
+    },
+    "Countries you have both flown to" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वे देश जहाँ आप दोनों गए हैं"
+          }
+        }
+      }
+    },
+    "Your airlines" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपकी एयरलाइंस"
+          }
+        }
+      }
+    },
+    "Their airlines" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "उनकी एयरलाइंस"
+          }
+        }
+      }
+    },
+    "Showing the last 12 months. HeyGate Pro compares all time." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पिछले 12 महीने दिख रहे हैं। HeyGate Pro शुरू से अब तक की तुलना करता है।"
+          }
+        }
+      }
+    },
+    "Distance" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "दूरी"
+          }
+        }
+      }
+    },
+    "%@ doesn't share their Passport." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ अपना पासपोर्ट शेयर नहीं करते।"
+          }
+        }
+      }
+    },
+    "Crew mode" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "क्रू मोड"
+          }
+        }
+      }
+    },
+    "For pilots and cabin crew: no check-in, boarding or time-to-leave alerts, no Pro offers, and block times instead of flight times." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पायलट और केबिन क्रू के लिए: चेक-इन, बोर्डिंग या निकलने के समय के अलर्ट नहीं, Pro के ऑफ़र नहीं, और फ़्लाइट टाइम की जगह ब्लॉक टाइम।"
+          }
+        }
+      }
+    },
+    "Friends can compare Passports with me" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "दोस्त मेरे साथ पासपोर्ट की तुलना कर सकते हैं"
+          }
+        }
+      }
+    },
+    "Your totals only: flights, distance, airports, countries and top airlines." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सिर्फ़ आपके कुल आँकड़े: फ़्लाइट्स, दूरी, एयरपोर्ट, देश और टॉप एयरलाइंस।"
+          }
+        }
+      }
+    },
+    "Family sharing" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "फ़ैमिली शेयरिंग"
+          }
+        }
+      }
+    },
+    "Find flights in my calendar" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मेरे कैलेंडर में फ़्लाइट्स ढूँढें"
+          }
+        }
+      }
+    },
+    "Travel and sharing" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सफ़र और शेयरिंग"
+          }
+        }
+      }
+    },
+    "You're offline. The setting was not changed." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आप ऑफ़लाइन हैं। सेटिंग नहीं बदली गई।"
+          }
+        }
+      }
+    },
+    "The setting could not be saved. Try again." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सेटिंग सेव नहीं हो सकी। फिर से कोशिश करें।"
+          }
+        }
+      }
+    },
+    "Remove from your family?" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अपने परिवार से हटाएँ?"
+          }
+        }
+      }
+    },
+    "They lose the Pro they get through your family." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपके परिवार से मिलने वाला उनका Pro बंद हो जाएगा।"
+          }
+        }
+      }
+    },
+    "Leave the family?" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "परिवार छोड़ें?"
+          }
+        }
+      }
+    },
+    "Leave" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "छोड़ें"
+          }
+        }
+      }
+    },
+    "This ends the family for everyone in it." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इससे परिवार के सभी सदस्यों के लिए यह परिवार ख़त्म हो जाएगा।"
+          }
+        }
+      }
+    },
+    "You lose the Pro you get through this family." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इस परिवार से मिलने वाला आपका Pro बंद हो जाएगा।"
+          }
+        }
+      }
+    },
+    "You joined %@'s family. Pro is on for you now." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आप %@ के परिवार में शामिल हो गए। अब आपके लिए Pro चालू है।"
+          }
+        }
+      }
+    },
+    "Share HeyGate Pro with your family" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अपने परिवार के साथ HeyGate Pro शेयर करें"
+          }
+        }
+      }
+    },
+    "On a yearly Pro plan you can add up to five people. They get Pro for as long as your plan runs." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सालाना Pro प्लान में आप पाँच लोगों तक जोड़ सकते हैं। जब तक आपका प्लान चलता है, उन्हें Pro मिलता रहेगा।"
+          }
+        }
+      }
+    },
+    "Invite family" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "परिवार को बुलाएँ"
+          }
+        }
+      }
+    },
+    "Join a family" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "किसी परिवार में शामिल हों"
+          }
+        }
+      }
+    },
+    "Family code" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "परिवार कोड"
+          }
+        }
+      }
+    },
+    "Joining…" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "शामिल हो रहे हैं…"
+          }
+        }
+      }
+    },
+    "Join" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "शामिल हों"
+          }
+        }
+      }
+    },
+    "Your family" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपका परिवार"
+          }
+        }
+      }
+    },
+    "Everyone here has Pro through your plan." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "यहाँ सभी को आपके प्लान से Pro मिला है।"
+          }
+        }
+      }
+    },
+    "Your Pro has ended, so your family's Pro is paused." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपका Pro ख़त्म हो गया है, इसलिए आपके परिवार का Pro रुका हुआ है।"
+          }
+        }
+      }
+    },
+    "%@'s family" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ का परिवार"
+          }
+        }
+      }
+    },
+    "Pro via %@'s family" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ के परिवार से Pro"
+          }
+        }
+      }
+    },
+    "The owner's Pro has ended, so the family's Pro is paused." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मालिक का Pro ख़त्म हो गया है, इसलिए परिवार का Pro रुका हुआ है।"
+          }
+        }
+      }
+    },
+    "Family member" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "परिवार का सदस्य"
+          }
+        }
+      }
+    },
+    "Nobody has joined yet." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अभी तक कोई शामिल नहीं हुआ।"
+          }
+        }
+      }
+    },
+    "Members (%lld of %lld)" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सदस्य (%2$lld में से %1$lld)"
+          }
+        }
+      }
+    },
+    "Share invite" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "न्योता शेयर करें"
+          }
+        }
+      }
+    },
+    "Your family is full." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपका परिवार भर गया है।"
+          }
+        }
+      }
+    },
+    "End family sharing" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "फ़ैमिली शेयरिंग बंद करें"
+          }
+        }
+      }
+    },
+    "Leave family" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "परिवार छोड़ें"
+          }
+        }
+      }
+    },
+    "Join my HeyGate family to get Pro: open %@ or enter the code %@ in Settings → Family sharing." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pro पाने के लिए मेरे HeyGate परिवार में शामिल हों: %1$@ खोलें या सेटिंग्स → फ़ैमिली शेयरिंग में कोड %2$@ डालें।"
+          }
+        }
+      }
+    },
+    "Family sharing needs a yearly or lifetime Pro plan." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "फ़ैमिली शेयरिंग के लिए सालाना या लाइफ़टाइम Pro प्लान चाहिए।"
+          }
+        }
+      }
+    },
+    "You're already in a family. Leave it first." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आप पहले से एक परिवार में हैं। पहले उसे छोड़ें।"
+          }
+        }
+      }
+    },
+    "That code is not valid or has expired." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "यह कोड सही नहीं है या इसकी मियाद ख़त्म हो गई है।"
+          }
+        }
+      }
+    },
+    "That's your own code. Send it to your family instead." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "यह आपका अपना कोड है। इसे अपने परिवार को भेजें।"
+          }
+        }
+      }
+    },
+    "That family is full." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वह परिवार भर गया है।"
+          }
+        }
+      }
+    },
+    "That family's Pro has ended." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "उस परिवार का Pro ख़त्म हो गया है।"
+          }
+        }
+      }
+    },
+    "That person is no longer in your family." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वह व्यक्ति अब आपके परिवार में नहीं है।"
+          }
+        }
+      }
+    },
+    "Only the family owner can do that." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "यह सिर्फ़ परिवार का मालिक कर सकता है।"
+          }
+        }
+      }
+    },
+    "Block time" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ब्लॉक टाइम"
+          }
+        }
+      }
+    },
+    "%lld h %lld min" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@hours@ %#@minutes@"
+          },
+          "substitutions" : {
+            "hours" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg घंटा"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg घंटे"
+                    }
+                  }
+                }
+              }
+            },
+            "minutes" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg मिनट"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg मिनट"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Shown once off-block and on-block times are known." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ऑफ़-ब्लॉक और ऑन-ब्लॉक समय पता चलने पर दिखेगा।"
+          }
+        }
+      }
+    },
+    "Off-block %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ऑफ़-ब्लॉक %@"
+          }
+        }
+      }
+    },
+    "On-block %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ऑन-ब्लॉक %@"
+          }
+        }
+      }
+    },
+    "Swap airports" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "एयरपोर्ट अदला-बदली करें"
+          }
+        }
+      }
+    },
+    "Airline code (optional), e.g. 6E" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "एयरलाइन कोड (वैकल्पिक), जैसे 6E"
+          }
+        }
+      }
+    },
+    "Search departures" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रवानगी खोजें"
+          }
+        }
+      }
+    },
+    "A route search counts as two searches." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रूट से खोज को दो खोज गिना जाता है।"
+          }
+        }
+      }
+    },
+    "Choose airport" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "एयरपोर्ट चुनें"
+          }
+        }
+      }
+    },
+    "Any airport" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कोई भी एयरपोर्ट"
+          }
+        }
+      }
+    },
+    "Not chosen" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "नहीं चुना"
+          }
+        }
+      }
+    },
+    "%lld departures" : {
+      "localizations" : {
+        "hi" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld रवानगी"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld रवानगियाँ"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "No departures found for that day." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "उस दिन की कोई रवानगी नहीं मिली।"
+          }
+        }
+      }
+    },
+    "Choose the airport you fly from." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वह एयरपोर्ट चुनें जहाँ से आप उड़ान भरेंगे।"
+          }
+        }
+      }
+    },
+    "From and to must be different airports." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रवानगी और मंज़िल के एयरपोर्ट अलग होने चाहिए।"
+          }
+        }
+      }
+    },
+    "An airline code has two letters or digits, such as 6E." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "एयरलाइन कोड में दो अक्षर या अंक होते हैं, जैसे 6E।"
+          }
+        }
+      }
+    },
+    "Adding…" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "जोड़ रहे हैं…"
+          }
+        }
+      }
+    },
+    "You're tracking a lot of flights. Remove some you no longer need, then try again." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आप बहुत सारी फ़्लाइट्स ट्रैक कर रहे हैं। जिनकी अब ज़रूरत नहीं, उन्हें हटाएँ, फिर से कोशिश करें।"
+          }
+        }
+      }
+    },
+    "The airport list could not be loaded." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "एयरपोर्ट की सूची लोड नहीं हो सकी।"
+          }
+        }
+      }
+    },
+    "City, airport or code" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "शहर, एयरपोर्ट या कोड"
+          }
+        }
+      }
+    },
+    "Search by" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इससे खोजें"
+          }
+        }
+      }
+    },
+    "By route" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रूट से"
+          }
+        }
+      }
+    },
+    "Add a past flight (for Passport)" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पिछली फ़्लाइट जोड़ें (पासपोर्ट के लिए)"
+          }
+        }
+      }
+    },
+    "Add to Passport" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पासपोर्ट में जोड़ें"
+          }
+        }
+      }
+    },
+    "Track as many flights as you like for free. Pro adds inbound-aircraft predictions, late-aircraft alerts and the Live Activity." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "जितनी चाहें उतनी फ़्लाइट्स फ़्री में ट्रैक करें। Pro में आने वाले विमान के अनुमान, विमान लेट होने के अलर्ट और Live Activity भी मिलते हैं।"
+          }
+        }
+      }
+    },
+    "Pro via your family" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपके परिवार से Pro"
+          }
+        }
+      }
+    },
+    "Block hours" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ब्लॉक घंटे"
+          }
+        }
+      }
+    },
+    "%lld h" : {
+      "localizations" : {
+        "hi" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld घंटा"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld घंटे"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Compare Passports" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पासपोर्ट की तुलना करें"
+          }
+        }
+      }
+    },
+    "On a yearly plan, share Pro with up to five family members." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सालाना प्लान में, परिवार के पाँच सदस्यों तक के साथ Pro शेयर करें।"
+          }
+        }
+      }
+    },
+    "your family" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "परिवार के मालिक"
+          }
+        }
+      }
+    },
+    "Your family owner" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "परिवार के मालिक"
+          }
+        }
+      }
+    },
+    "your family owner" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "परिवार के मालिक"
+          }
+        }
+      }
+    },
+    "route.from" : {
+      "comment" : "Route search: the departure airport.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "From"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कहाँ से"
+          }
+        }
+      }
+    },
+    "route.to" : {
+      "comment" : "Route search: the arrival airport.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "To"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कहाँ तक"
           }
         }
       }

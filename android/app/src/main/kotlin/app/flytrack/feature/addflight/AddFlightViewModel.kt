@@ -3,6 +3,7 @@ package app.flytrack.feature.addflight
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.flytrack.core.flightnumber.parseFlightNumber
+import app.flytrack.core.model.RouteSearchQuery
 import app.flytrack.core.model.TrackExtras
 import app.flytrack.core.model.TrackSource
 import app.flytrack.core.model.TrackedFlight
@@ -18,6 +19,8 @@ import app.flytrack.data.repo.AuthRepository
 import app.flytrack.data.repo.FlightRepository
 import app.flytrack.data.repo.ProfileRepository
 import app.flytrack.data.repo.SessionState
+import app.flytrack.feature.airports.AirportCatalog
+import app.flytrack.feature.airports.CatalogAirport
 import app.flytrack.feature.gmailimport.GmailNotifier
 import app.flytrack.feature.gmailimport.GmailSuggestionStore
 import app.flytrack.feature.gmailimport.GmailSuggestions
@@ -59,6 +62,7 @@ class AddFlightViewModel @AssistedInject constructor(
     private val gmailSuggestions: GmailSuggestionStore,
     private val gmailNotifier: GmailNotifier,
     private val defaultAlerts: DefaultAlertPreferences = DefaultAlertPreferences.AllOn,
+    private val airports: AirportCatalog = AirportCatalog.Empty,
 ) : ViewModel() {
 
     @AssistedFactory
@@ -77,13 +81,33 @@ class AddFlightViewModel @AssistedInject constructor(
     private val gmailSuggestionId = prefill.gmailSuggestionId
 
     private var searchJob: Job? = null
+
+    /** The upcoming-flight date range; [pastSelectableDates] replaces it while the past-flight toggle is on. */
+    private val upcomingDates: ClosedRange<LocalDate>
+    private val pastDates: ClosedRange<LocalDate>
+
+    /** The date picked for upcoming flights, restored when the past-flight toggle is switched off again. */
+    private var upcomingDate: LocalDate? = null
     private var trackedByFlightId: Map<String, TrackedFlight> = emptyMap()
     private var profile: UserProfile? = null
 
     init {
         val today = clock.today(homeTimeZone.id)
         val selectable = selectableDates(today, clock.now())
-        val resolved = resolvePrefill(prefill, selectable)
+        upcomingDates = selectable
+        pastDates = pastSelectableDates(today, clock.now())
+        val routeDates = routeSelectableDates(today, clock.now())
+        val routePrefill = prefill.isRoutePrefill
+        val resolved = if (routePrefill) {
+            ResolvedPrefill(flightInput = "", date = null, pnrInput = sanitizePnrInput(prefill.pnr.orEmpty()), notice = null, autoSearch = false)
+        } else {
+            resolvePrefill(prefill, selectable).let { r ->
+                // A calendar suggestion says where it came from instead of "your ticket".
+                if (prefill.source == TrackSource.CALENDAR && r.notice == PrefillNotice.CheckDetails) r.copy(notice = PrefillNotice.FromCalendar) else r
+            }
+        }
+        val routeEventDate = prefill.date?.trim()?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+        val routeDate = routeEventDate?.takeIf { it in routeDates } ?: today.coerceIn(routeDates)
         _uiState = MutableStateFlow(
             AddFlightUiState(
                 flightInput = resolved.flightInput,
@@ -95,9 +119,18 @@ class AddFlightViewModel @AssistedInject constructor(
                 seatInput = sanitizeSeatInput(prefill.seat.orEmpty()),
                 prefillNotice = resolved.notice,
                 isFromTicket = !prefill.isEmpty,
+                mode = if (routePrefill) AddFlightMode.ROUTE else AddFlightMode.FLIGHT_NUMBER,
+                route = RouteForm(date = routeDate, firstSelectableDate = routeDates.start, lastSelectableDate = routeDates.endInclusive),
             ).withFlightInput(resolved.flightInput),
         )
         uiState = _uiState.asStateFlow()
+        if (routePrefill) {
+            val tooFar = routeEventDate != null && routeEventDate !in routeDates && routeEventDate > routeDates.endInclusive
+            viewModelScope.launch { applyRoutePrefill(prefill, autoSearch = routeEventDate != null && !tooFar) }
+            if (tooFar) {
+                _uiState.update { it.copy(prefillNotice = PrefillNotice.RouteDateTooFar(routeEventDate, routeDates.endInclusive)) }
+            }
+        }
 
         viewModelScope.launch {
             auth.session.collect { session ->
@@ -119,6 +152,78 @@ class AddFlightViewModel @AssistedInject constructor(
         viewModelScope.launch { profiles.observeProfile().collect { profile = it } }
 
         if (resolved.autoSearch) onSearch()
+    }
+
+    // ---- form -------------------------------------------------------------------------------------
+
+    /** Resolves the calendar's airports in the bundled catalog, then searches when the date is searchable. */
+    private suspend fun applyRoutePrefill(prefill: AddFlightPrefill, autoSearch: Boolean) {
+        val list = airports.load()
+        val from = prefill.routeFrom?.trim()?.uppercase()?.let { list[it] }
+        val to = prefill.routeTo?.trim()?.uppercase()?.let { list[it] }?.takeIf { it.iata != from?.iata }
+        _uiState.update { s -> s.copy(route = s.route?.copy(from = from, to = to), prefillNotice = s.prefillNotice ?: PrefillNotice.FromCalendar) }
+        if (autoSearch && from != null) onSearch()
+    }
+
+    // ---- tabs and past flights (P3 B5, B6) --------------------------------------------------------
+
+    fun onModeChange(mode: AddFlightMode) {
+        val state = _uiState.value
+        if (state.isTracking || state.mode == mode || state.route == null) return
+        resetSearch()
+        _uiState.update { it.copy(mode = mode, prefillNotice = null) }
+    }
+
+    /** "Add a past flight (for Passport)". Switches the date range; a date outside the new range moves into it. */
+    fun onPastFlightChange(past: Boolean) {
+        val state = _uiState.value
+        if (state.isTracking || state.pastFlight == past) return
+        resetSearch()
+        _uiState.update {
+            if (past) {
+                upcomingDate = it.date
+                val date = if (it.date in pastDates) it.date else it.today.plusDays(-1).coerceIn(pastDates)
+                it.copy(pastFlight = true, date = date, firstSelectableDate = pastDates.start, lastSelectableDate = pastDates.endInclusive,
+                    dateRejected = false, prefillNotice = null)
+            } else {
+                val date = (upcomingDate ?: it.today).takeIf { d -> d in upcomingDates } ?: it.today.coerceIn(upcomingDates)
+                it.copy(pastFlight = false, date = date, firstSelectableDate = upcomingDates.start, lastSelectableDate = upcomingDates.endInclusive,
+                    dateRejected = false, prefillNotice = null)
+            }
+        }
+    }
+
+    fun onRouteFromChange(airport: CatalogAirport) = updateRoute { r ->
+        r.copy(from = airport, to = r.to?.takeIf { it.iata != airport.iata }, error = null)
+    }
+
+    /** Null clears the arrival airport ("any destination"). */
+    fun onRouteToChange(airport: CatalogAirport?) = updateRoute { r ->
+        r.copy(to = airport?.takeIf { it.iata != r.from?.iata }, error = null)
+    }
+
+    fun onRouteSwap() = updateRoute { r ->
+        if (r.to == null) r else r.copy(from = r.to, to = r.from, error = null)
+    }
+
+    fun onRouteAirlineChange(text: String) = updateRoute { r ->
+        r.copy(airlineInput = RouteSearchQuery.sanitizeAirlineInput(text), error = r.error?.takeUnless { it == RouteInputError.AIRLINE_INCOMPLETE })
+    }
+
+    fun onRouteDateChange(date: LocalDate) {
+        val route = _uiState.value.route ?: return
+        if (!route.isSelectable(date)) return
+        updateRoute { it.copy(date = date) }
+    }
+
+    private fun updateRoute(change: (RouteForm) -> RouteForm) {
+        val state = _uiState.value
+        val route = state.route ?: return
+        if (state.isTracking) return
+        val next = change(route)
+        if (next == route) return
+        resetSearch()
+        _uiState.update { it.copy(route = next, prefillNotice = null) }
     }
 
     // ---- form -------------------------------------------------------------------------------------
@@ -161,6 +266,7 @@ class AddFlightViewModel @AssistedInject constructor(
     fun onSearch() {
         val state = _uiState.value
         if (state.isSearching || state.isTracking) return
+        if (state.mode == AddFlightMode.ROUTE) return onRouteSearch()
 
         val number = parseFlightNumber(state.flightInput)
         val pnrOk = isPnrInputAcceptable(state.pnrInput)
@@ -182,10 +288,37 @@ class AddFlightViewModel @AssistedInject constructor(
             return
         }
 
-        val query = SearchQuery(number.display, state.date)
+        val query = SearchQuery(number.display, state.date, past = state.pastFlight)
         _uiState.update { it.copy(search = SearchUiState.Searching(query), trackNotice = null, dateRejected = false) }
         searchJob = viewModelScope.launch {
-            val result = flights.search(query.flight, query.date)
+            val result = if (query.past) flights.searchPast(query.flight, query.date) else flights.search(query.flight, query.date)
+            _uiState.update { it.withSearchResult(query, result) }
+        }
+    }
+
+    private fun onRouteSearch() {
+        val state = _uiState.value
+        val route = state.route ?: return
+        val error = when {
+            route.from == null -> RouteInputError.FROM_REQUIRED
+            route.to != null && route.to.iata == route.from.iata -> RouteInputError.SAME_AIRPORT
+            !isAirlineInputAcceptable(route.airlineInput) -> RouteInputError.AIRLINE_INCOMPLETE
+            else -> null
+        }
+        if (error != null || route.from == null) {
+            _uiState.update { it.copy(route = route.copy(error = error ?: RouteInputError.FROM_REQUIRED)) }
+            return
+        }
+        if (!state.isBackendConfigured) {
+            _uiState.update { it.copy(search = SearchUiState.NotConfigured) }
+            return
+        }
+        val routeQuery = RouteSearchQuery(dep = route.from.iata, arr = route.to?.iata, date = route.date, airline = route.airlineInput.ifEmpty { null })
+        val label = listOfNotNull(route.from.iata, route.to?.iata).joinToString(" → ")
+        val query = SearchQuery(label, route.date, route = routeQuery)
+        _uiState.update { it.copy(search = SearchUiState.Searching(query), trackNotice = null) }
+        searchJob = viewModelScope.launch {
+            val result = flights.searchRoute(routeQuery)
             _uiState.update { it.withSearchResult(query, result) }
         }
     }
@@ -200,10 +333,11 @@ class AddFlightViewModel @AssistedInject constructor(
         SearchResult.NotConfigured -> copy(search = SearchUiState.NotConfigured)
         // The form validates like the server, so these only happen when the two disagree
         // (a newer server rule, or a phone clock that is days off).
-        is SearchResult.BadInput -> when (result.reason) {
-            BadInputReason.FLIGHT_NUMBER -> copy(search = SearchUiState.Idle, flightError = FlightInputError.NOT_A_FLIGHT_NUMBER)
-            BadInputReason.DATE -> copy(search = SearchUiState.Idle, dateRejected = true)
-            BadInputReason.OTHER -> copy(search = SearchUiState.Rejected)
+        is SearchResult.BadInput -> when {
+            query.route != null -> copy(search = SearchUiState.Rejected)
+            result.reason == BadInputReason.FLIGHT_NUMBER -> copy(search = SearchUiState.Idle, flightError = FlightInputError.NOT_A_FLIGHT_NUMBER)
+            result.reason == BadInputReason.DATE -> copy(search = SearchUiState.Idle, dateRejected = true)
+            else -> copy(search = SearchUiState.Rejected)
         }
     }
 
@@ -248,10 +382,13 @@ class AddFlightViewModel @AssistedInject constructor(
             _uiState.update { it.copy(pnrInvalid = true, trackNotice = TrackNotice(flightId, TrackProblem.InvalidDetails)) }
             return null
         }
+        // The leg on screen decides: a past search's legs go straight to Passport (B6, source 'manual').
+        val past = (state.search as? SearchUiState.Results)?.query?.past == true
         return TrackExtras(
             pnr = state.pnrInput.ifEmpty { null },
             seat = state.seatInput.ifEmpty { null },
-            source = source,
+            source = if (past) TrackSource.MANUAL else source,
+            archived = past,
         )
     }
 
@@ -317,13 +454,15 @@ class AddFlightViewModel @AssistedInject constructor(
         }
     }
 
+    /**
+     * A1: the cap only names its number; there is no "go Pro for more" any more. The server refused, so the
+     * user follows at least the cap: the profile's cap, or more when the server's cap is higher than the
+     * profile shows (a family member is Pro on the server with a free `plan`, so their cap is 300).
+     */
     private fun limitReached(): TrackProblem.LimitReached {
-        val now = clock.now()
-        val isPro = profile?.isPro(now) == true
-        return TrackProblem.LimitReached(
-            limit = profile?.trackingLimit(now) ?: UserProfile.FREE_TRACKING_LIMIT,
-            proLimit = UserProfile.PRO_TRACKING_LIMIT.takeUnless { isPro },
-        )
+        val profileCap = profile?.trackingLimit(clock.now()) ?: UserProfile.FREE_TRACKING_LIMIT
+        val active = trackedByFlightId.values.count { !it.isArchived }
+        return TrackProblem.LimitReached(limit = maxOf(profileCap, active))
     }
 }
 

@@ -133,9 +133,9 @@ do $$ declare n int; begin
   assert n = 0, 'leased flight must not be claimed again';
 end $$;
 
--- ===== free tracking limit (10 active) =====
+-- ===== free tracking cap (P3 A1: 100 active, anti-abuse only) =====
 do $$ declare i int; begin
-  for i in 1..9 loop
+  for i in 1..99 loop
     insert into public.flights (carrier_iata, flight_number, flight_date, dep_iata, arr_iata, sched_arr)
     values ('SG', (100 + i)::text, current_date + 2, 'BOM', 'GOX', now() + interval '2 days');
     insert into public.user_flights (user_id, flight_id)
@@ -146,7 +146,7 @@ do $$ declare i int; begin
     values ('SG', '999', current_date + 2, 'BOM', 'GOX', now() + interval '2 days');
     insert into public.user_flights (user_id, flight_id)
     select '00000000-0000-0000-0000-00000000000c', id from public.flights where carrier_iata = 'SG' and flight_number = '999';
-    raise exception 'FAIL: 11th active flight allowed for free user';
+    raise exception 'FAIL: 101st active flight allowed for free user';
   exception when raise_exception then
     if sqlerrm <> 'tracking_limit_reached' then raise; end if;
   end;

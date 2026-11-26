@@ -724,24 +724,37 @@ class AddFlightViewModelTest {
     }
 
     @Test
-    fun `the free tracking limit names both limits`() = runTest {
-        assertEquals(TrackProblem.LimitReached(limit = 10, proLimit = 50), problemFor(TrackResult.TrackingLimitReached("hint")))
+    fun `the tracking cap names the free cap and never sells Pro`() = runTest {
+        assertEquals(TrackProblem.LimitReached(limit = 100), problemFor(TrackResult.TrackingLimitReached("hint")))
     }
 
     @Test
-    fun `the pro tracking limit names only its own`() = runTest {
+    fun `the pro tracking cap names its own number`() = runTest {
         profiles.profile.value = TestData.profile(plan = Plan.PRO)
 
-        assertEquals(TrackProblem.LimitReached(limit = 50, proLimit = null), problemFor(TrackResult.TrackingLimitReached()))
+        assertEquals(TrackProblem.LimitReached(limit = 300), problemFor(TrackResult.TrackingLimitReached()))
+    }
+
+    @Test
+    fun `a cap above the profile's (family Pro on the server) names the active flights instead`() = runTest {
+        // A family member's own plan is free, but the server's is_pro gives them the Pro cap of 300.
+        val active = (1..300).map { i -> TestData.tracked(TestData.flight(id = "active-$i", flightNumber = "$i")) }
+        val archived = (1..5).map { i ->
+            val f = TestData.flight(id = "old-$i", flightNumber = "9$i")
+            TestData.tracked(f, TestData.tracking(f.id, archivedAt = TestData.NOW))
+        }
+        fake.setTracked(*(active + archived).toTypedArray())
+
+        assertEquals(TrackProblem.LimitReached(300), problemFor(TrackResult.TrackingLimitReached()))
     }
 
     @Test
     fun `an expired pro plan counts as free, and so does an unknown profile`() = runTest {
         profiles.profile.value = TestData.profile(plan = Plan.PRO, proUntil = TestData.NOW - 1.days)
-        assertEquals(TrackProblem.LimitReached(10, 50), problemFor(TrackResult.TrackingLimitReached()))
+        assertEquals(TrackProblem.LimitReached(100), problemFor(TrackResult.TrackingLimitReached()))
 
         profiles.profile.value = null
-        assertEquals(TrackProblem.LimitReached(10, 50), problemFor(TrackResult.TrackingLimitReached()))
+        assertEquals(TrackProblem.LimitReached(100), problemFor(TrackResult.TrackingLimitReached()))
     }
 
     @Test

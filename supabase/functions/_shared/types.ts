@@ -63,6 +63,12 @@ export interface FlightSnapshot {
   aircraftModel: string | null;
   aircraftReg: string | null; // tail number, e.g. "VT-ISR"
 
+  // Block times (docs/P3_CONTRACTS.md A2). Optional so older snapshot builders stay valid; missing = unknown.
+  depOffblockAt?: string | null; // pushback
+  depRunwayAt?: string | null; // takeoff
+  arrRunwayAt?: string | null; // touchdown
+  arrOnblockAt?: string | null; // at the gate
+
   delayReason: string | null; // only if the provider/airline gives one
   live: LivePosition | null;
 
@@ -113,6 +119,12 @@ export const EVENT_TYPES = [
   "CHECKIN_CLOSING", // web check-in closes in 30 min or less (free)
   "FOG_ALERT", // fog / visibility < 1000 m at the departure or arrival airport (free, critical)
   "DIVERTED_DEST", // after DIVERTED: the diversion airport became known (critical)
+  // P3 (docs/P3_CONTRACTS.md section C: append in exactly this order)
+  "GATE_CLOSED", // status gate_closed (free, info)
+  "TAKEOFF", // runway time known (free, info)
+  "AT_GATE", // on-block time known (free, info)
+  "AIRCRAFT_SWAP", // Pro: the tail changed before departure (critical)
+  "CONNECTION_AT_RISK", // Pro: the connection from this flight became at risk (critical)
 ] as const;
 export type EventType = typeof EVENT_TYPES[number];
 
@@ -136,6 +148,8 @@ export interface AlertState {
   milestones?: string[]; // BOARDING, DEPARTED, LANDED, CANCELLED, DIVERTED, DIVERTED_DEST already sent
   schedDep?: string | null; // scheduled departure users were last told (detects airline retimes)
   plannedArr?: string | null; // original destination (diversion messages)
+  aircraftReg?: string | null; // tail users were last told (AIRCRAFT_SWAP)
+  aircraftModel?: string | null;
   alertSeq?: number; // generation counter mixed into dedupe keys
 }
 
@@ -195,6 +209,11 @@ export interface FlightRow {
   checkin_closing_notified?: boolean;
   /** Set the first time a live position arrives (coverage stats). */
   live_seen?: boolean;
+  /** Block times (migration 22). */
+  dep_offblock_at?: string | null;
+  dep_runway_at?: string | null;
+  arr_runway_at?: string | null;
+  arr_onblock_at?: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -222,6 +241,8 @@ export interface Recipient {
   role?: RecipientRole | null;
   /** For role "friend": the tracker's display name, null when unset. */
   friend_name?: string | null;
+  /** profiles.crew_mode (P3 B12): CHECKIN_OPEN / CHECKIN_CLOSING / BOARDING / GATE_CLOSED are not pushed. Missing = off. */
+  crew_mode?: boolean | null;
 }
 
 export type RecipientRole = "tracker" | "friend";

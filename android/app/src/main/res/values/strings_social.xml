@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- P3 social: Passport compare (B10), Passport sharing, crew mode (B12). Every name starts with social_. -->
+<resources>
+    <!-- Settings -->
+    <string name="social_section">Sharing and crew</string>
+    <string name="social_share_passport_title">Share my Passport with friends</string>
+    <string name="social_share_passport_message">Friends can compare their flight totals with yours. They never see your flights or bookings.</string>
+    <string name="social_crew_title">Crew mode</string>
+    <string name="social_crew_message">For pilots and cabin crew: check-in, boarding and when-to-leave alerts are muted, Pro offers are hidden, flights show block times and Passport counts block hours.</string>
+    <string name="social_crew_muted">Muted in crew mode: check-in, boarding and when-to-leave alerts. Delay, gate and cancellation alerts still arrive.</string>
+    <string name="social_message_offline">You\'re offline, so that didn\'t change. Try again when you\'re connected.</string>
+    <string name="social_message_failed">That didn\'t change. Please try again.</string>
+
+    <!-- Passport, crew mode -->
+    <string name="social_passport_tile_block_hours">Block hours</string>
+
+    <!-- Compare Passports -->
+    <string name="social_compare_action">Compare Passports</string>
+    <!-- %1$s is the friend\'s name -->
+    <string name="social_compare_title">You vs %1$s</string>
+    <string name="social_compare_tab_overview">Overview</string>
+    <!-- %1$d is the current year -->
+    <string name="social_compare_tab_year">%1$d</string>
+    <string name="social_compare_you">You</string>
+    <string name="social_compare_vs">vs</string>
+    <string name="social_compare_error">We couldn\'t load the comparison</string>
+    <!-- %1$s is the friend\'s name -->
+    <string name="social_compare_not_shared_title">%1$s isn\'t sharing their Passport</string>
+    <string name="social_compare_not_shared_message">%1$s can turn on \"Share my Passport with friends\" in Settings. Then you can compare.</string>
+    <string name="social_compare_last12_note">Both sides count the last 12 months. Pro compares all time.</string>
+    <string name="social_compare_flights">Flights</string>
+    <string name="social_compare_km">Kilometres</string>
+    <string name="social_compare_airports">Airports</string>
+    <string name="social_compare_countries">Countries</string>
+    <string name="social_compare_longest_km">Longest flight, km</string>
+    <!-- %1$s is "You" or the friend\'s name -->
+    <string name="social_compare_leader">Ahead: %1$s</string>
+    <string name="social_compare_tie">A tie</string>
+    <!-- Read aloud for one row. %1$s label, %2$s "You", %3$s your value, %4$s friend\'s name, %5$s their value, %6$s who leads -->
+    <string name="social_compare_row_description">%1$s: %2$s %3$s, %4$s %5$s. %6$s.</string>
+    <plurals name="social_compare_shared_countries">
+        <item quantity="one">You have both flown to %1$d country.</item>
+        <item quantity="other">You have both flown to %1$d countries.</item>
+    </plurals>
+    <string name="social_compare_section_airlines">Top airlines</string>
+    <string name="social_compare_section_longest">Longest flight</string>
+    <!-- %1$s airline name, %2$d flights -->
+    <string name="social_compare_airline_row">%1$s · %2$d</string>
+    <!-- %1$s flight number, %2$s distance in km -->
+    <string name="social_compare_longest_detail">%1$s · %2$s km</string>
+</resources>

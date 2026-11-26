@@ -121,15 +121,6 @@
 
     <!-- Problems when tracking a leg -->
     <string name="addflight_limit_title">Tracking limit reached</string>
-    <!-- %1$d is the free limit (also the plural count), %2$d the Pro limit -->
-    <plurals name="addflight_limit_message_free">
-        <item quantity="one">You\'re already tracking %1$d flight, the most the free plan allows. Pro tracks up to %2$d. Archive or remove a flight you no longer need, then track this one.</item>
-        <item quantity="other">You\'re already tracking %1$d flights, the most the free plan allows. Pro tracks up to %2$d. Archive or remove a flight you no longer need, then track this one.</item>
-    </plurals>
-    <plurals name="addflight_limit_message_pro">
-        <item quantity="one">You\'re already tracking %1$d flight, the most Pro allows. Archive or remove a flight you no longer need, then track this one.</item>
-        <item quantity="other">You\'re already tracking %1$d flights, the most Pro allows. Archive or remove a flight you no longer need, then track this one.</item>
-    </plurals>
     <string name="addflight_limit_action">Go to my flights</string>
     <string name="addflight_track_offline">You\'re offline, so this flight wasn\'t added. Check your connection and tap Track again.</string>
     <string name="addflight_track_gone">This flight is no longer available. Search again to get the latest details.</string>

@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>The year in flights · HeyGate</title>
+  <meta name="description" content="India's year in flights: the most punctual and most delayed airlines and airports, the busiest routes and Delhi's fog days, from flights followed on HeyGate.">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#f6f5ef" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#14281f" media="(prefers-color-scheme: dark)">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co http://127.0.0.1:54321 http://localhost:54321; img-src 'self' data:; base-uri 'none'; form-action 'none'">
+  <meta property="og:title" content="The year in flights · HeyGate">
+  <meta property="og:description" content="Most punctual airlines, busiest routes and fog days, from flights followed on HeyGate.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=Instrument+Serif:ital@0;1&display=swap">
+  <link rel="stylesheet" href="../share/share.css">
+  <link rel="stylesheet" href="../airports/public.css">
+</head>
+<body>
+  <main class="page" aria-live="polite">
+    <header class="brand">
+      <span class="mark" aria-hidden="true"></span>
+      <span>HeyGate</span>
+      <span class="brand-note">year in flights</span>
+    </header>
+
+    <section id="state-loading" class="notice">
+      <p class="serif">Adding up the year…</p>
+    </section>
+
+    <section id="state-error" class="notice" hidden>
+      <h1 class="serif" id="error-title">Can't load the report right now</h1>
+      <p id="error-body">Check your connection and try again.</p>
+    </section>
+
+    <article id="report" hidden>
+      <section class="hero">
+        <h1 class="serif"><span id="year"></span> in flights</h1>
+        <p class="lede">What India's flying looked like, from every flight followed on HeyGate. No one's trips are shown: only totals and rankings with hundreds of flights behind them.</p>
+      </section>
+
+      <dl class="tiles" id="totals"></dl>
+
+      <div class="two">
+        <section class="panel" aria-labelledby="ap-title">
+          <h2 id="ap-title">Most punctual airlines</h2>
+          <p class="note">Departures within 15 minutes of the timetable.</p>
+          <ol class="ranks" id="airlines-punctual"></ol>
+        </section>
+        <section class="panel" aria-labelledby="ad-title">
+          <h2 id="ad-title">Most delayed airlines</h2>
+          <p class="note">Lowest share of on-time departures.</p>
+          <ol class="ranks" id="airlines-delayed"></ol>
+        </section>
+      </div>
+
+      <div class="two">
+        <section class="panel" aria-labelledby="pp-title">
+          <h2 id="pp-title">Most punctual airports</h2>
+          <p class="note">By departures.</p>
+          <ol class="ranks" id="airports-punctual"></ol>
+        </section>
+        <section class="panel" aria-labelledby="pd-title">
+          <h2 id="pd-title">Most delayed airports</h2>
+          <p class="note">By departures.</p>
+          <ol class="ranks" id="airports-delayed"></ol>
+        </section>
+      </div>
+
+      <section class="panel" aria-labelledby="routes-title">
+        <h2 id="routes-title">Busiest routes</h2>
+        <p class="note">Flights followed on each route.</p>
+        <div class="globe-wrap">
+          <canvas id="routes-globe" role="img" aria-label="Busiest routes"></canvas>
+        </div>
+        <ol class="ranks" id="routes"></ol>
+      </section>
+
+      <div class="actions">
+        <button type="button" id="share">Share this report</button>
+        <a href="../airports/">Airports today</a>
+      </div>
+    </article>
+
+    <footer class="foot">
+      Rankings need at least 200 flights each; traveller counts are rounded to the nearest 100 and hidden under 1,000.
+      Not an official airline or airport source.
+    </footer>
+  </main>
+
+  <script src="../share/config.js"></script>
+  <script src="../share/vendor/d3-array@3.2.4.min.js"></script>
+  <script src="../share/vendor/d3-geo@3.1.1.min.js"></script>
+  <script src="../share/vendor/topojson-client@3.1.0.min.js"></script>
+  <script type="module" src="report.js"></script>
+</body>
+</html>

@@ -118,10 +118,12 @@ class FakeBackendApi(private val userId: String = TestData.USER_ID) : BackendApi
         if (serverUserFlights.any { it.flightId == body.flightId }) {
             throw BackendException.Http(409, PgErrors.UNIQUE_VIOLATION, "duplicate key value violates unique constraint")
         }
-        checkLimit(excludingId = null)
+        // An archived insert (a past flight for Passport, P3 B6) is never capped, like the database trigger.
+        if (body.archivedAt == null) checkLimit(excludingId = null)
         val row = UserFlightDto(
             id = "uf-${nextId++}", userId = userId, flightId = body.flightId, pnr = body.pnr, seat = body.seat,
             cabin = body.cabin, source = body.source, note = body.note, createdAt = TestData.NOW.toString(),
+            archivedAt = body.archivedAt,
         )
         serverUserFlights += row
         return row

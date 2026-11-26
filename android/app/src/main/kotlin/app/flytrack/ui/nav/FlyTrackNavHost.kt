@@ -12,6 +12,10 @@ import androidx.navigation.toRoute
 import app.flytrack.core.model.TrackSource
 import app.flytrack.feature.addflight.AddFlightRoute
 import app.flytrack.feature.billing.ui.LocalProFlightId
+import app.flytrack.feature.calendarimport.CalendarImportRoute
+import app.flytrack.feature.calendarimport.SuggestionAction
+import app.flytrack.feature.family.FamilyRoute
+import app.flytrack.feature.social.FriendPassportRoute
 import app.flytrack.feature.billing.ui.PaywallRoute
 import app.flytrack.feature.billing.ui.ProStateProvider
 import app.flytrack.feature.flights.FlightDetailRoute
@@ -76,6 +80,31 @@ class NavControllerNavigator(private val navController: NavHostController) : App
         navController.navigate(EmailForwarding) { launchSingleTop = true }
     }
 
+    override fun openCalendarImport() {
+        navController.navigate(CalendarImport) { launchSingleTop = true }
+    }
+
+    /** Back from add-flight returns to the suggestions, which then mark the flight as tracked. */
+    override fun openAddFlightFromCalendar(flight: String?, date: String, from: String?, to: String?) {
+        navController.navigate(
+            AddFlight(
+                prefillFlight = flight,
+                prefillDate = date,
+                prefillSource = TrackSource.CALENDAR.wire,
+                prefillFrom = from.takeIf { flight == null },
+                prefillTo = to.takeIf { flight == null },
+            ),
+        ) { launchSingleTop = true }
+    }
+
+    override fun openFriendPassport(friendId: String, friendName: String?) {
+        navController.navigate(FriendPassport(friendId, friendName)) { launchSingleTop = true }
+    }
+
+    override fun openFamily(prefillCode: String?) {
+        navController.navigate(Family(prefillCode)) { launchSingleTop = true }
+    }
+
     override fun back() {
         navController.popBackStack()
     }
@@ -128,6 +157,8 @@ fun FlyTrackNavHost(
                         prefillSource = route.prefillSource,
                         prefillSeat = route.prefillSeat,
                         prefillGmailSuggestionId = route.prefillGmailSuggestionId,
+                        prefillFrom = route.prefillFrom,
+                        prefillTo = route.prefillTo,
                         onDone = { flightId -> if (flightId != null) navigator.openFlightFromAdd(flightId) else navigator.back() },
                         onBack = { navigator.back() },
                     )
@@ -165,6 +196,27 @@ fun FlyTrackNavHost(
                 }
                 composable<EmailForwarding> {
                     EmailForwardingRoute(onBack = { navigator.back() })
+                }
+                composable<CalendarImport> {
+                    CalendarImportRoute(
+                        onAdd = { action ->
+                            when (action) {
+                                is SuggestionAction.ByNumber ->
+                                    navigator.openAddFlightFromCalendar(action.flight, action.date.toString(), null, null)
+                                is SuggestionAction.ByRoute ->
+                                    navigator.openAddFlightFromCalendar(null, action.date.toString(), action.from, action.to)
+                                SuggestionAction.NeedsDetails -> Unit
+                            }
+                        },
+                        onBack = { navigator.back() },
+                    )
+                }
+                composable<FriendPassport> { entry ->
+                    val route = entry.toRoute<FriendPassport>()
+                    FriendPassportRoute(friendId = route.friendId, friendName = route.friendName, onBack = { navigator.back() })
+                }
+                composable<Family> { entry ->
+                    FamilyRoute(prefillCode = entry.toRoute<Family>().prefillCode, onBack = { navigator.back() })
                 }
                 composable<Paywall> {
                     PaywallRoute(onBack = { navigator.back() })

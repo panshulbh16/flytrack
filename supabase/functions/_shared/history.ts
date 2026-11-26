@@ -29,11 +29,22 @@ export interface LegHistoryRow {
   had_position: boolean;
   provider: string | null;
   finalized_at: string;
+  /** Runway − off-block and on-block − runway, minutes (P3 B3); null when unknown or implausible. */
+  taxi_out_min?: number | null;
+  taxi_in_min?: number | null;
 }
 
 function minutesLate(actual: string | null, scheduled: string | null): number | null {
   const a = Date.parse(actual ?? ""), s = Date.parse(scheduled ?? "");
   return Number.isNaN(a) || Number.isNaN(s) ? null : Math.round((a - s) / 60_000);
+}
+
+/** Taxi minutes between two block times; outside 1..180 min it is a data error, not a taxi time. */
+export function taxiMinutes(from: string | null | undefined, to: string | null | undefined): number | null {
+  const a = Date.parse(from ?? ""), b = Date.parse(to ?? "");
+  if (Number.isNaN(a) || Number.isNaN(b)) return null;
+  const m = Math.round((b - a) / 60_000);
+  return m >= 1 && m <= 180 ? m : null;
 }
 
 const present = (v: string | null | undefined) => v != null && v.trim() !== "";
@@ -70,6 +81,8 @@ export function legHistoryRow(r: FlightRow, now: Date): LegHistoryRow {
     had_position: !!r.live_seen || (r.live_lat != null && r.live_lon != null),
     provider: r.provider,
     finalized_at: now.toISOString(),
+    taxi_out_min: taxiMinutes(r.dep_offblock_at, r.dep_runway_at),
+    taxi_in_min: taxiMinutes(r.arr_runway_at, r.arr_onblock_at),
   };
 }
 

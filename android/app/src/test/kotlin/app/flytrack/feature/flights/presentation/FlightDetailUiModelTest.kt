@@ -277,7 +277,7 @@ class FlightDetailUiModelTest {
     @Test
     fun `a group is off only when all of its alert types are muted`() {
         val prefs = mapOf(
-            AlertType.DEPARTED to false, AlertType.LANDED to false, // whole group
+            AlertType.DEPARTED to false, AlertType.TAKEOFF to false, AlertType.LANDED to false, AlertType.AT_GATE to false, // whole group
             AlertType.GATE_ASSIGNED to false, // one of three
             AlertType.BOARDING to true,
         )
@@ -291,11 +291,22 @@ class FlightDetailUiModelTest {
     }
 
     @Test
-    fun `the Pro-only alert is locked and off for a free user`() {
+    fun `the Pro-only alerts are locked and off for a free user`() {
         val alerts = TestData.flight().toDetailUiModel(TestData.tracking(), isPro = false, now = now).alerts
 
-        assertEquals(AlertToggleUiModel(AlertGroup.INBOUND_AIRCRAFT, enabled = false, locked = true), alerts.last())
-        assertTrue(alerts.dropLast(1).none { it.locked })
+        assertEquals(
+            listOf(AlertGroup.INBOUND_AIRCRAFT, AlertGroup.AIRCRAFT_SWAP, AlertGroup.CONNECTIONS).map { AlertToggleUiModel(it, enabled = false, locked = true) },
+            alerts.takeLast(3),
+        )
+        assertTrue(alerts.dropLast(3).none { it.locked })
+    }
+
+    @Test
+    fun `the Pro-only alerts are switchable for a Pro user`() {
+        val alerts = TestData.flight().toDetailUiModel(TestData.tracking(), isPro = true, now = now).alerts
+
+        assertTrue(alerts.none { it.locked })
+        assertTrue(alerts.single { it.group == AlertGroup.CONNECTIONS }.enabled)
     }
 
     // ---- alert groups against the backend contract --------------------------------------------
@@ -309,9 +320,23 @@ class FlightDetailUiModelTest {
     }
 
     @Test
-    fun `only the inbound-aircraft group is Pro-only, like the server's fan-out`() {
-        assertEquals(listOf(AlertGroup.INBOUND_AIRCRAFT), AlertGroup.entries.filter { it.proOnly })
-        assertEquals(AlertType.entries.filter { it.proOnly }, AlertGroup.INBOUND_AIRCRAFT.types)
+    fun `the Pro-only groups hold exactly the server's Pro-only alerts`() {
+        val pro = listOf(AlertGroup.INBOUND_AIRCRAFT, AlertGroup.AIRCRAFT_SWAP, AlertGroup.CONNECTIONS)
+        assertEquals(pro, AlertGroup.entries.filter { it.proOnly })
+        assertEquals(AlertType.entries.filter { it.proOnly }, pro.flatMap { it.types })
+        assertEquals("the Pro-only groups stay last", pro, AlertGroup.entries.takeLast(3))
+    }
+
+    @Test
+    fun `P3 alerts sit in the boarding, movement, swap and connection groups`() {
+        assertEquals(listOf(AlertType.BOARDING, AlertType.GATE_CLOSED), AlertGroup.BOARDING.types)
+        assertEquals(
+            listOf(AlertType.DEPARTED, AlertType.TAKEOFF, AlertType.LANDED, AlertType.AT_GATE),
+            AlertGroup.TAKEOFF_AND_LANDING.types,
+        )
+        assertEquals(listOf(AlertType.AIRCRAFT_SWAP), AlertGroup.AIRCRAFT_SWAP.types)
+        assertEquals(listOf(AlertType.CONNECTION_AT_RISK), AlertGroup.CONNECTIONS.types)
+        assertEquals(mapOf(AlertType.BOARDING to false, AlertType.GATE_CLOSED to false), AlertGroup.BOARDING.prefs(enabled = false))
     }
 
     @Test
@@ -319,7 +344,7 @@ class FlightDetailUiModelTest {
         assertEquals(listOf(AlertType.FOG_ALERT), AlertGroup.WEATHER.types)
         assertTrue(AlertType.DIVERTED_DEST in AlertGroup.DISRUPTION.types)
         assertEquals(
-            "Weather comes right before the Pro-only group, which stays last",
+            "Weather comes right before the Pro-only groups, which stay last",
             AlertGroup.entries.indexOf(AlertGroup.INBOUND_AIRCRAFT) - 1,
             AlertGroup.entries.indexOf(AlertGroup.WEATHER),
         )

@@ -30,7 +30,24 @@ enum class AlertType(val critical: Boolean, val proOnly: Boolean = false) {
     FOG_ALERT(critical = true),
 
     /** After [DIVERTED]: the diversion airport became known (P2 contract, section 3). */
-    DIVERTED_DEST(critical = true);
+    DIVERTED_DEST(critical = true),
+
+    // P3 (docs/P3_CONTRACTS.md section C): appended in exactly the order of EVENT_TYPES.
+
+    /** Status `gate_closed` (A2, info). */
+    GATE_CLOSED(critical = false),
+
+    /** Runway time known: the aircraft is airborne (A2, info). */
+    TAKEOFF(critical = false),
+
+    /** On-block time known: the aircraft reached the arrival gate (A2, info). */
+    AT_GATE(critical = false),
+
+    /** The tail number changed before departure (A5, Pro). */
+    AIRCRAFT_SWAP(critical = true, proOnly = true),
+
+    /** A connection from this flight went from ok or tight to at risk (B4, Pro). */
+    CONNECTION_AT_RISK(critical = true, proOnly = true);
 
     val wire: String get() = name
 

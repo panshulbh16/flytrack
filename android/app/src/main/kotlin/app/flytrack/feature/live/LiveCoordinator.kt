@@ -8,6 +8,7 @@ import app.flytrack.di.DefaultDispatcher
 import app.flytrack.feature.billing.FlightProAccess
 import app.flytrack.feature.billing.ProRepository
 import app.flytrack.feature.billing.ProState
+import app.flytrack.feature.wear.NextFlightPublisher
 import app.flytrack.feature.widget.NextFlightWidgetUpdater
 import dagger.Binds
 import dagger.Module
@@ -56,6 +57,8 @@ class LiveCoordinator @Inject constructor(
     strings: LiveStrings,
     private val notifier: LiveFlightNotifier,
     private val widget: NextFlightWidgetUpdater,
+    /** P3 B9: the Wear OS Tile and complication follow the widget's flight through the Data Layer. */
+    private val watch: NextFlightPublisher,
     private val scheduler: LiveScheduler,
     private val clock: Clock,
     @ApplicationScope private val scope: CoroutineScope,
@@ -117,13 +120,16 @@ class LiveCoordinator @Inject constructor(
 
     private suspend fun apply(inputs: Inputs, forceWidget: Boolean) = mutex.withLock {
         try {
-            val plan = planner.plan(inputs.tracked, clock.now(), inputs.pro.eligibility(), inputs.dismissed)
+            val now = clock.now()
+            val plan = planner.plan(inputs.tracked, now, inputs.pro.eligibility(), inputs.dismissed)
             notifier.render(plan.notification)
             val key = plan.widgetRedrawKey
             if (forceWidget || key != widgetKey) {
                 widget.updateAll()
                 widgetKey = key
             }
+            // Writes only when what the watch draws changed; never throws.
+            watch.publish(inputs.tracked, now)
             // Last: when the plan no longer needs the periodic tick, this cancels the running tick
             // worker itself (and its coroutine), so nothing may come after it.
             scheduler.apply(plan)

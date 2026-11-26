@@ -1,0 +1,2241 @@
+{
+ "about": "Shared fixtures for the Kotlin and Swift ports of HeyTurbulence src/calendar-parser.js (P3 A3). Inputs are Google-Calendar-shaped events; expected values were produced by the JavaScript parser itself (catalog: android/app/src/main/assets/airports.json). Issue codes map the JS review notes: NO_FROM, NO_TO, SAME_AIRPORT, UNTIMED, CONFLICT, MULTI_LEG, STATED_TIMES. sourceId uses the prefix 'google:primary:'.",
+ "cases": [
+  {
+   "name": "basic route with secret description",
+   "event": {
+    "id": "event1",
+    "summary": "Flight BLR → SIN",
+    "description": "Reservation PNR SECRET",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T13:00:00+08:00"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:event1",
+    "from": "BLR",
+    "to": "SIN",
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T05:00:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "2026-11-26T13:00",
+    "needsReview": false,
+    "requiresCorrection": false,
+    "issues": [],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "hotel from gmail is not a flight",
+   "event": {
+    "id": "hotel",
+    "eventType": "fromGmail",
+    "summary": "Hotel in Singapore"
+   },
+   "expected": null
+  },
+  {
+   "name": "cancelled status",
+   "event": {
+    "id": "event1",
+    "summary": "Flight BLR → SIN",
+    "status": "cancelled",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T13:00:00+08:00"
+    }
+   },
+   "expected": null
+  },
+  {
+   "name": "destination only needs review",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight to Singapore",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T13:00:00+08:00"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": null,
+    "to": "SIN",
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T05:00:00Z",
+    "departLocal": "",
+    "arriveLocal": "2026-11-26T13:00",
+    "needsReview": true,
+    "requiresCorrection": false,
+    "issues": [
+     "NO_FROM"
+    ],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "all-day start needs review",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight BLR → SIN",
+    "description": "",
+    "start": {
+     "date": "2026-11-26"
+    },
+    "end": {
+     "dateTime": "2026-11-26T13:00:00+08:00"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": "SIN",
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": null,
+    "endInstant": "2026-11-26T05:00:00Z",
+    "departLocal": "",
+    "arriveLocal": "",
+    "needsReview": true,
+    "requiresCorrection": false,
+    "issues": [
+     "UNTIMED"
+    ],
+    "sortDate": "2026-11-26",
+    "split": []
+   }
+  },
+  {
+   "name": "offset-free time without zone needs review",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight BLR → SIN",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00"
+    },
+    "end": {
+     "dateTime": "2026-11-26T13:00:00+08:00"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": "SIN",
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": null,
+    "endInstant": "2026-11-26T05:00:00Z",
+    "departLocal": "",
+    "arriveLocal": "",
+    "needsReview": true,
+    "requiresCorrection": false,
+    "issues": [
+     "UNTIMED"
+    ],
+    "sortDate": "",
+    "split": []
+   }
+  },
+  {
+   "name": "city route with Bangalore alias and number",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight from Bangalore to Singapore (SQ 509)",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T13:00:00+08:00"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": "SIN",
+    "number": "SQ 509",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T05:00:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "2026-11-26T13:00",
+    "needsReview": false,
+    "requiresCorrection": false,
+    "issues": [],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "labelled itinerary in HTML",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight to Singapore",
+    "description": "<b>Departure:</b> Bengaluru (BLR)<br><b>Arrival:</b> Singapore (SIN)<br>Booking reference: SECRET",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T13:00:00+08:00"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": "SIN",
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T05:00:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "2026-11-26T13:00",
+    "needsReview": false,
+    "requiresCorrection": false,
+    "issues": [],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "explicit airport name",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight London Heathrow to Bengaluru",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T13:00:00+08:00"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "LHR",
+    "to": "BLR",
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T05:00:00Z",
+    "departLocal": "2026-11-26T00:30",
+    "arriveLocal": "2026-11-26T10:30",
+    "needsReview": false,
+    "requiresCorrection": false,
+    "issues": [],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "code-only slash title",
+   "event": {
+    "id": "synthetic",
+    "summary": "BLR / SIN",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T13:00:00+08:00"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": "SIN",
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T05:00:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "2026-11-26T13:00",
+    "needsReview": false,
+    "requiresCorrection": false,
+    "issues": [],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "destination with number, origin missing",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight to Singapore (SQ 509)",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T13:00:00+08:00"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": null,
+    "to": "SIN",
+    "number": "SQ 509",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T05:00:00Z",
+    "departLocal": "",
+    "arriveLocal": "2026-11-26T13:00",
+    "needsReview": true,
+    "requiresCorrection": false,
+    "issues": [
+     "NO_FROM"
+    ],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "ambiguous Tokyo",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight Bengaluru to Tokyo",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T13:00:00+08:00"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": null,
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T05:00:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "",
+    "needsReview": true,
+    "requiresCorrection": false,
+    "issues": [
+     "NO_TO"
+    ],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "conflicting routes",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight BLR → SIN",
+    "description": "Flight BLR → DXB",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T13:00:00+08:00"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": "DXB",
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T05:00:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "2026-11-26T09:00",
+    "needsReview": true,
+    "requiresCorrection": true,
+    "issues": [
+     "CONFLICT"
+    ],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "offset-free times with explicit zones",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight BLR → SIN",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00",
+     "timeZone": "Asia/Kolkata"
+    },
+    "end": {
+     "dateTime": "2026-11-26T13:00:00",
+     "timeZone": "Asia/Singapore"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": "SIN",
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T05:00:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "2026-11-26T13:00",
+    "needsReview": false,
+    "requiresCorrection": false,
+    "issues": [],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "cancelled in title",
+   "event": {
+    "id": "synthetic",
+    "summary": "Cancelled flight BLR → SIN",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T13:00:00+08:00"
+    }
+   },
+   "expected": null
+  },
+  {
+   "name": "airport meeting",
+   "event": {
+    "id": "synthetic",
+    "summary": "Meeting at Singapore airport",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T13:00:00+08:00"
+    }
+   },
+   "expected": null
+  },
+  {
+   "name": "all-day flight",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight BLR → SIN",
+    "description": "",
+    "start": {
+     "date": "2026-11-26"
+    },
+    "end": {
+     "date": "2026-11-27"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": "SIN",
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": null,
+    "endInstant": null,
+    "departLocal": "",
+    "arriveLocal": "",
+    "needsReview": true,
+    "requiresCorrection": false,
+    "issues": [
+     "UNTIMED"
+    ],
+    "sortDate": "2026-11-26",
+    "split": []
+   }
+  },
+  {
+   "name": "location fills origin",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight to Singapore (SQ 509)",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T13:00:00+08:00"
+    },
+    "location": "Bengaluru BLR airport"
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": "SIN",
+    "number": "SQ 509",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T05:00:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "2026-11-26T13:00",
+    "needsReview": false,
+    "requiresCorrection": false,
+    "issues": [],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "location equal to destination is ignored",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight to Singapore",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T13:00:00+08:00"
+    },
+    "location": "Singapore SIN airport"
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": null,
+    "to": "SIN",
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T05:00:00Z",
+    "departLocal": "",
+    "arriveLocal": "2026-11-26T13:00",
+    "needsReview": true,
+    "requiresCorrection": false,
+    "issues": [
+     "NO_FROM"
+    ],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "gmail destination title with airport location",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight to Delhi (6E 1234)",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30",
+     "timeZone": "Asia/Kolkata"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30",
+     "timeZone": "Asia/Kolkata"
+    },
+    "eventType": "fromGmail",
+    "location": "Kempegowda International Airport, Bengaluru"
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": "DEL",
+    "number": "6E 1234",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "2026-11-26T08:45",
+    "needsReview": false,
+    "requiresCorrection": false,
+    "issues": [],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "airline app title with hyphenated number",
+   "event": {
+    "id": "synthetic",
+    "summary": "IndiGo 6E-1234 Bangalore-Delhi",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": "DEL",
+    "number": "6E 1234",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "2026-11-26T08:45",
+    "needsReview": false,
+    "requiresCorrection": false,
+    "issues": [],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "compact number and code pair",
+   "event": {
+    "id": "synthetic",
+    "summary": "AI503 BLR-DEL",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": "DEL",
+    "number": "AI 503",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "2026-11-26T08:45",
+    "needsReview": false,
+    "requiresCorrection": false,
+    "issues": [],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "plane symbol route",
+   "event": {
+    "id": "synthetic",
+    "summary": "✈ BLR → SIN",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": "SIN",
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "2026-11-26T11:15",
+    "needsReview": false,
+    "requiresCorrection": false,
+    "issues": [],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "two-leg chain",
+   "event": {
+    "id": "evt-legs",
+    "summary": "Flight BLR → DXB → LHR",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T19:10:00+00:00"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:evt-legs",
+    "from": "BLR",
+    "to": "LHR",
+    "number": "",
+    "legs": [
+     [
+      "BLR",
+      "DXB"
+     ],
+     [
+      "DXB",
+      "LHR"
+     ]
+    ],
+    "legNumbers": [
+     "",
+     ""
+    ],
+    "legTimes": [
+     [],
+     []
+    ],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T19:10:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "2026-11-26T19:10",
+    "needsReview": true,
+    "requiresCorrection": true,
+    "issues": [
+     "MULTI_LEG"
+    ],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": [
+     {
+      "sourceId": "google:primary:evt-legs:leg1",
+      "leg": 1,
+      "legCount": 2,
+      "from": "BLR",
+      "to": "DXB",
+      "number": "",
+      "startInstant": "2026-11-26T00:30:00Z",
+      "endInstant": null,
+      "departLocal": "2026-11-26T06:00",
+      "arriveLocal": "",
+      "missing": "LANDING",
+      "issues": []
+     },
+     {
+      "sourceId": "google:primary:evt-legs:leg2",
+      "leg": 2,
+      "legCount": 2,
+      "from": "DXB",
+      "to": "LHR",
+      "number": "",
+      "startInstant": null,
+      "endInstant": "2026-11-26T19:10:00Z",
+      "departLocal": "",
+      "arriveLocal": "2026-11-26T19:10",
+      "missing": "TAKEOFF",
+      "issues": []
+     }
+    ]
+   }
+  },
+  {
+   "name": "linked routes in description",
+   "event": {
+    "id": "synthetic",
+    "summary": "Trip flights",
+    "description": "Flight BLR → DXB<br>Flight DXB → LHR",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": "LHR",
+    "number": "",
+    "legs": [
+     [
+      "BLR",
+      "DXB"
+     ],
+     [
+      "DXB",
+      "LHR"
+     ]
+    ],
+    "legNumbers": [
+     "",
+     ""
+    ],
+    "legTimes": [
+     [],
+     []
+    ],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "2026-11-26T03:15",
+    "needsReview": true,
+    "requiresCorrection": true,
+    "issues": [
+     "MULTI_LEG"
+    ],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": [
+     {
+      "sourceId": "google:primary:synthetic:leg1",
+      "leg": 1,
+      "legCount": 2,
+      "from": "BLR",
+      "to": "DXB",
+      "number": "",
+      "startInstant": "2026-11-26T00:30:00Z",
+      "endInstant": null,
+      "departLocal": "2026-11-26T06:00",
+      "arriveLocal": "",
+      "missing": "LANDING",
+      "issues": []
+     },
+     {
+      "sourceId": "google:primary:synthetic:leg2",
+      "leg": 2,
+      "legCount": 2,
+      "from": "DXB",
+      "to": "LHR",
+      "number": "",
+      "startInstant": null,
+      "endInstant": "2026-11-26T03:15:00Z",
+      "departLocal": "",
+      "arriveLocal": "2026-11-26T03:15",
+      "missing": "TAKEOFF",
+      "issues": []
+     }
+    ]
+   }
+  },
+  {
+   "name": "return trip chain",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight BLR-GOI-BLR",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": "BLR",
+    "number": "",
+    "legs": [
+     [
+      "BLR",
+      "GOI"
+     ],
+     [
+      "GOI",
+      "BLR"
+     ]
+    ],
+    "legNumbers": [
+     "",
+     ""
+    ],
+    "legTimes": [
+     [],
+     []
+    ],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "2026-11-26T08:45",
+    "needsReview": true,
+    "requiresCorrection": true,
+    "issues": [
+     "MULTI_LEG"
+    ],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": [
+     {
+      "sourceId": "google:primary:synthetic:leg1",
+      "leg": 1,
+      "legCount": 2,
+      "from": "BLR",
+      "to": "GOI",
+      "number": "",
+      "startInstant": "2026-11-26T00:30:00Z",
+      "endInstant": null,
+      "departLocal": "2026-11-26T06:00",
+      "arriveLocal": "",
+      "missing": "LANDING",
+      "issues": []
+     },
+     {
+      "sourceId": "google:primary:synthetic:leg2",
+      "leg": 2,
+      "legCount": 2,
+      "from": "GOI",
+      "to": "BLR",
+      "number": "",
+      "startInstant": null,
+      "endInstant": "2026-11-26T03:15:00Z",
+      "departLocal": "",
+      "arriveLocal": "2026-11-26T08:45",
+      "missing": "TAKEOFF",
+      "issues": []
+     }
+    ]
+   }
+  },
+  {
+   "name": "labelled depart and arrive lines",
+   "event": {
+    "id": "synthetic",
+    "summary": "Air India to Mumbai",
+    "description": "Depart: Bengaluru (BLR) 06:00\nArrive: Mumbai (BOM) 07:40\nPNR: ABC123",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": "BOM",
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "2026-11-26T08:45",
+    "needsReview": false,
+    "requiresCorrection": false,
+    "issues": [],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "number only from safe line",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight to Singapore",
+    "description": "Booking reference: SQ1234\nSingapore Airlines SQ 509",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": null,
+    "to": "SIN",
+    "number": "SQ 509",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "",
+    "arriveLocal": "2026-11-26T11:15",
+    "needsReview": true,
+    "requiresCorrection": false,
+    "issues": [
+     "NO_FROM"
+    ],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "PNR line never gives a number",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight to Singapore",
+    "description": "PNR AI5678",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": null,
+    "to": "SIN",
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "",
+    "arriveLocal": "2026-11-26T11:15",
+    "needsReview": true,
+    "requiresCorrection": false,
+    "issues": [
+     "NO_FROM"
+    ],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "airline name as context",
+   "event": {
+    "id": "synthetic",
+    "summary": "Vistara Bengaluru to Delhi",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": "DEL",
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "2026-11-26T08:45",
+    "needsReview": false,
+    "requiresCorrection": false,
+    "issues": [],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "check-in reminder",
+   "event": {
+    "id": "synthetic",
+    "summary": "Web check-in opens for 6E 1234",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": null
+  },
+  {
+   "name": "city pair without flight context",
+   "event": {
+    "id": "synthetic",
+    "summary": "Bengaluru to Delhi",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": null
+  },
+  {
+   "name": "out of office type",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight BLR → SIN",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    },
+    "eventType": "outOfOffice"
+   },
+   "expected": null
+  },
+  {
+   "name": "flying from X to Y",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flying from Bengaluru to Kochi",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": "COK",
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "2026-11-26T08:45",
+    "needsReview": false,
+    "requiresCorrection": false,
+    "issues": [],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "same airport",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight BLR → BLR",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": "BLR",
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "2026-11-26T08:45",
+    "needsReview": true,
+    "requiresCorrection": true,
+    "issues": [
+     "SAME_AIRPORT"
+    ],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "all-day long haul",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight BLR → SFO",
+    "description": "",
+    "start": {
+     "date": "2026-11-26"
+    },
+    "end": {
+     "date": "2026-11-27"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": "SFO",
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": null,
+    "endInstant": null,
+    "departLocal": "",
+    "arriveLocal": "",
+    "needsReview": true,
+    "requiresCorrection": false,
+    "issues": [
+     "UNTIMED"
+    ],
+    "sortDate": "2026-11-26",
+    "split": []
+   }
+  },
+  {
+   "name": "ambiguous London",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight Bengaluru to London",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": null,
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "",
+    "needsReview": true,
+    "requiresCorrection": false,
+    "issues": [
+     "NO_TO"
+    ],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "ambiguous Shanghai",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight Bengaluru to Shanghai",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": null,
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "",
+    "needsReview": true,
+    "requiresCorrection": false,
+    "issues": [
+     "NO_TO"
+    ],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "unknown code",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight BLR to XYZ",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": null,
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "",
+    "needsReview": true,
+    "requiresCorrection": false,
+    "issues": [
+     "NO_TO"
+    ],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "Dubai resolves",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight Bengaluru to Dubai",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": "DXB",
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "2026-11-26T07:15",
+    "needsReview": false,
+    "requiresCorrection": false,
+    "issues": [],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "regional destination Bareilly",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight to Bareilly (6E 7421)",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    },
+    "location": "Kempegowda International Airport, Bengaluru"
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": "BEK",
+    "number": "6E 7421",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "2026-11-26T08:45",
+    "needsReview": false,
+    "requiresCorrection": false,
+    "issues": [],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "unknown destination with airport location",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight to Nowhereville",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    },
+    "location": "Kempegowda International Airport, Bengaluru"
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": null,
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "",
+    "needsReview": true,
+    "requiresCorrection": false,
+    "issues": [
+     "NO_TO"
+    ],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "origin only",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight from Bengaluru",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    },
+    "location": "Bareilly airport"
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": null,
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "",
+    "needsReview": true,
+    "requiresCorrection": false,
+    "issues": [
+     "NO_TO"
+    ],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "catalog airport name destination",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight to Singapore Changi Airport",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    },
+    "location": "Kempegowda International Airport, Bengaluru"
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": "SIN",
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "2026-11-26T11:15",
+    "needsReview": false,
+    "requiresCorrection": false,
+    "issues": [],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "catalog airport name origin",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight Bareilly Air Force Station to Delhi",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BEK",
+    "to": "DEL",
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "2026-11-26T08:45",
+    "needsReview": false,
+    "requiresCorrection": false,
+    "issues": [],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "three-leg chain",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight BLR-DEL-FRA-LHR",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": "LHR",
+    "number": "",
+    "legs": [
+     [
+      "BLR",
+      "DEL"
+     ],
+     [
+      "DEL",
+      "FRA"
+     ],
+     [
+      "FRA",
+      "LHR"
+     ]
+    ],
+    "legNumbers": [
+     "",
+     "",
+     ""
+    ],
+    "legTimes": [
+     [],
+     [],
+     []
+    ],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "2026-11-26T03:15",
+    "needsReview": true,
+    "requiresCorrection": true,
+    "issues": [
+     "MULTI_LEG"
+    ],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": [
+     {
+      "sourceId": "google:primary:synthetic:leg1",
+      "leg": 1,
+      "legCount": 3,
+      "from": "BLR",
+      "to": "DEL",
+      "number": "",
+      "startInstant": "2026-11-26T00:30:00Z",
+      "endInstant": null,
+      "departLocal": "2026-11-26T06:00",
+      "arriveLocal": "",
+      "missing": "LANDING",
+      "issues": []
+     },
+     {
+      "sourceId": "google:primary:synthetic:leg2",
+      "leg": 2,
+      "legCount": 3,
+      "from": "DEL",
+      "to": "FRA",
+      "number": "",
+      "startInstant": null,
+      "endInstant": null,
+      "departLocal": "",
+      "arriveLocal": "",
+      "missing": "BOTH",
+      "issues": []
+     },
+     {
+      "sourceId": "google:primary:synthetic:leg3",
+      "leg": 3,
+      "legCount": 3,
+      "from": "FRA",
+      "to": "LHR",
+      "number": "",
+      "startInstant": null,
+      "endInstant": "2026-11-26T03:15:00Z",
+      "departLocal": "",
+      "arriveLocal": "2026-11-26T03:15",
+      "missing": "TAKEOFF",
+      "issues": []
+     }
+    ]
+   }
+  },
+  {
+   "name": "per-leg numbers and times",
+   "event": {
+    "id": "synthetic",
+    "summary": "Emirates to London",
+    "description": "EK 569 BLR → DXB 04:30 - 07:05<br>EK 1 DXB → LHR 07:45 - 11:25<br>Booking reference: EK 9999 BLR-DXB",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": "LHR",
+    "number": "EK 569",
+    "legs": [
+     [
+      "BLR",
+      "DXB"
+     ],
+     [
+      "DXB",
+      "LHR"
+     ]
+    ],
+    "legNumbers": [
+     "EK 569",
+     "EK 1"
+    ],
+    "legTimes": [
+     [
+      "04:30",
+      "07:05"
+     ],
+     [
+      "07:45",
+      "11:25"
+     ]
+    ],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "2026-11-26T03:15",
+    "needsReview": true,
+    "requiresCorrection": true,
+    "issues": [
+     "MULTI_LEG"
+    ],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": [
+     {
+      "sourceId": "google:primary:synthetic:leg1",
+      "leg": 1,
+      "legCount": 2,
+      "from": "BLR",
+      "to": "DXB",
+      "number": "EK 569",
+      "startInstant": "2026-11-26T00:30:00Z",
+      "endInstant": null,
+      "departLocal": "2026-11-26T06:00",
+      "arriveLocal": "",
+      "missing": "LANDING",
+      "issues": [
+       "STATED_TIMES"
+      ]
+     },
+     {
+      "sourceId": "google:primary:synthetic:leg2",
+      "leg": 2,
+      "legCount": 2,
+      "from": "DXB",
+      "to": "LHR",
+      "number": "EK 1",
+      "startInstant": null,
+      "endInstant": "2026-11-26T03:15:00Z",
+      "departLocal": "",
+      "arriveLocal": "2026-11-26T03:15",
+      "missing": "TAKEOFF",
+      "issues": [
+       "STATED_TIMES"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "chain with one number",
+   "event": {
+    "id": "synthetic",
+    "summary": "EK 569 BLR → DXB → LHR",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": "LHR",
+    "number": "EK 569",
+    "legs": [
+     [
+      "BLR",
+      "DXB"
+     ],
+     [
+      "DXB",
+      "LHR"
+     ]
+    ],
+    "legNumbers": [
+     "",
+     ""
+    ],
+    "legTimes": [
+     [],
+     []
+    ],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "2026-11-26T03:15",
+    "needsReview": true,
+    "requiresCorrection": true,
+    "issues": [
+     "MULTI_LEG"
+    ],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": [
+     {
+      "sourceId": "google:primary:synthetic:leg1",
+      "leg": 1,
+      "legCount": 2,
+      "from": "BLR",
+      "to": "DXB",
+      "number": "",
+      "startInstant": "2026-11-26T00:30:00Z",
+      "endInstant": null,
+      "departLocal": "2026-11-26T06:00",
+      "arriveLocal": "",
+      "missing": "LANDING",
+      "issues": []
+     },
+     {
+      "sourceId": "google:primary:synthetic:leg2",
+      "leg": 2,
+      "legCount": 2,
+      "from": "DXB",
+      "to": "LHR",
+      "number": "",
+      "startInstant": null,
+      "endInstant": "2026-11-26T03:15:00Z",
+      "departLocal": "",
+      "arriveLocal": "2026-11-26T03:15",
+      "missing": "TAKEOFF",
+      "issues": []
+     }
+    ]
+   }
+  },
+  {
+   "name": "entities and arrow",
+   "event": {
+    "id": "synthetic",
+    "summary": "IndiGo 6E 2341 DEL &rarr; BOM",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "DEL",
+    "to": "BOM",
+    "number": "6E 2341",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "2026-11-26T08:45",
+    "needsReview": false,
+    "requiresCorrection": false,
+    "issues": [],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "leading zeros kept",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight 6E 0234 DEL to BOM",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "DEL",
+    "to": "BOM",
+    "number": "6E 0234",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "2026-11-26T08:45",
+    "needsReview": false,
+    "requiresCorrection": false,
+    "issues": [],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "Hindi-style title with codes",
+   "event": {
+    "id": "synthetic",
+    "summary": "Yatra: Air India AI 101 DEL - JFK",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "DEL",
+    "to": "JFK",
+    "number": "AI 101",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "2026-11-25T22:15",
+    "needsReview": false,
+    "requiresCorrection": false,
+    "issues": [],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "Akasa booking description",
+   "event": {
+    "id": "synthetic",
+    "summary": "Akasa Air QP 1402",
+    "description": "From: Mumbai (BOM)\nTo: Bengaluru (BLR)\nPassenger: Jane Doe",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BOM",
+    "to": "BLR",
+    "number": "QP 1402",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "2026-11-26T08:45",
+    "needsReview": false,
+    "requiresCorrection": false,
+    "issues": [],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "SpiceJet with Delhi and Goa",
+   "event": {
+    "id": "synthetic",
+    "summary": "SpiceJet SG 8169 Delhi to Goa",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "DEL",
+    "to": null,
+    "number": "SG 8169",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "",
+    "needsReview": true,
+    "requiresCorrection": false,
+    "issues": [
+     "NO_TO"
+    ],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "Mopa named",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight Delhi to Mopa",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "DEL",
+    "to": "GOX",
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "2026-11-26T08:45",
+    "needsReview": false,
+    "requiresCorrection": false,
+    "issues": [],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "lowercase to separator",
+   "event": {
+    "id": "synthetic",
+    "summary": "flight del to bom",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": null,
+    "to": null,
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "",
+    "arriveLocal": "",
+    "needsReview": true,
+    "requiresCorrection": false,
+    "issues": [
+     "NO_FROM",
+     "NO_TO"
+    ],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "birthday type",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight BLR → SIN",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    },
+    "eventType": "birthday"
+   },
+   "expected": null
+  },
+  {
+   "name": "no id",
+   "event": {
+    "id": "",
+    "summary": "Flight BLR → SIN",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": null
+  },
+  {
+   "name": "lounge reminder",
+   "event": {
+    "id": "synthetic",
+    "summary": "Lounge access DEL",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": null
+  },
+  {
+   "name": "boarding pass with chain is kept",
+   "event": {
+    "id": "synthetic",
+    "summary": "Boarding pass BLR → DEL",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": "DEL",
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "2026-11-26T08:45",
+    "needsReview": false,
+    "requiresCorrection": false,
+    "issues": [],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "arrival time zone invalid",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight BLR → SIN",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00",
+     "timeZone": "Not/AZone"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "BLR",
+    "to": "SIN",
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": null,
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "",
+    "arriveLocal": "",
+    "needsReview": true,
+    "requiresCorrection": false,
+    "issues": [
+     "UNTIMED"
+    ],
+    "sortDate": "",
+    "split": []
+   }
+  },
+  {
+   "name": "Z instants",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight 6E 2341 DEL → BOM",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-28T03:30:00Z"
+    },
+    "end": {
+     "dateTime": "2026-11-28T05:40:00Z"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "DEL",
+    "to": "BOM",
+    "number": "6E 2341",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-28T03:30:00Z",
+    "endInstant": "2026-11-28T05:40:00Z",
+    "departLocal": "2026-11-28T09:00",
+    "arriveLocal": "2026-11-28T11:10",
+    "needsReview": false,
+    "requiresCorrection": false,
+    "issues": [],
+    "sortDate": "2026-11-28T03:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "Delhi IGI alias",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight from IGI to Chennai",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "DEL",
+    "to": "MAA",
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "2026-11-26T08:45",
+    "needsReview": false,
+    "requiresCorrection": false,
+    "issues": [],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "Trivandrum alias",
+   "event": {
+    "id": "synthetic",
+    "summary": "Flight Trivandrum to Bengaluru",
+    "description": "",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": "TRV",
+    "to": "BLR",
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "2026-11-26T06:00",
+    "arriveLocal": "2026-11-26T08:45",
+    "needsReview": false,
+    "requiresCorrection": false,
+    "issues": [],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  },
+  {
+   "name": "description itinerary destination label",
+   "event": {
+    "id": "synthetic",
+    "summary": "My trip",
+    "description": "Flight details\nOrigin: Hyderabad\nDestination: Kolkata",
+    "start": {
+     "dateTime": "2026-11-26T06:00:00+05:30"
+    },
+    "end": {
+     "dateTime": "2026-11-26T08:45:00+05:30"
+    }
+   },
+   "expected": {
+    "sourceId": "google:primary:synthetic",
+    "from": null,
+    "to": "CCU",
+    "number": "",
+    "legs": [],
+    "legNumbers": [],
+    "legTimes": [],
+    "startInstant": "2026-11-26T00:30:00Z",
+    "endInstant": "2026-11-26T03:15:00Z",
+    "departLocal": "",
+    "arriveLocal": "2026-11-26T08:45",
+    "needsReview": true,
+    "requiresCorrection": false,
+    "issues": [
+     "NO_FROM"
+    ],
+    "sortDate": "2026-11-26T00:30:00Z",
+    "split": []
+   }
+  }
+ ]
+}

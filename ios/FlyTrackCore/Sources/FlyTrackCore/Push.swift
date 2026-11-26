@@ -110,6 +110,10 @@ public struct ApnsEnvelope: Equatable, Sendable {
 
 public func alertTagGroup(_ eventType: String) -> String {
     if eventType == AlertType.terminalChange.wire { return "terminal" }
+    // P3, same as notify.ts tagGroup: "gate closed" replaces "boarding now", takeoff refines "departed".
+    if eventType == AlertType.gateClosed.wire { return "boarding" }
+    if eventType == AlertType.takeoff.wire { return "departed" }
+    if eventType == AlertType.connectionAtRisk.wire { return "connection" }
     if eventType.hasPrefix("GATE") { return "gate" }
     if eventType.hasPrefix("BELT") { return "belt" }
     if eventType.hasPrefix("DELAY") || eventType == AlertType.inboundLate.wire || eventType == AlertType.scheduleChange.wire {
@@ -308,6 +312,20 @@ public func mergeCompactFlight(json: String, into existing: Flight?) -> Flight? 
         arrAirport: existing?.arrAirport,
         inboundFlightId: existing?.inboundFlightId,
         prediction: existing?.prediction,
-        hasProInsight: existing?.hasProInsight ?? false
+        hasProInsight: existing?.hasProInsight ?? false,
+        // P3 block times (notify.ts compactFlight `ofb` / `rwd` / `rwa` / `onb`); an older payload without them
+        // keeps what the cache had.
+        depOffblockAt: compactInstant(object, "ofb", fallback: existing?.depOffblockAt),
+        depRunwayAt: compactInstant(object, "rwd", fallback: existing?.depRunwayAt),
+        arrRunwayAt: compactInstant(object, "rwa", fallback: existing?.arrRunwayAt),
+        arrOnblockAt: compactInstant(object, "onb", fallback: existing?.arrOnblockAt),
+        aircraftIcaoType: JSON.string(object["reg"]) == existing?.aircraftReg ? existing?.aircraftIcaoType : nil,
+        aircraftAgeYears: JSON.string(object["reg"]) == existing?.aircraftReg ? existing?.aircraftAgeYears : nil
     )
+}
+
+/// A key the payload carries wins (null clears it); a key it lacks (an older server) keeps `fallback`.
+private func compactInstant(_ object: [String: Any], _ key: String, fallback: Date?) -> Date? {
+    guard object.keys.contains(key) else { return fallback }
+    return parseInstant(JSON.string(object[key]))
 }

@@ -26,7 +26,8 @@ async function simulateFlight(n: number) {
   };
 }
 
-const BASE = ["GATE_ASSIGNED", "BOARDING", "DEPARTED", "LANDED", "BELT_ASSIGNED"];
+// P3 adds the free timeline milestones GATE_CLOSED, TAKEOFF and AT_GATE to every full journey.
+const BASE = ["GATE_ASSIGNED", "BOARDING", "GATE_CLOSED", "DEPARTED", "TAKEOFF", "LANDED", "AT_GATE", "BELT_ASSIGNED"];
 
 Deno.test("scenario 0 (on time): full journey, each alert exactly once, polling stops", async () => {
   const r = await simulateFlight(2340);
@@ -110,7 +111,7 @@ Deno.test("muted alert types are respected per user", async () => {
   h.repo.track(row.id, { userId: "m", isPro: false, prefs: { DEPARTED: false, LANDED: false }, devices: [{ id: "d", token: "tok-m-xxxxxxxxxxxxxxxxxxxx" }] });
   await runUntil(h, "2026-11-26T06:00:00Z", 1, (d) => runPollCycle(d, 5_000));
   const got = h.pusher.sent.filter((m) => m.data?.kind === "alert").map((m) => m.data!.event_type);
-  assertEquals(got, ["GATE_ASSIGNED", "BOARDING", "BELT_ASSIGNED"]);
+  assertEquals(got, ["GATE_ASSIGNED", "BOARDING", "GATE_CLOSED", "TAKEOFF", "AT_GATE", "BELT_ASSIGNED"]);
 });
 
 Deno.test("untracked flights are never polled (cost)", async () => {
@@ -147,6 +148,7 @@ Deno.test("provider outage → backoff, then recovers without duplicate alerts",
     name: "mock", supportsWebhooks: false,
     getFlight: (k) => (down ? Promise.reject(new Error("503")) : real.getFlight(k)),
     getFlightsByRegistration: (r, d) => real.getFlightsByRegistration(r, d),
+    getAirportDepartures: (i, f, t) => real.getAirportDepartures(i, f, t),
   };
   h.deps.provider = flaky;
   // outage from T-60m to T-40m (straddles the gate change at T-50m)
@@ -159,7 +161,7 @@ Deno.test("provider outage → backoff, then recovers without duplicate alerts",
   down = false;
   await runUntil(h, "2026-11-26T06:00:00Z", 1, (d) => runPollCycle(d, 5_000));
   const got = h.pusher.sent.filter((m) => m.data?.kind === "alert").map((m) => m.data!.event_type);
-  assertEquals(got, ["GATE_ASSIGNED", "GATE_CHANGE", "BOARDING", "DEPARTED", "LANDED", "BELT_ASSIGNED"]);
+  assertEquals(got, ["GATE_ASSIGNED", "GATE_CHANGE", ...BASE.slice(1)]);
 });
 
 Deno.test("webhook + poll race on the same change → exactly one push", async () => {

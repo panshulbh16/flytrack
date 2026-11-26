@@ -49,3 +49,12 @@ verify_jwt = false # protected by the x-inbound-secret header (secret INBOUND_EM
 
 [functions.calendar-feed]
 verify_jwt = false # calendar apps can't send a JWT: the unguessable ?t= token (profiles.calendar_token) is the only key
+
+[functions.search-route]
+verify_jwt = true # P3 B5: search by route / airport; 2 units of the caller's daily search quota per provider fetch
+
+[functions.airport-status]
+verify_jwt = false # P3 B8: public airport page data (web/airports); counts and weather only, never user data
+
+[functions.global-report]
+verify_jwt = false # P3 B11: public yearly report (web/report); anonymous aggregates with k-anonymity

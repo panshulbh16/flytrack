@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Flight intelligence (P3 contract A2, A5, B1–B4, B7): timeline, predictions, taxi times, aircraft,
+     connections, airport trends, and the switches of the new alerts. -->
+<resources>
+    <!-- Alert switches -->
+    <string name="intel_alert_swap">Aircraft swap</string>
+    <string name="intel_alert_swap_description">When the airline changes the plane before departure</string>
+    <string name="intel_alert_connection">Connection at risk</string>
+    <string name="intel_alert_connection_description">When a delay puts your onward flight at risk</string>
+
+    <!-- A2 timeline -->
+    <string name="intel_timeline_title">Timeline</string>
+    <string name="intel_timeline_scheduled">Scheduled</string>
+    <string name="intel_timeline_checkin_open">Check-in opens</string>
+    <string name="intel_timeline_gate_assigned">Gate assigned</string>
+    <string name="intel_timeline_boarding">Boarding</string>
+    <string name="intel_timeline_gate_closed">Gate closed</string>
+    <string name="intel_timeline_pushback">Pushback</string>
+    <string name="intel_timeline_takeoff">Take-off</string>
+    <string name="intel_timeline_diverted">Diverted</string>
+    <string name="intel_timeline_landing">Landing</string>
+    <string name="intel_timeline_at_gate">At the gate</string>
+    <string name="intel_timeline_belt">Baggage belt</string>
+    <string name="intel_timeline_cancelled">Cancelled</string>
+    <string name="intel_timeline_day_offset">+%1$d</string>
+    <string name="intel_timeline_day_offset_before">−%1$d</string>
+    <string name="intel_timeline_state_done">Done</string>
+    <string name="intel_timeline_state_current">Latest</string>
+    <string name="intel_timeline_state_next">Coming up</string>
+    <string name="intel_timeline_block">Block time %1$s</string>
+    <string name="intel_timeline_pro_hint">Pro adds the gate and the delay at each step.</string>
+
+    <string name="intel_fact_gate">Gate %1$s</string>
+    <string name="intel_fact_terminal">Terminal %1$s</string>
+    <string name="intel_fact_late">%1$s late</string>
+    <string name="intel_fact_early">%1$s early</string>
+    <string name="intel_fact_on_time">On time</string>
+    <string name="intel_fact_taxi_out">Taxi out %1$s</string>
+    <string name="intel_fact_taxi_in">Taxi in %1$s</string>
+    <string name="intel_fact_belt">Belt %1$s</string>
+    <string name="intel_fact_checkin_closes">Closes at %1$s</string>
+    <string name="intel_fact_timetable">%1$s → %2$s</string>
+    <string name="intel_fact_departs">Departs %1$s</string>
+    <string name="intel_fact_arrives">Arrives %1$s</string>
+    <string name="intel_fact_diverted">To %2$s instead of %1$s</string>
+    <string name="intel_fact_diverted_to">To %1$s</string>
+    <string name="intel_fact_diverted_from">Instead of %1$s</string>
+
+    <!-- B1 delay prediction, B2 gate, B3 taxi -->
+    <string name="intel_prediction_title">Delay prediction</string>
+    <string name="intel_prediction_on_time">Likely on time</string>
+    <string name="intel_prediction_late">Likely about %1$s late</string>
+    <string name="intel_prediction_chance_15">%1$d%% chance of a delay of 15 min or more</string>
+    <string name="intel_prediction_chance_60">%1$d%% chance of an hour or more</string>
+    <string name="intel_prediction_why">Why</string>
+    <string name="intel_prediction_effect_plus">+%1$s</string>
+    <string name="intel_prediction_effect_minus">−%1$s</string>
+    <string name="intel_prediction_confidence_low">Low confidence</string>
+    <string name="intel_prediction_confidence_medium">Medium confidence</string>
+    <string name="intel_prediction_confidence_high">High confidence</string>
+    <plurals name="intel_prediction_samples">
+        <item quantity="one">based on %d past flight</item>
+        <item quantity="other">based on %d past flights</item>
+    </plurals>
+    <string name="intel_prediction_confidence_samples">%1$s, %2$s</string>
+    <string name="intel_prediction_note">A prediction from past flights and today\'s conditions, not the airline\'s word.</string>
+    <string name="intel_prediction_teaser_title">Will it be late?</string>
+    <string name="intel_prediction_teaser_body">Pro predicts the delay, explains why, and shows the gate this flight usually uses.</string>
+    <string name="intel_gate_usual">Usually gate %1$s (%2$d of %3$d)</string>
+    <string name="intel_gate_usual_terminal">Usually gate %1$s, terminal %2$s (%3$d of %4$d)</string>
+    <string name="intel_gate_usual_note">Not announced yet. From this flight\'s last 60 days.</string>
+    <string name="intel_taxi_out">Typical taxi out at %1$s: %2$s</string>
+    <string name="intel_taxi_in">Typical taxi in at %1$s: %2$s</string>
+    <string name="intel_taxi_slow">up to %1$s on a slow day</string>
+    <string name="intel_taxi_with_slow">%1$s, %2$s</string>
+
+    <!-- A5 aircraft -->
+    <string name="intel_aircraft_icao">ICAO type</string>
+    <string name="intel_aircraft_age">Age</string>
+    <string name="intel_aircraft_age_value">%1$s years old</string>
+    <string name="intel_aircraft_swaps">Aircraft changes</string>
+    <string name="intel_aircraft_swap">%1$s → %2$s</string>
+    <string name="intel_aircraft_swap_with_model">%1$s (%2$s)</string>
+    <string name="intel_aircraft_swap_at">Changed at %1$s</string>
+    <string name="intel_aircraft_swap_unknown">unknown</string>
+
+    <!-- B4 connections -->
+    <string name="intel_connections_title">Connections</string>
+    <string name="intel_connection_route">%1$s → %2$s at %3$s</string>
+    <string name="intel_connection_layover">%1$s layover, %2$s needed</string>
+    <string name="intel_connection_spare">%1$s to spare</string>
+    <string name="intel_connection_short">%1$s short</string>
+    <string name="intel_connection_no_spare">No time to spare</string>
+    <string name="intel_connection_times">Lands %1$s, departs %2$s</string>
+    <string name="intel_connection_departs">Departs %1$s</string>
+    <string name="intel_connection_terminal">Terminal change %1$s</string>
+    <string name="intel_connection_to">Onward flight %1$s</string>
+    <string name="intel_connection_from">Arriving on %1$s</string>
+    <string name="intel_connection_flight_unknown">your next flight</string>
+    <string name="intel_connection_note">Minimum connection times are estimates. Check with your airline.</string>
+    <string name="intel_risk_ok">Comfortable</string>
+    <string name="intel_risk_tight">Tight</string>
+    <string name="intel_risk_at_risk">At risk</string>
+    <string name="intel_risk_missed">Missed</string>
+    <plurals name="intel_connections_teaser_title">
+        <item quantity="one">You have a connection</item>
+        <item quantity="other">You have %d connections</item>
+    </plurals>
+    <string name="intel_connections_teaser_body">Pro checks each layover against the airport\'s minimum connection time and warns you when it is at risk.</string>
+
+    <!-- B7 airport trends -->
+    <string name="intel_trends_show">Show delay trends</string>
+    <string name="intel_trends_hide">Hide delay trends</string>
+    <string name="intel_trends_title">Departure delays by hour, last %1$d days</string>
+    <string name="intel_trends_by_day">Average delay by day</string>
+    <string name="intel_trends_worst">Worst hour: %1$s, average %2$s late</string>
+    <string name="intel_trends_best">Best hour: %1$s, average %2$s late</string>
+    <string name="intel_trends_best_on_time">Best hour: %1$s, on time on average</string>
+    <plurals name="intel_trends_cancelled">
+        <item quantity="one">%d cancellation in this period</item>
+        <item quantity="other">%d cancellations in this period</item>
+    </plurals>
+    <string name="intel_trends_empty">Not enough flights yet to show trends.</string>
+    <string name="intel_trends_offline">Delay trends need a connection.</string>
+    <string name="intel_trends_failed">Delay trends could not be loaded.</string>
+    <string name="intel_trends_retry">Try again</string>
+    <string name="intel_trends_teaser_title">Delay trends</string>
+    <string name="intel_trends_teaser_body">Pro shows when this airport runs late, hour by hour.</string>
+    <string name="intel_trends_cd_hours">Bar chart of average departure delay for each hour of the day.</string>
+    <string name="intel_trends_cd_days">Bar chart of average departure delay for each of the last %1$d days.</string>
+    <string name="intel_trends_local_time">Hours are local time at %1$s.</string>
+</resources>

@@ -2,3 +2,4 @@
 
 "CFBundleDisplayName" = "HeyGate";
 "NSCameraUsageDescription" = "फ़्लाइट जोड़ने के लिए HeyGate आपके बोर्डिंग पास का बारकोड पढ़ता है।";
+"NSCalendarsFullAccessUsageDescription" = "HeyGate आपके कैलेंडर में फ़्लाइट्स ढूँढता है, ताकि आप उन्हें एक टैप में जोड़ सकें। कुछ भी अपलोड नहीं होता और कुछ नहीं बदलता।";

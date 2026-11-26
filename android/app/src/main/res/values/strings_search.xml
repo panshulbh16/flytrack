@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- P3 search additions to add-flight (route search B5, past flights B6, the A1 cap). Every name starts with search_. -->
+<resources>
+    <!-- Tabs -->
+    <string name="search_tab_flight_number">Flight number</string>
+    <string name="search_tab_route">By route</string>
+
+    <!-- Route search (B5) -->
+    <string name="search_route_intro">Don\'t know the flight number? Pick the airports and the day, and we\'ll list that day\'s departures.</string>
+    <string name="search_route_from">From</string>
+    <string name="search_route_to">To</string>
+    <string name="search_route_choose">Choose an airport</string>
+    <string name="search_route_any_destination">Any destination</string>
+    <string name="search_route_swap">Swap airports</string>
+    <string name="search_route_clear_to">Clear destination</string>
+    <!-- %1$d is how many days ahead a route can be searched -->
+    <string name="search_route_date_hint">Local date at the departure airport. Route search covers the next %1$d days.</string>
+    <string name="search_route_airline">Airline code (optional)</string>
+    <string name="search_route_airline_hint">Two characters, like 6E for IndiGo or AI for Air India.</string>
+    <string name="search_route_search">Search departures</string>
+    <string name="search_route_cost_note">A route search counts as two flight searches towards your daily limit.</string>
+    <string name="search_route_error_from">Choose the airport you\'re flying from.</string>
+    <string name="search_route_error_same">Choose two different airports.</string>
+    <string name="search_route_error_airline">An airline code has two characters, like 6E.</string>
+    <!-- Caption of a route search without a destination. %1$s is an airport code -->
+    <string name="search_route_label_from">Departures from %1$s</string>
+    <!-- %1$s is the route caption, %2$s the airline code -->
+    <string name="search_route_label_airline">%1$s · %2$s</string>
+    <!-- %1$d is the number of flights, %2$s is search_route_headline_key in italics -->
+    <plurals name="search_route_headline">
+        <item quantity="one">%1$d flight that day. Pick %2$s.</item>
+        <item quantity="other">%1$d flights that day. Pick %2$s.</item>
+    </plurals>
+    <string name="search_route_headline_key">yours</string>
+    <string name="search_route_not_found_message">No departures matched. Check the date (local time at the departure airport), or leave out the destination or the airline to see more flights.</string>
+
+    <!-- Airport picker -->
+    <!-- %1$s airport code, %2$s city -->
+    <string name="search_airport_value">%1$s · %2$s</string>
+    <string name="search_airport_query">Search airports</string>
+    <string name="search_airport_query_hint">City, airport or code, like Delhi or BOM</string>
+    <string name="search_airport_none">No airport matches. Try the city name or the three-letter code.</string>
+    <!-- %1$s city, %2$s country -->
+    <string name="search_airport_city_country">%1$s, %2$s</string>
+
+    <!-- Past flights (B6) -->
+    <string name="search_past_title">Add a past flight (for Passport)</string>
+    <string name="search_past_message">Search flights from the last 12 months. They go straight into your Passport, without alerts.</string>
+    <string name="search_past_add">Add to Passport</string>
+    <!-- Accessibility label. %1$s flight number, %2$s and %3$s cities -->
+    <string name="search_past_add_description">Add %1$s from %2$s to %3$s to your Passport</string>
+    <string name="search_past_not_found_message">Check the date: it is the day the flight took off, in local time at the departure airport. Then check the airline code, for example 6E for IndiGo and AI for Air India.</string>
+
+    <!-- Calendar suggestions opening add-flight (A3) -->
+    <string name="search_prefill_calendar">Filled in from your calendar. Check the details before you track.</string>
+    <!-- %1$s is the event\'s date, %2$s the last date route search covers -->
+    <string name="search_prefill_route_too_far">Your calendar says %1$s, but route search only reaches %2$s. Come back closer to the day, or search by flight number.</string>
+
+    <!-- The anti-abuse cap (A1). %1$d is the number of active flights allowed -->
+    <plurals name="search_limit_message">
+        <item quantity="one">You\'re following %1$d flight right now, the most one account can follow at once. Archive or remove a flight you no longer need, then track this one.</item>
+        <item quantity="other">You\'re following %1$d flights right now, the most one account can follow at once. Archive or remove flights you no longer need, then track this one.</item>
+    </plurals>
+</resources>

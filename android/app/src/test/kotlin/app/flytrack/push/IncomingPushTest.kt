@@ -40,7 +40,7 @@ class IncomingPushTest {
         val critical = setOf(
             "GATE_CHANGE", "TERMINAL_CHANGE", "BOARDING", "BELT_ASSIGNED", "BELT_CHANGE",
             "DELAY", "SCHEDULE_CHANGE", "CANCELLED", "DIVERTED", "REINSTATED", "INBOUND_LATE",
-            "CHECKIN_CLOSING", "FOG_ALERT", "DIVERTED_DEST",
+            "CHECKIN_CLOSING", "FOG_ALERT", "DIVERTED_DEST", "AIRCRAFT_SWAP", "CONNECTION_AT_RISK",
         )
         val tags = mapOf(
             "TERMINAL_CHANGE" to "terminal",
@@ -62,6 +62,11 @@ class IncomingPushTest {
             "CHECKIN_CLOSING" to "checkin_closing",
             "FOG_ALERT" to "fog_alert",
             "DIVERTED_DEST" to "diverted", // replaces the DIVERTED alert in the shade
+            "GATE_CLOSED" to "boarding", // replaces "Boarding now", never a gate change
+            "TAKEOFF" to "departed", // the runway time refines "has departed"
+            "AT_GATE" to "at_gate",
+            "AIRCRAFT_SWAP" to "aircraft_swap",
+            "CONNECTION_AT_RISK" to "connection",
         )
         assertEquals(AlertType.entries.map { it.wire }.toSet(), tags.keys)
         for (type in AlertType.entries) {

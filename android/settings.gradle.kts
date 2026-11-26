@@ -14,3 +14,4 @@ dependencyResolutionManagement {
 }
 rootProject.name = "flytrack"
 include(":app")
+include(":wear")

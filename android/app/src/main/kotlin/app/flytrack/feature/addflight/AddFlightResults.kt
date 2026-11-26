@@ -60,17 +60,18 @@ internal fun SearchOutcome(
     onOpenSettings: () -> Unit,
     onShowMyFlights: () -> Unit,
     modifier: Modifier = Modifier,
+    onImportCalendar: (() -> Unit)? = null,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         when (val search = state.search) {
             SearchUiState.Idle -> when {
                 !state.isBackendConfigured -> BackendNotConfiguredState()
-                !state.isFromTicket -> ImportPrompt(onImportTicket)
+                !state.isFromTicket && state.mode == AddFlightMode.FLIGHT_NUMBER -> ImportPrompt(onImportTicket, onImportCalendar)
             }
 
             is SearchUiState.Searching -> {
                 QueryCaption(search.query, state)
-                LoadingState(label = stringResource(R.string.addflight_searching, search.query.flight))
+                LoadingState(label = stringResource(R.string.addflight_searching, searchLabel(search.query)))
             }
 
             is SearchUiState.Results -> Results(search, state, onRetry, onTrack, onOpenTracked, onShowMyFlights)
@@ -80,10 +81,14 @@ internal fun SearchOutcome(
                 ErrorState(
                     title = stringResource(
                         R.string.addflight_not_found_title,
-                        search.query.flight,
+                        searchLabel(search.query),
                         formDateText(search.query.date, state.today),
                     ),
-                    message = stringResource(R.string.addflight_not_found_message),
+                    message = when {
+                        search.query.route != null -> stringResource(R.string.search_route_not_found_message)
+                        search.query.past -> stringResource(R.string.search_past_not_found_message)
+                        else -> stringResource(R.string.addflight_not_found_message)
+                    },
                     icon = painterResource(R.drawable.ic_search),
                     retryLabel = stringResource(R.string.addflight_not_found_change_date),
                     onRetry = onPickDate,
@@ -125,13 +130,13 @@ internal fun SearchOutcome(
 @Composable
 private fun QueryCaption(query: SearchQuery, state: AddFlightUiState) {
     SectionCaption(
-        text = stringResource(R.string.addflight_results_caption, query.flight, formDateText(query.date, state.today)),
+        text = stringResource(R.string.addflight_results_caption, searchLabel(query), formDateText(query.date, state.today)),
         modifier = Modifier.padding(top = 20.dp),
     )
 }
 
 @Composable
-private fun ImportPrompt(onImportTicket: () -> Unit) {
+private fun ImportPrompt(onImportTicket: () -> Unit, onImportCalendar: (() -> Unit)?) {
     Column(modifier = Modifier.padding(top = 20.dp)) {
         Text(
             text = stringResource(R.string.addflight_import_hint),
@@ -145,6 +150,14 @@ private fun ImportPrompt(onImportTicket: () -> Unit) {
             icon = painterResource(R.drawable.ic_ticket),
         )
         ScanBoardingPassButton()
+        if (onImportCalendar != null) {
+            Spacer(Modifier.height(8.dp))
+            SecondaryButton(
+                text = stringResource(R.string.calendarimport_action_open),
+                onClick = onImportCalendar,
+                icon = painterResource(R.drawable.ic_calendar),
+            )
+        }
     }
 }
 
@@ -158,9 +171,13 @@ private fun Results(
     onShowMyFlights: () -> Unit,
 ) {
     val legs = results.legs
+    val past = results.query.past
     QueryCaption(results.query, state)
     Spacer(Modifier.height(6.dp))
-    val headline = if (legs.size == 1) {
+    val headline = if (results.query.route != null) {
+        val key = stringResource(R.string.search_route_headline_key)
+        emphasised(pluralStringResource(R.plurals.search_route_headline, legs.size, legs.size, key), key)
+    } else if (legs.size == 1) {
         val key = stringResource(R.string.addflight_results_headline_single_key)
         emphasised(stringResource(R.string.addflight_results_headline_single, key), key)
     } else {
@@ -173,7 +190,7 @@ private fun Results(
         style = MaterialTheme.typography.headlineSmall,
         color = MaterialTheme.colorScheme.onBackground,
     )
-    if (legs.size > 1) {
+    if (legs.size > 1 && results.query.route == null) {
         Spacer(Modifier.height(4.dp))
         Text(
             text = stringResource(R.string.addflight_results_legs_hint),
@@ -194,6 +211,7 @@ private fun Results(
             onOpen = { onOpenTracked(leg.id) },
             onSearchAgain = onSearchAgain,
             onShowMyFlights = onShowMyFlights,
+            past = past,
         )
     }
     HairlineDivider()
@@ -216,6 +234,7 @@ private fun LegRow(
     onOpen: () -> Unit,
     onSearchAgain: () -> Unit,
     onShowMyFlights: () -> Unit,
+    past: Boolean = false,
 ) {
     val depCity = flight.depAirport?.displayCity ?: flight.depIata
     val arrCity = flight.arrAirport?.displayCity ?: flight.arrIata
@@ -299,9 +318,13 @@ private fun LegRow(
                 )
             } else {
                 Spacer(Modifier.weight(1f))
-                val description = stringResource(R.string.addflight_leg_track_description, flight.designator, depCity, arrCity)
+                val description = if (past) {
+                    stringResource(R.string.search_past_add_description, flight.designator, depCity, arrCity)
+                } else {
+                    stringResource(R.string.addflight_leg_track_description, flight.designator, depCity, arrCity)
+                }
                 PrimaryButton(
-                    text = stringResource(R.string.addflight_leg_track),
+                    text = stringResource(if (past) R.string.search_past_add else R.string.addflight_leg_track),
                     onClick = onTrack,
                     modifier = Modifier.semantics { contentDescription = description },
                     enabled = enabled,
@@ -398,13 +421,10 @@ private fun TrackProblemNotice(problem: TrackProblem, onSearchAgain: () -> Unit,
     val colors = MaterialTheme.colorScheme
     when (problem) {
         // Not an error of the app or the user: the accent colour, with a way forward.
+        // P3 A1: tracking is unlimited; this is only the anti-abuse cap, so it never sells Pro.
         is TrackProblem.LimitReached -> NoticeSurface(
             title = stringResource(R.string.addflight_limit_title),
-            text = if (problem.proLimit != null) {
-                pluralStringResource(R.plurals.addflight_limit_message_free, problem.limit, problem.limit, problem.proLimit)
-            } else {
-                pluralStringResource(R.plurals.addflight_limit_message_pro, problem.limit, problem.limit)
-            },
+            text = pluralStringResource(R.plurals.search_limit_message, problem.limit, problem.limit),
             icon = painterResource(R.drawable.ic_archive),
             container = colors.tertiaryContainer,
             content = colors.onTertiaryContainer,

@@ -119,7 +119,8 @@ struct PassportScreen: View {
                 shareSection(card)
             }
         }
-        if passport.proLimited {
+        // P3 B12: crew mode hides the Pro upsell.
+        if passport.proLimited && !shell.p3.crewMode {
             VStack(alignment: .leading, spacing: 6) {
                 Text(String(localized: "Your full history is in Pro"))
                     .font(FlyFont.serifItalic(20, relativeTo: .title3))
@@ -163,6 +164,10 @@ struct PassportScreen: View {
     @ViewBuilder
     private func highlights(_ passport: Passport) -> some View {
         section(String(localized: "Highlights")) {
+            // P3 B12: crew count block hours (off-block to on-block).
+            if shell.p3.crewMode && passport.blockMinutes > 0 {
+                highlightRow(String(localized: "Block hours"), String(localized: "\(blockHours(minutes: passport.blockMinutes)) h"))
+            }
             if let longest = passport.longest {
                 highlightRow(String(localized: "Longest flight"),
                              "\(longest.carrier) \(longest.number) · \(longest.dep) → \(longest.arr) · \(longest.distanceKm.formatted()) km")

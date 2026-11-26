@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- P3 B13 family sharing (app.flytrack.feature.family). Every name starts with family_. -->
+<resources>
+    <string name="family_title">Family sharing</string>
+    <!-- %1$s is the family owner\'s name -->
+    <string name="family_pro_via">Pro via %1$s\'s family</string>
+    <string name="family_pro_via_unnamed">Pro via your family</string>
+    <string name="family_settings_row">Family sharing</string>
+    <string name="family_settings_row_message">Share Pro with up to 5 people</string>
+    <string name="family_load_failed">We couldn\'t load your family</string>
+    <string name="family_privacy">Family members share Pro only. Nobody in the family sees anyone else\'s flights unless you are also friends.</string>
+
+    <!-- Not in a family -->
+    <string name="family_start_title">Share Pro with your family</string>
+    <!-- %1$d is the most members besides the owner -->
+    <plurals name="family_start_message">
+        <item quantity="one">Invite %1$d person to get every Pro feature on your plan, at no extra cost.</item>
+        <item quantity="other">Invite up to %1$d people to get every Pro feature on your plan, at no extra cost.</item>
+    </plurals>
+    <string name="family_start_yearly_note">Family sharing comes with yearly and lifetime Pro.</string>
+    <string name="family_start_needs_pro">Family sharing comes with yearly or lifetime Pro. Someone with Pro can invite you, or you can start a family once you have it.</string>
+    <string name="family_join_title">Have a family code?</string>
+    <string name="family_join_message">Enter the code someone in your family sent you to get Pro through their plan.</string>
+    <string name="family_code_label">Family code</string>
+    <string name="family_code_hint">8 letters and numbers, like ABCD-EF23</string>
+    <string name="family_code_invalid">That isn\'t a family code. It has 8 letters and numbers.</string>
+    <string name="family_code_copied">Family code copied</string>
+    <!-- %1$s is a date -->
+    <string name="family_code_expires">Works until %1$s, for one person.</string>
+    <string name="family_action_join">Join family</string>
+
+    <!-- In a family -->
+    <string name="family_owner_headline">You share Pro with your family</string>
+    <string name="family_owner_inactive">Your Pro has ended, so your family doesn\'t get Pro right now.</string>
+    <string name="family_member_own_pro">You\'re in this family and have Pro of your own</string>
+    <!-- %1$s is the owner\'s name -->
+    <string name="family_member_inactive">%1$s\'s Pro has ended, so the family doesn\'t get Pro right now</string>
+    <!-- %1$d members, %2$d the most allowed -->
+    <plurals name="family_seats">
+        <item quantity="one">%1$d of %2$d places taken</item>
+        <item quantity="other">%1$d of %2$d places taken</item>
+    </plurals>
+    <string name="family_full">All places are taken. Remove someone to invite another person.</string>
+    <string name="family_section_members">Members</string>
+    <string name="family_role_owner">Owner, pays for Pro</string>
+    <string name="family_owner_you">You</string>
+    <string name="family_owner_fallback">Family owner</string>
+    <string name="family_member_fallback">Family member</string>
+    <!-- %1$s is a date -->
+    <string name="family_member_since">Joined %1$s</string>
+    <string name="family_members_empty">Nobody has joined yet.</string>
+    <string name="family_action_invite">Invite on WhatsApp</string>
+    <string name="family_action_copy">Copy code</string>
+    <!-- The invite message. {code} is replaced by the code; keep it exactly. -->
+    <string name="family_invite_text">Join my HeyGate family and get Pro flight alerts free. Open HeyGate → Settings → Family sharing and enter the code {code}</string>
+    <string name="family_invite_subject">Join my HeyGate family</string>
+    <string name="family_invite_chooser">Send family invite</string>
+    <string name="family_action_leave">Leave family</string>
+    <string name="family_action_end">End family sharing</string>
+    <string name="family_action_remove">Remove</string>
+    <string name="family_leave_title">Leave the family?</string>
+    <string name="family_leave_message">You\'ll lose the Pro you get through this family. Your flights stay as they are.</string>
+    <string name="family_end_title">End family sharing?</string>
+    <string name="family_end_message">Everyone in your family loses the Pro they get through you. You keep your own Pro.</string>
+    <!-- %1$s is the member\'s name -->
+    <string name="family_remove_title">Remove %1$s?</string>
+    <string name="family_remove_message">%1$s will lose the Pro they get through your family.</string>
+
+    <!-- Results -->
+    <string name="family_message_left">You left the family.</string>
+    <string name="family_message_ended">Family sharing has ended.</string>
+    <string name="family_message_removed">Removed from your family.</string>
+    <string name="family_message_offline">You\'re offline. Try again when you\'re connected.</string>
+    <string name="family_message_failed">That didn\'t work. Please try again.</string>
+    <string name="family_error_requires_yearly">Family sharing needs yearly or lifetime Pro.</string>
+    <string name="family_error_already">You\'re already in a family. Leave it first, or remove its members if you own it.</string>
+    <string name="family_error_invalid_code">That code doesn\'t work. It may have been used or have expired: ask for a new one.</string>
+    <string name="family_error_own_code">That\'s your own family code. Send it to someone in your family.</string>
+    <string name="family_error_full">That family is full.</string>
+    <string name="family_error_inactive">That family\'s Pro has ended, so it can\'t take new members.</string>
+    <string name="family_error_not_member">That person isn\'t in your family any more.</string>
+    <string name="family_error_not_owner">Only the family\'s owner can do that.</string>
+</resources>

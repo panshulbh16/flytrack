@@ -8,6 +8,8 @@ let package = Package(
     platforms: [
         .iOS("26.0"),
         .macOS("14.0"),
+        // P3 B9: the Apple Watch app and its complication use the same models.
+        .watchOS("26.0"),
     ],
     products: [
         .library(name: "FlyTrackCore", targets: ["FlyTrackCore"]),

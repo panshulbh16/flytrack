@@ -8,6 +8,9 @@ import app.flytrack.data.repo.ProfileRepository
 import app.flytrack.data.repo.SessionState
 import app.flytrack.data.repo.toActionResult
 import app.flytrack.di.IoDispatcher
+import app.flytrack.feature.social.FamilyGrant
+import app.flytrack.feature.social.NoSocialStore
+import app.flytrack.feature.social.SocialStore
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -32,7 +35,13 @@ data class SyncEntitlementResponse(
     val plan: String = "free",
     @SerialName("pro_until") val proUntil: String? = null,
     @SerialName("trial_flight_id") val trialFlightId: String? = null,
+    /** P3 B13: set when the user is Pro only through a family. */
+    @SerialName("via_family") val viaFamily: ViaFamilyDto? = null,
 )
+
+/** `via_family` of sync-entitlement: whose family the user's Pro comes from. */
+@Serializable
+data class ViaFamilyDto(@SerialName("owner_name") val ownerName: String? = null)
 
 /**
  * Pro for the whole app: the server profile (`plan`, `pro_until`, `trial_flight_id`) combined with
@@ -48,6 +57,7 @@ class ProRepository @Inject constructor(
     private val json: Json,
     private val clock: Clock,
     @IoDispatcher private val io: CoroutineDispatcher,
+    private val social: SocialStore = NoSocialStore,
 ) {
     val isBillingAvailable: Boolean get() = billing.isAvailable
 
@@ -59,9 +69,10 @@ class ProRepository @Inject constructor(
         profiles.observeProfile(),
         billing.storeEntitlement,
         auth.session,
+        social.familyGrant,
         ticker(tick),
-    ) { profile, store, session, _ ->
-        EntitlementRules.resolve(profile, store, (session as? SessionState.SignedIn)?.userId, clock.now())
+    ) { profile, store, session, family, _ ->
+        EntitlementRules.resolve(profile, store, (session as? SessionState.SignedIn)?.userId, clock.now(), family)
     }.distinctUntilChanged()
 
     suspend fun loadOffer(): OfferResult = billing.loadOffer()
@@ -90,7 +101,11 @@ class ProRepository @Inject constructor(
         val signedIn = auth.ensureSignedIn().toActionResult()
         if (signedIn != ActionResult.Success) return@withContext signedIn
         val synced = try {
-            json.decodeFromString(SyncEntitlementResponse.serializer(), api.invokeFunction(BillingContract.FUNCTION_SYNC_ENTITLEMENT, "{}"))
+            val response = json.decodeFromString(SyncEntitlementResponse.serializer(), api.invokeFunction(BillingContract.FUNCTION_SYNC_ENTITLEMENT, "{}"))
+            // P3 B13: the answer also says whether the Pro comes from a family; cache it for the whole app.
+            auth.currentUserId?.let { userId ->
+                social.setFamilyGrant(response.viaFamily?.let { FamilyGrant(userId, it.ownerName?.trim()?.ifEmpty { null }) })
+            }
             ActionResult.Success
         } catch (e: BackendException) {
             e.toActionResult()

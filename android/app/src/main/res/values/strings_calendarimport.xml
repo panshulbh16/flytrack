@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- P3 A3 calendar import (app.flytrack.feature.calendarimport). Every name starts with calendarimport_. -->
+<resources>
+    <string name="calendarimport_title">Import from calendar</string>
+    <string name="calendarimport_action_open">Import from calendar</string>
+    <string name="calendarimport_intro">We\'ll look through the next 12 months of your phone\'s calendar for flights, like booking confirmations or reminders you added, and list them for you to add.</string>
+    <string name="calendarimport_privacy">Your calendar is read on this phone only and nothing from it is uploaded. Android will ask you to allow calendar access.</string>
+    <string name="calendarimport_scan">Scan my calendar</string>
+    <string name="calendarimport_scan_again">Scan again</string>
+    <string name="calendarimport_scanning">Looking for flights in your calendar…</string>
+    <string name="calendarimport_pro_only">Calendar import is part of Pro.</string>
+    <string name="calendarimport_teaser_title">Find flights in your calendar</string>
+    <string name="calendarimport_teaser_body">Pro reads your phone\'s calendar for upcoming flights and adds them in a tap.</string>
+    <string name="calendarimport_denied_title">Calendar access is off</string>
+    <string name="calendarimport_denied_message">To find flights, HeyGate needs to read your calendar. It only reads; it never changes or uploads your events.</string>
+    <string name="calendarimport_try_again">Allow calendar access</string>
+    <string name="calendarimport_open_settings">Open app settings</string>
+    <string name="calendarimport_unavailable">We couldn\'t read your calendar</string>
+    <string name="calendarimport_empty_title">No flights found</string>
+    <!-- %1$d is the number of calendar events read -->
+    <plurals name="calendarimport_empty_message">
+        <item quantity="one">We read %1$d event in the next 12 months and none looked like a flight.</item>
+        <item quantity="other">We read %1$d events in the next 12 months and none looked like a flight.</item>
+    </plurals>
+    <!-- %1$d is the number of suggestions -->
+    <plurals name="calendarimport_found">
+        <item quantity="one">%1$d flight found</item>
+        <item quantity="other">%1$d flights found</item>
+    </plurals>
+    <string name="calendarimport_results_hint">Tap one to search it and check the details before you track it.</string>
+    <string name="calendarimport_truncated">Your calendar is very full, so only the first 5,000 events were read.</string>
+    <!-- %1$s is a local time like 06:00 -->
+    <string name="calendarimport_departs_at">departs %1$s</string>
+    <!-- %1$d leg number, %2$d legs in the event -->
+    <string name="calendarimport_leg_of">Leg %1$d of %2$d from one calendar event</string>
+    <string name="calendarimport_tracked">You\'re tracking this</string>
+    <string name="calendarimport_needs_details">Not enough details to search. Add it by flight number instead.</string>
+    <string name="calendarimport_action_add">Add</string>
+    <string name="calendarimport_action_find">Find flight</string>
+    <!-- %1$s and %2$s airport codes, %3$s and %4$s cities -->
+    <string name="calendarimport_title_route">%1$s → %2$s · %3$s to %4$s</string>
+    <!-- %1$s is a city -->
+    <string name="calendarimport_title_to">Flight to %1$s</string>
+    <string name="calendarimport_title_from">Flight from %1$s</string>
+    <string name="calendarimport_title_unknown">Flight</string>
+    <string name="calendarimport_issue_conflict">The event names more than one route: check which one you\'re on.</string>
+    <string name="calendarimport_issue_same_airport">The event names the same airport twice: check the route.</string>
+    <string name="calendarimport_issue_no_number">No flight number in the event: we\'ll list that day\'s departures for you to pick from.</string>
+    <string name="calendarimport_issue_untimed">The event has no exact time: check the date.</string>
+    <string name="calendarimport_issue_stated_times">The event mentions times for this leg: check them when you add it.</string>
+</resources>

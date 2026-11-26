@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- P3 B9 Wear OS: same words as the phone's live notification and widget (strings_live.xml). -->
+    <string name="app_name">FlyTrack</string>
+    <string name="wear_tile_label">Next flight</string>
+    <string name="wear_tile_description">Your next flight: status, departure time and gate</string>
+    <string name="wear_complication_label">Next flight</string>
+
+    <string name="wear_status_on_time">On time</string>
+    <string name="wear_status_delayed">Delayed</string>
+    <string name="wear_status_delayed_by">Delayed %d min</string>
+    <string name="wear_status_check_in">Check-in open</string>
+    <string name="wear_status_boarding">Boarding</string>
+    <string name="wear_status_gate_closed">Gate closed</string>
+    <string name="wear_status_departed">Departed</string>
+    <string name="wear_status_in_air">In the air</string>
+    <string name="wear_status_landed">Landed</string>
+    <string name="wear_status_cancelled">Cancelled</string>
+    <string name="wear_status_diverted">Diverted</string>
+
+    <string name="wear_route">%1$s → %2$s</string>
+    <string name="wear_gate">Gate %s</string>
+    <string name="wear_terminal">T%s</string>
+    <string name="wear_belt">Belt %s</string>
+    <string name="wear_separator" translatable="false">" · "</string>
+    <!-- %s: departure time at the departure airport, "18:25". -->
+    <string name="wear_departs">Departs %s</string>
+
+    <string name="wear_empty_title">No upcoming flight</string>
+    <string name="wear_empty_body">Add a flight in FlyTrack on your phone.</string>
+    <string name="wear_empty_short" translatable="false">—</string>
+    <string name="wear_open">Open</string>
+</resources>

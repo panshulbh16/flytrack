@@ -31,11 +31,14 @@ data class UserProfile(
     /** Same rule as the server's `is_pro_for_flight()`: Pro, or this is the free trial flight. */
     fun isProForFlight(now: Instant, flightId: String): Boolean = isPro(now) || trialFlightId == flightId
 
-    /** Active tracked flights allowed by `enforce_tracking_limit()`. */
+    /**
+     * Active tracked flights allowed by `enforce_tracking_limit()`. Since P3 (A1) tracking is unlimited as a
+     * product; this is only the anti-abuse cap (`tracking_cap`), and the apps never sell against it.
+     */
     fun trackingLimit(now: Instant): Int = if (isPro(now)) PRO_TRACKING_LIMIT else FREE_TRACKING_LIMIT
 
     companion object {
-        const val FREE_TRACKING_LIMIT = 10
-        const val PRO_TRACKING_LIMIT = 50
+        const val FREE_TRACKING_LIMIT = 100
+        const val PRO_TRACKING_LIMIT = 300
     }
 }

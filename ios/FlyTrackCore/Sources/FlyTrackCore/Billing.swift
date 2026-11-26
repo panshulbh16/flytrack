@@ -59,6 +59,28 @@ public enum ProSource: String, Sendable, Equatable {
     case subscription
     /// A trip pass bought less than seven days ago.
     case tripPass
+    /// P3 B13: a member of a family whose owner has Pro of their own ("Pro via {owner}'s family"). Never passed on.
+    case family
+}
+
+/// P3 B13: the signed-in user is Pro through a family (`my_family().pro_via_family`, or sync-entitlement's
+/// `via_family`). The server decides family Pro itself (`is_pro`); this only decides what the app shows.
+public struct FamilyGrant: Hashable, Sendable {
+    /// The user the grant was read for; a grant for another user is ignored.
+    public var userId: String
+    /// The owner's display name, nil when they set none.
+    public var ownerName: String?
+
+    public init(userId: String, ownerName: String?) {
+        self.userId = userId
+        self.ownerName = ownerName
+    }
+}
+
+/// The cached family grant of the signed-in user (the app keeps it per user).
+@MainActor
+public protocol FamilyGrantProviding: AnyObject {
+    func familyGrant() -> FamilyGrant?
 }
 
 /// Pro on one flight. `trial` shows the "Pro free for this flight" badge.
@@ -78,14 +100,20 @@ public struct ProState: Hashable, Sendable {
     public var confirmedByServer: Bool
     /// `profiles.trial_flight_id`.
     public var trialFlightId: String?
+    /// P3 B13: the family owner's name while `source` is `.family` (nil when they set none).
+    public var familyOwnerName: String?
 
-    public init(isPro: Bool, proUntil: Date?, source: ProSource, confirmedByServer: Bool, trialFlightId: String?) {
+    public init(isPro: Bool, proUntil: Date?, source: ProSource, confirmedByServer: Bool, trialFlightId: String?, familyOwnerName: String? = nil) {
         self.isPro = isPro
         self.proUntil = proUntil
         self.source = source
         self.confirmedByServer = confirmedByServer
         self.trialFlightId = trialFlightId
+        self.familyOwnerName = familyOwnerName
     }
+
+    /// "Pro via {owner}'s family" applies.
+    public var isViaFamily: Bool { isPro && source == .family }
 
     public static let free = ProState(isPro: false, proUntil: nil, source: .none, confirmedByServer: true, trialFlightId: nil)
 
@@ -100,7 +128,8 @@ public struct ProState: Hashable, Sendable {
 public enum EntitlementRules {
     /// Combines the server profile with the store's optimistic view. A store snapshot for another RevenueCat user
     /// (between a sign-in switch and `logIn` finishing) is ignored, so one account's purchase never shows on another.
-    public static func resolve(profile: UserProfile?, store: StoreEntitlement?, currentUserId: String?, now: Date) -> ProState {
+    /// P3 B13: `family` (the user's cached family grant) only fills the gap when the user has no Pro of their own.
+    public static func resolve(profile: UserProfile?, store: StoreEntitlement?, currentUserId: String?, now: Date, family: FamilyGrant? = nil) -> ProState {
         let ownStore = store.flatMap { snapshot in currentUserId != nil && snapshot.appUserId == currentUserId ? snapshot : nil }
         var grants: [(source: ProSource, until: Date?)] = []
         if let profile, profile.isPro(now: now) { grants.append((source: .server, until: profile.proUntil)) }
@@ -110,6 +139,12 @@ public enum EntitlementRules {
         }
         let trial = profile?.trialFlightId
         guard var best = grants.first else {
+            if let family, let currentUserId, family.userId == currentUserId {
+                return ProState(
+                    isPro: true, proUntil: nil, source: .family, confirmedByServer: true, trialFlightId: trial,
+                    familyOwnerName: family.ownerName
+                )
+            }
             var state = ProState.free
             state.trialFlightId = trial
             return state
@@ -277,13 +312,18 @@ public final class ProService: ProStateProviding {
     private let auth: AuthRepository
     private let sync: EntitlementSyncing
     private let clock: FlyClock
+    private let family: FamilyGrantProviding?
 
-    public init(billing: BillingGateway, profiles: ProfileRepository, auth: AuthRepository, sync: EntitlementSyncing, clock: FlyClock) {
+    public init(
+        billing: BillingGateway, profiles: ProfileRepository, auth: AuthRepository, sync: EntitlementSyncing, clock: FlyClock,
+        family: FamilyGrantProviding? = nil
+    ) {
         self.billing = billing
         self.profiles = profiles
         self.auth = auth
         self.sync = sync
         self.clock = clock
+        self.family = family
     }
 
     public var isBillingAvailable: Bool { billing.isAvailable }
@@ -293,7 +333,7 @@ public final class ProService: ProStateProviding {
         if case .signedIn(let id, _, _) = await auth.session() { userId = id } else { userId = nil }
         let profile = await profiles.profile()
         let store = await billing.storeEntitlement()
-        return EntitlementRules.resolve(profile: profile, store: store, currentUserId: userId, now: clock.now())
+        return EntitlementRules.resolve(profile: profile, store: store, currentUserId: userId, now: clock.now(), family: family?.familyGrant())
     }
 
     /// Keeps the RevenueCat app user equal to the signed-in Supabase user (anonymous users included).

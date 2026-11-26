@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hindi translation of values/strings_calendarimport.xml. -->
+<resources>
+    <string name="calendarimport_title">कैलेंडर से इंपोर्ट करें</string>
+    <string name="calendarimport_action_open">कैलेंडर से इंपोर्ट करें</string>
+    <string name="calendarimport_intro">हम आपके फ़ोन के कैलेंडर में अगले 12 महीनों की फ़्लाइट्स ढूँढेंगे, जैसे बुकिंग कन्फ़र्मेशन या आपके जोड़े हुए रिमाइंडर, और उन्हें जोड़ने के लिए आपको दिखाएँगे।</string>
+    <string name="calendarimport_privacy">आपका कैलेंडर सिर्फ़ इसी फ़ोन पर पढ़ा जाता है और उसकी कोई भी जानकारी अपलोड नहीं होती। Android आपसे कैलेंडर की अनुमति माँगेगा।</string>
+    <string name="calendarimport_scan">मेरा कैलेंडर स्कैन करें</string>
+    <string name="calendarimport_scan_again">फिर से स्कैन करें</string>
+    <string name="calendarimport_scanning">आपके कैलेंडर में फ़्लाइट्स ढूँढ रहे हैं…</string>
+    <string name="calendarimport_pro_only">कैलेंडर से इंपोर्ट Pro का हिस्सा है।</string>
+    <string name="calendarimport_teaser_title">अपने कैलेंडर में फ़्लाइट्स ढूँढें</string>
+    <string name="calendarimport_teaser_body">Pro आपके फ़ोन के कैलेंडर से आने वाली फ़्लाइट्स पढ़ता है और एक टैप में उन्हें जोड़ देता है।</string>
+    <string name="calendarimport_denied_title">कैलेंडर की अनुमति बंद है</string>
+    <string name="calendarimport_denied_message">फ़्लाइट्स ढूँढने के लिए HeyGate को आपका कैलेंडर पढ़ना होगा। यह सिर्फ़ पढ़ता है; आपके इवेंट कभी बदलता या अपलोड नहीं करता।</string>
+    <string name="calendarimport_try_again">कैलेंडर की अनुमति दें</string>
+    <string name="calendarimport_open_settings">ऐप सेटिंग्स खोलें</string>
+    <string name="calendarimport_unavailable">हम आपका कैलेंडर नहीं पढ़ पाए</string>
+    <string name="calendarimport_empty_title">कोई फ़्लाइट नहीं मिली</string>
+    <!-- %1$d is the number of calendar events read -->
+    <plurals name="calendarimport_empty_message">
+        <item quantity="one">हमने अगले 12 महीनों का %1$d इवेंट पढ़ा, लेकिन वह फ़्लाइट जैसा नहीं लगा।</item>
+        <item quantity="other">हमने अगले 12 महीनों के %1$d इवेंट पढ़े, लेकिन उनमें से कोई भी फ़्लाइट जैसा नहीं लगा।</item>
+    </plurals>
+    <!-- %1$d is the number of suggestions -->
+    <plurals name="calendarimport_found">
+        <item quantity="one">%1$d फ़्लाइट मिली</item>
+        <item quantity="other">%1$d फ़्लाइट्स मिलीं</item>
+    </plurals>
+    <string name="calendarimport_results_hint">किसी एक पर टैप करके उसे खोजें और ट्रैक करने से पहले जानकारी जाँच लें।</string>
+    <string name="calendarimport_truncated">आपका कैलेंडर बहुत भरा हुआ है, इसलिए सिर्फ़ पहले 5,000 इवेंट पढ़े गए।</string>
+    <!-- %1$s is a local time like 06:00 -->
+    <string name="calendarimport_departs_at">रवानगी %1$s</string>
+    <!-- %1$d leg number, %2$d legs in the event -->
+    <string name="calendarimport_leg_of">एक कैलेंडर इवेंट के %2$d में से पड़ाव %1$d</string>
+    <string name="calendarimport_tracked">आप इसे ट्रैक कर रहे हैं</string>
+    <string name="calendarimport_needs_details">खोजने के लिए पूरी जानकारी नहीं है। इसकी जगह फ़्लाइट नंबर से जोड़ें।</string>
+    <string name="calendarimport_action_add">जोड़ें</string>
+    <string name="calendarimport_action_find">फ़्लाइट ढूँढें</string>
+    <!-- %1$s and %2$s airport codes, %3$s and %4$s cities -->
+    <string name="calendarimport_title_route">%1$s → %2$s · %3$s से %4$s</string>
+    <!-- %1$s is a city -->
+    <string name="calendarimport_title_to">%1$s जाने वाली फ़्लाइट</string>
+    <string name="calendarimport_title_from">%1$s से आने वाली फ़्लाइट</string>
+    <string name="calendarimport_title_unknown">फ़्लाइट</string>
+    <string name="calendarimport_issue_conflict">इवेंट में एक से ज़्यादा रूट लिखे हैं: जाँच लें कि आप किस पर सफ़र कर रहे हैं।</string>
+    <string name="calendarimport_issue_same_airport">इवेंट में एक ही एयरपोर्ट दो बार लिखा है: रूट जाँच लें।</string>
+    <string name="calendarimport_issue_no_number">इवेंट में फ़्लाइट नंबर नहीं है: हम उस दिन की रवानगियाँ दिखाएँगे, आप उनमें से चुन लें।</string>
+    <string name="calendarimport_issue_untimed">इवेंट में सही समय नहीं है: तारीख जाँच लें।</string>
+    <string name="calendarimport_issue_stated_times">इवेंट में इस पड़ाव के समय लिखे हैं: जोड़ते समय उन्हें जाँच लें।</string>
+</resources>

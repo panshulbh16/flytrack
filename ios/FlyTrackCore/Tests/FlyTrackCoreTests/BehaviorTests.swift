@@ -178,11 +178,11 @@ final class ViewModelTests: XCTestCase {
 
     func testAddFlightLimit() async {
         let repo = FakeFlights()
-        repo.trackResult = .trackingLimitReached("10")
+        repo.trackResult = .trackingLimitReached("100")
         let model = makeAdd(repo)
         model.setFlightInput("6E 2341")
         await model.track(flightId: "f1")
-        XCTAssertEqual(model.state.trackNotice?.problem, .limitReached(limit: 10, proLimit: 50))
+        XCTAssertEqual(model.state.trackNotice?.problem, .limitReached(limit: 100, proLimit: 300))
     }
 
     func testPrefillSearches() async {

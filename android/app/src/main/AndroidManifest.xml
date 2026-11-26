@@ -11,6 +11,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SHORT_SERVICE" />
     <!-- Android 16+: lets the live flight notification (channel flight_live) be promoted to a Live Update. -->
     <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
+    <!-- P3 A3 calendar import (Pro): read-only, asked at runtime only when the user taps "Scan my calendar". -->
+    <uses-permission android:name="android.permission.READ_CALENDAR" />
 
     <!-- Package visibility for the battery-saver screens on the phones that kill background apps. -->
     <queries>

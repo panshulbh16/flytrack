@@ -117,6 +117,8 @@ public struct Passport: Hashable, Sendable {
     public var byMonth: [MonthCount]
     /// ISO date "2025-12-03", nil when there are no flights.
     public var firstFlightDate: LocalDate?
+    /// P3 B12: off-block to on-block minutes (crew mode shows block hours). 0 from servers before migration 28.
+    public var blockMinutes: Int = 0
 
     public var isEmpty: Bool { flights == 0 }
 }
@@ -172,7 +174,8 @@ public func parsePassport(_ o: [String: Any], fallbackYear: Int) -> Passport {
         co2Kg: max(0, JSON.int(o["co2_kg"]) ?? 0),
         co2Method: text(o["co2_method"]) ?? co2MethodV1,
         byMonth: list("by_month").compactMap { m in text(m["month"]).map { MonthCount(month: $0, flights: JSON.int(m["flights"]) ?? 0) } },
-        firstFlightDate: text(o["first_flight_date"]).flatMap(LocalDate.parse)
+        firstFlightDate: text(o["first_flight_date"]).flatMap(LocalDate.parse),
+        blockMinutes: max(0, JSON.int(o["block_minutes"]) ?? 0)
     )
 }
 

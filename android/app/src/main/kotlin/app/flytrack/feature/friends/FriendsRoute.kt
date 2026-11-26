@@ -58,6 +58,7 @@ import app.flytrack.ui.components.HairlineDivider
 import app.flytrack.ui.components.IconAction
 import app.flytrack.ui.components.LoadingState
 import app.flytrack.ui.components.OfflineState
+import app.flytrack.ui.nav.LocalAppNavigator
 import app.flytrack.ui.components.PrimaryButton
 import app.flytrack.ui.components.SecondaryButton
 import app.flytrack.ui.components.SectionCaption
@@ -68,6 +69,7 @@ import kotlin.time.Instant
 @Composable
 fun FriendsRoute(onEnterCode: () -> Unit, onBack: () -> Unit) {
     val viewModel = hiltViewModel<FriendsViewModel>()
+    val navigator = LocalAppNavigator.current
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var resumedOnce by remember { mutableStateOf(false) }
     // Coming back from the accept screen: the new friend appears.
@@ -84,6 +86,7 @@ fun FriendsRoute(onEnterCode: () -> Unit, onBack: () -> Unit) {
         onAlerts = viewModel::setAlerts,
         onRemove = viewModel::remove,
         onMessageShown = viewModel::messageShown,
+        onComparePassport = { friend -> navigator.openFriendPassport(friend.id, friend.displayName) },
     )
 }
 
@@ -123,6 +126,7 @@ fun FriendsScreen(
     onAlerts: (friendId: String, enabled: Boolean) -> Unit,
     onRemove: (friendId: String) -> Unit,
     onMessageShown: (FriendsMessage) -> Unit,
+    onComparePassport: (Friend) -> Unit = {},
 ) {
     val snackbars = remember { SnackbarHostState() }
     val messageText = when (state.message) {
@@ -183,6 +187,7 @@ fun FriendsScreen(
                             busy = friend.id in state.busy,
                             onAlerts = { onAlerts(friend.id, it) },
                             onRemove = { confirmRemove = friend.id },
+                            onCompare = { onComparePassport(friend) },
                         )
                         HairlineDivider()
                     }
@@ -276,7 +281,7 @@ private fun InviteCard(state: FriendsUiState, onInvite: (ShareTarget?) -> Unit, 
 }
 
 @Composable
-private fun FriendRow(friend: Friend, busy: Boolean, onAlerts: (Boolean) -> Unit, onRemove: () -> Unit) {
+private fun FriendRow(friend: Friend, busy: Boolean, onAlerts: (Boolean) -> Unit, onRemove: () -> Unit, onCompare: () -> Unit = {}) {
     val name = friendName(friend.displayName)
     val switchDescription = stringResource(R.string.friends_alerts_switch, name)
     Row(
@@ -296,6 +301,10 @@ private fun FriendRow(friend: Friend, busy: Boolean, onAlerts: (Boolean) -> Unit
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+            }
+            // P3 B10: "You vs Asha".
+            TextButton(onClick = onCompare, contentPadding = PaddingValues(0.dp)) {
+                Text(stringResource(R.string.social_compare_action), style = MaterialTheme.typography.labelLarge)
             }
         }
         Switch(

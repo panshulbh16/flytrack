@@ -146,12 +146,36 @@ struct AddFlightScreen: View {
     @ObservedObject var shell: AppShell
     let prefill: AddFlightPrefill
     @State private var store: AddStore?
+    // P3 B5: "By route" tab; B6: past flights for Passport.
+    @State private var tab: AddFlightTab = .number
+    @State private var route: RouteStore?
+    @State private var airports: AirportList = .empty
 
     var body: some View {
         PaperScreen {
             if let store {
                 Form {
                     Section {
+                        Picker(String(localized: "Search by"), selection: $tab) {
+                            Text(String(localized: "Flight number")).tag(AddFlightTab.number)
+                            Text(String(localized: "By route")).tag(AddFlightTab.route)
+                        }
+                        .pickerStyle(.segmented)
+                        .labelsHidden()
+                    }
+                    .listRowBackground(FlyColor.paperRaised)
+                    if tab == .route, let route {
+                        RouteSearchSection(store: route, airports: airports)
+                    } else {
+                    Section {
+                        if store.state.canAddPastFlights {
+                            Toggle(String(localized: "Add a past flight (for Passport)"), isOn: Binding(
+                                get: { store.state.pastMode },
+                                set: { store.model.setPastMode($0); store.pull() }
+                            ))
+                            .disabled(store.state.isTracking)
+                            .hitTarget()
+                        }
                         if let notice = store.state.prefillNotice {
                             Text(prefillText(notice)).font(FlyFont.serifItalic(18, relativeTo: .headline))
                         }
@@ -177,6 +201,16 @@ struct AddFlightScreen: View {
                         searchBody(store)
                     }
                     .listRowBackground(FlyColor.paperRaised)
+                    if prefill.isEmpty && !store.state.pastMode {
+                        Section {
+                            Button(String(localized: "Find flights in my calendar"), systemImage: "calendar") {
+                                shell.path.append(Route.calendarImport)
+                            }
+                            .hitTarget()
+                        }
+                        .listRowBackground(FlyColor.paperRaised)
+                    }
+                    }
                 }
                 .scrollContentBackground(.hidden)
             }
@@ -198,18 +232,31 @@ struct AddFlightScreen: View {
                 let session = await shell.auth.session()
                 let anonymous = if case .signedIn(_, true, _) = session { true } else { false }
                 let model = AddFlightModel(
-                    prefill: prefill, flights: shell.flights, clock: shell.clock, homeTimeZone: TimeZone.current.identifier,
+                    prefill: prefill.forNumberTab, flights: shell.flights, clock: shell.clock, homeTimeZone: TimeZone.current.identifier,
                     backendConfigured: shell.session != .notConfigured, googleConfigured: AppConfig.isGoogleConfigured,
                     isAnonymous: anonymous, defaultAlerts: shell.settings,
-                    gmailStore: shell.gmailStore, gmailSystem: LiveGmailSystem(auth: shell.gmailAuth)
+                    gmailStore: shell.gmailStore, gmailSystem: LiveGmailSystem(auth: shell.gmailAuth),
+                    past: shell.p3.search
+                )
+                let routeModel = RouteSearchModel(
+                    prefill: prefill, routes: shell.p3.search, flights: shell.flights, clock: shell.clock,
+                    homeTimeZone: TimeZone.current.identifier, backendConfigured: shell.session != .notConfigured,
+                    defaultAlerts: shell.settings
                 )
                 let wrapped = AddStore(model: model)
+                route = RouteStore(model: routeModel)
+                tab = prefill.isRoute ? .route : .number
                 store = wrapped
+                airports = await shell.p3.airports.load()
                 await model.start()
                 wrapped.pull()
+                await routeModel.start()
             }
         }
         .onChange(of: store?.state.finishedFlightId) { _, id in
+            if let id { shell.openFlight(id) }
+        }
+        .onChange(of: route?.state.finishedFlightId) { _, id in
             if let id { shell.openFlight(id) }
         }
     }
@@ -224,7 +271,8 @@ struct AddFlightScreen: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(leg.designator).font(FlyFont.sans(17, weight: .medium, relativeTo: .headline))
                     Text("\(leg.depIata) → \(leg.arrIata)").font(FlyFont.numeral(22))
-                    Button(store.state.trackedFlightIds.contains(leg.id) ? String(localized: "Open") : String(localized: "Track")) {
+                    Button(store.state.trackedFlightIds.contains(leg.id) ? String(localized: "Open")
+                        : (store.state.pastMode ? String(localized: "Add to Passport") : String(localized: "Track"))) {
                         Task {
                             if store.state.trackedFlightIds.contains(leg.id) { await store.open(leg.id) }
                             else { await store.track(leg.id) }
@@ -300,7 +348,7 @@ struct DetailScreen: View {
                         if !store.state.airportHealth.isEmpty {
                             AirportHealthCard(
                                 rows: store.state.airportHealth,
-                                showProUpsell: !store.state.proAccess.unlocked
+                                showProUpsell: !store.state.proAccess.unlocked && !shell.p3.crewMode
                             ) { shell.path.append(Route.paywall) }
                         }
                         if let card = store.state.checkin {
@@ -308,6 +356,16 @@ struct DetailScreen: View {
                         }
                         // P2 wave 2: when to leave, arrival forecast, add to calendar, share with friends.
                         FlightExtrasView(
+                            shell: shell, flightId: flightId,
+                            proAccess: store.state.isLoading ? nil : store.state.proAccess,
+                            revision: detail.card.asOf
+                        )
+                        // P3 B12: crew see block time (off-block to on-block).
+                        if shell.p3.crewMode {
+                            CrewBlockTimeView(shell: shell, flightId: flightId, revision: detail.card.asOf)
+                        }
+                        // P3: timeline, delay and gate prediction, taxi times, aircraft, connections, trends.
+                        FlightIntelView(
                             shell: shell, flightId: flightId,
                             proAccess: store.state.isLoading ? nil : store.state.proAccess,
                             revision: detail.card.asOf
@@ -696,15 +754,20 @@ private struct ProSettingsSection: View {
         Section(String(localized: "HeyGate Pro")) {
             let state = shell.pro.state
             if state.isPro {
+                // "Pro via {owner}'s family" for family members (P3 B13) comes from the Pro state itself.
                 ProStatusView(state: state)
-            } else {
-                Text(String(localized: "Free plan: up to \(UserProfile.freeTrackingLimit) flights at once. Pro adds inbound-aircraft predictions, late-aircraft alerts and the Live Activity."))
+            } else if !shell.p3.crewMode {
+                // P3 A1: tracking is unlimited for everyone; Pro is about what you see, never about a count.
+                Text(String(localized: "Track as many flights as you like for free. Pro adds inbound-aircraft predictions, late-aircraft alerts and the Live Activity."))
                     .font(FlyFont.sans(14, relativeTo: .subheadline))
             }
-            Button(state.isPro ? String(localized: "See Pro plans") : String(localized: "Go Pro")) {
-                shell.path.append(Route.paywall)
+            // P3 B12: crew mode hides Pro upsells.
+            if state.isPro || !shell.p3.crewMode {
+                Button(state.isPro ? String(localized: "See Pro plans") : String(localized: "Go Pro")) {
+                    shell.path.append(Route.paywall)
+                }
+                .hitTarget()
             }
-            .hitTarget()
         }
         .task { await shell.pro.reload() }
     }
@@ -776,6 +839,9 @@ struct SettingsScreen: View {
                     Wave2SettingsSection(shell: shell)
                         .listRowBackground(FlyColor.paperRaised)
                     CalendarSettingsSection(shell: shell)
+                        .listRowBackground(FlyColor.paperRaised)
+                    // P3: crew mode, Passport sharing, family, calendar import.
+                    P3SettingsSection(shell: shell)
                         .listRowBackground(FlyColor.paperRaised)
                     Section(String(localized: "Ticket reading")) {
                         Toggle(String(localized: "Allow cloud reading when the phone cannot read the ticket"), isOn: Binding(
@@ -1178,6 +1244,8 @@ private func alertTitle(_ group: AlertGroup) -> String {
     case .inboundAircraft: String(localized: "Inbound aircraft (Pro)")
     case .checkin: String(localized: "Web check-in reminders")
     case .weather: String(localized: "Fog and low visibility")
+    case .aircraftSwap: String(localized: "Aircraft swap (Pro)")
+    case .connections: String(localized: "Connection at risk (Pro)")
     }
 }
 
@@ -1192,7 +1260,7 @@ private func prefillText(_ notice: PrefillNotice) -> String {
 
 private func trackText(_ problem: TrackProblem?) -> String {
     switch problem {
-    case .limitReached: String(localized: "You've reached the number of flights your plan can track.")
+    case .limitReached: String(localized: "You're tracking a lot of flights. Remove some you no longer need, then try again.")
     case .offline: String(localized: "You're offline.")
     case .flightGone: String(localized: "That flight is no longer available. Search again.")
     case .notConfigured: String(localized: "Backend not configured.")

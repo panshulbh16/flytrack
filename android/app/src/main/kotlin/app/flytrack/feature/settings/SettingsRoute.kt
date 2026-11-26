@@ -44,6 +44,7 @@ import app.flytrack.core.push.PushContract
 import app.flytrack.data.repo.Appearance
 import app.flytrack.feature.billing.ui.ProSettingsSection
 import app.flytrack.feature.calendar.CalendarSettingsSection
+import app.flytrack.feature.social.SocialSettingsSection
 import app.flytrack.feature.friends.Wave2SettingsRows
 import app.flytrack.feature.flights.presentation.AlertGroup
 import app.flytrack.feature.flights.presentation.AlertToggleUiModel
@@ -105,6 +106,8 @@ fun SettingsRoute(onBack: () -> Unit, viewModel: SettingsViewModel = hiltViewMod
             PassportSettingsEntry()
             // P2 wave 2: Friends and Import by email rows, then the calendar feed.
             Wave2SettingsRows()
+            // P3: Family sharing, Passport sharing and crew mode.
+            SocialSettingsSection()
             Spacer(Modifier.height(12.dp))
             HairlineDivider()
             Spacer(Modifier.height(16.dp))
@@ -481,6 +484,8 @@ private fun alertTitle(group: AlertGroup): String = stringResource(
         AlertGroup.INBOUND_AIRCRAFT -> R.string.settings_alert_inbound
         AlertGroup.CHECK_IN -> R.string.settings_alert_checkin
         AlertGroup.WEATHER -> R.string.settings_alert_weather
+        AlertGroup.AIRCRAFT_SWAP -> R.string.intel_alert_swap
+        AlertGroup.CONNECTIONS -> R.string.intel_alert_connection
     },
 )
 

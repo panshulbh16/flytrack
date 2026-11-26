@@ -77,12 +77,27 @@ function fullEvent(type: EventType): FlightEvent {
       new: "AMD",
       payload: { origArr: "BOM", newArr: "AMD", estArr: "2026-11-25T15:50:00Z" },
     },
+    GATE_CLOSED: { new: "gate_closed", payload: { gate: "29", terminal: "1", estDep: "2026-11-25T13:20:00Z" } },
+    TAKEOFF: { new: "2026-11-25T13:44:00Z", payload: { runwayAt: "2026-11-25T13:44:00Z", estArr: "2026-11-25T15:35:00Z" } },
+    AT_GATE: {
+      new: "2026-11-25T15:40:00Z",
+      payload: { onblockAt: "2026-11-25T15:40:00Z", arrGate: "B4", arrTerminal: "2", belt: "7" },
+    },
+    AIRCRAFT_SWAP: {
+      old: "VT-ISR",
+      new: "VT-IJK",
+      payload: { old_reg: "VT-ISR", new_reg: "VT-IJK", old_model: "Airbus A320neo", new_model: "Airbus A321neo" },
+    },
+    CONNECTION_AT_RISK: {
+      new: "at_risk",
+      payload: { out_flight: "6E 512", out_dep: "2026-11-25T16:30:00Z", airport: "BOM", buffer_min: -15 },
+    },
   };
   const x = p[type];
   return {
     type,
     severity: isCriticalAlert(type) ? "critical" : "info",
-    proOnly: type === "INBOUND_LATE",
+    proOnly: type === "INBOUND_LATE" || type === "AIRCRAFT_SWAP" || type === "CONNECTION_AT_RISK",
     oldValue: x.old ?? null,
     newValue: x.new ?? null,
     payload: { ...base, ...x.payload },

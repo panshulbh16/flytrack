@@ -2,3 +2,4 @@
 
 "CFBundleDisplayName" = "HeyGate";
 "NSCameraUsageDescription" = "HeyGate reads the barcode on your boarding pass to add the flight.";
+"NSCalendarsFullAccessUsageDescription" = "HeyGate looks through your calendar for flights so you can add them in one tap. Nothing is uploaded or changed.";

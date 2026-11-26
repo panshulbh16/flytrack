@@ -197,7 +197,7 @@ Migrations are numbered **21–30**, and the old ones are never edited. Every ne
 ### B12. Crew mode (free)
 * `profiles.crew_mode` (bool).
 * When on:
-  * Check-in, when-to-leave and boarding alerts are muted.
+  * Check-in, when-to-leave, boarding and gate-closed alerts are muted.
   * Pro upsells are hidden.
   * The timeline shows block times (off-block to on-block).
   * Passport counts block hours.
@@ -250,3 +250,17 @@ Migrations are numbered **21–30**, and the old ones are never edited. Every ne
 | ios-intel-widgets | A2 / A5 / B1–B4 UI on iOS, plus the A4 WidgetKit extension |
 | ios-search-social-watch | A3 / B5 / B6 / B10 / B12 / B13 on iOS, plus the B9 Apple Watch target |
 | i18n | after everything: Hindi for all new Android strings and iOS keys |
+
+## E. Backend-intel implementation notes (for the app areas)
+
+These pin down details the sections above leave open. Names match migrations 22–25 and 30.
+
+* **Errors.** Pro RPCs (`delay_prediction`, `gate_prediction`, `taxi_stats`, `my_connections`) raise `pro_required` (SQLSTATE 42501) for callers without Pro, like `airport_trends`. Flight RPCs raise `not_allowed` (42501) when `can_read_flight` is false, which includes an unknown id (no existence oracle); apps treat both as "not available". `not_found` (P0002) is only a safety net.
+* **`flight_timeline`.** Order: `scheduled, checkin_open, gate_assigned, boarding, gate_closed, pushback, takeoff, [diverted], landing, at_gate, belt`. A cancelled flight lists only what happened, then `cancelled` (current). `at` is ISO-8601 UTC (minutes) or null: for `next` items it is the expected time where known (check-in window, departure estimate for `pushback`, arrival estimate for `landing`). Implied milestones (proven by a later one) are `done` with `at: null`; `checkin_open`, `gate_assigned` and `belt` are left out when they never happened. Pro `detail` per key: `scheduled {sched_dep, sched_arr}`, `checkin_open {closes_at}`, `gate_assigned`/`boarding {gate, terminal}`, `gate_closed {gate}`, `pushback {delay_min}`, `takeoff {taxi_out_min}`, `diverted {from_arr, to_arr}`, `landing {delay_min}`, `at_gate {gate, terminal, taxi_in_min}`, `belt {belt}`, `cancelled {sched_dep}`.
+* **`delay_prediction(p_flight_id, p_lang default 'en')`** returns null outside the window (more than 72 h ahead, departed, cancelled). The JSON also has `samples` (route legs). `factors[].effect_min` add up to `expected_delay_min` exactly (`history` is first and takes the rounding remainder).
+* **`gate_prediction`** also returns `count` (legs at the top gate) so the label "Usually gate 42B (7 of 9)" is `count` of `samples`. Up to 3 alternatives.
+* **`taxi_stats(p_iata)`** returns `{iata, window_days: 30, taxi_out: {p50, p80, samples}, taxi_in: {...}}`; p50/p80 are null with 0 samples.
+* **`my_connections()`** items also carry `in_flight`, `out_flight` ("6E 512"), `in_arr` and `out_dep` (best known times, ISO). Ordered by `out_dep`; connections whose departing leg left more than 12 h ago are dropped. A `CONNECTION_AT_RISK` row in `flight_events` is visible only to callers who also track its `out_flight_id` (the same users the push goes to, also when the sweeper re-sends it).
+* **`flight_view`** gains, at the end: `dep_offblock_at, dep_runway_at, arr_runway_at, arr_onblock_at, aircraft_icao_type` (everyone) and `aircraft_age_years` (Pro for the flight, one decimal). A later migration that redefines `flight_view` must keep these columns.
+* **Sync push (`compactFlight`)** gains `ofb` (off-block), `rwd` (takeoff), `rwa` (touchdown), `onb` (on-block).
+* **Event payloads.** `GATE_CLOSED {gate, terminal, estDep}`, `TAKEOFF {runwayAt, estArr}`, `AT_GATE {onblockAt, arrGate, arrTerminal, belt}`, `AIRCRAFT_SWAP {old_reg, new_reg, old_model, new_model}`, `CONNECTION_AT_RISK {out_flight, out_dep, airport, buffer_min, layover_min, mct_min, out_flight_id}`; all also carry `flight, dep, arr`. Push tags: `GATE_CLOSED` replaces the boarding notification, `TAKEOFF` replaces "departed", the others have their own tag. `AIRCRAFT_SWAP` and `CONNECTION_AT_RISK` use `flight_critical`, the three milestones `flight_updates`.

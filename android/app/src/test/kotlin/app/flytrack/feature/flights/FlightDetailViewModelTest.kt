@@ -197,6 +197,24 @@ class FlightDetailViewModelTest {
         assertTrue(alert(state(), AlertGroup.INBOUND_AIRCRAFT).locked)
     }
 
+    @Test
+    fun `a family member gets Pro data and Pro alerts, and only for their own account`() = runTest {
+        flights.setTracked(TestData.tracked(TestData.flight(hasProInsight = true, prediction = prediction)))
+        val profile = TestData.profile()
+        profiles.profile.value = profile
+        val social = app.flytrack.feature.social.InMemorySocialStore()
+        val state = observe(FlightDetailViewModel(TestData.FLIGHT_ID, flights, profiles, clock, changes, shares, checkinRules, social))
+        assertTrue(alert(state(), AlertGroup.INBOUND_AIRCRAFT).locked)
+
+        social.family.value = app.flytrack.feature.social.FamilyGrant(profile.id, "Asha")
+        assertTrue("was ${state().detail?.proInsight}", state().detail?.proInsight is ProInsightUiModel.Details)
+        assertFalse(alert(state(), AlertGroup.INBOUND_AIRCRAFT).locked)
+
+        // A grant cached for another account on this device never counts.
+        social.family.value = app.flytrack.feature.social.FamilyGrant("someone-else", "Asha")
+        assertTrue(alert(state(), AlertGroup.INBOUND_AIRCRAFT).locked)
+    }
+
     // ---- alerts -------------------------------------------------------------------------------
 
     @Test
@@ -219,7 +237,10 @@ class FlightDetailViewModelTest {
 
     @Test
     fun `switching an alert group back on keeps the other preferences`() = runTest {
-        val prefs = mapOf(AlertType.DEPARTED to false, AlertType.LANDED to false, AlertType.BOARDING to false)
+        val prefs = mapOf(
+            AlertType.DEPARTED to false, AlertType.TAKEOFF to false, AlertType.LANDED to false, AlertType.AT_GATE to false,
+            AlertType.BOARDING to false, AlertType.GATE_CLOSED to false,
+        )
         flights.setTracked(TestData.tracked(tracking = TestData.tracking(notifyPrefs = prefs)))
         val vm = viewModel()
         val state = observe(vm)
@@ -228,7 +249,10 @@ class FlightDetailViewModelTest {
         vm.setAlertEnabled(AlertGroup.TAKEOFF_AND_LANDING, true)
 
         assertEquals(
-            mapOf(AlertType.DEPARTED to true, AlertType.LANDED to true, AlertType.BOARDING to false),
+            mapOf(
+                AlertType.DEPARTED to true, AlertType.TAKEOFF to true, AlertType.LANDED to true, AlertType.AT_GATE to true,
+                AlertType.BOARDING to false, AlertType.GATE_CLOSED to false,
+            ),
             flights.tracked.value.single().tracking.notifyPrefs,
         )
         assertTrue(alert(state(), AlertGroup.TAKEOFF_AND_LANDING).enabled)

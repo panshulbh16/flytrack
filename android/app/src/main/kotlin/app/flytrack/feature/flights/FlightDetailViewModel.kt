@@ -31,6 +31,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import app.flytrack.core.model.UserProfile
+import app.flytrack.feature.social.NoSocialStore
+import app.flytrack.feature.social.SocialStore
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -91,6 +94,8 @@ class FlightDetailViewModel @AssistedInject constructor(
     private val changes: FlightChangeTracker,
     private val shares: ShareRepository,
     private val checkinRules: CheckinRulesRepository,
+    /** P3 B13: a family member is Pro on the server (is_pro) while their own `plan` stays free. */
+    social: SocialStore = NoSocialStore,
 ) : ViewModel() {
 
     @AssistedFactory
@@ -115,17 +120,23 @@ class FlightDetailViewModel @AssistedInject constructor(
 
     private val local = MutableStateFlow(Local())
 
+    private data class ProfileAccess(val profile: UserProfile?, val viaFamily: Boolean)
+
     val uiState: StateFlow<FlightDetailUiState> = combine(
         flights.observeTrackedFlight(flightId),
         flights.observeFlight(flightId),
-        profiles.observeProfile(),
+        combine(profiles.observeProfile(), social.familyGrant) { profile, family ->
+            ProfileAccess(profile, viaFamily = profile != null && family?.userId == profile.id)
+        },
         clock.ticks(),
         local,
-    ) { tracked, cached, profile, now, local ->
+    ) { tracked, cached, access, now, local ->
         val flight = tracked?.flight ?: cached
+        val profile = access.profile
         val detail = flight?.toDetailUiModel(
             tracking = tracked?.tracking,
-            isPro = profile?.isProForFlight(now, flightId) == true, // the trial flight gets Pro data too
+            // the trial flight gets Pro data too, and so does a family member (P3 B13)
+            isPro = profile?.isProForFlight(now, flightId) == true || access.viaFamily,
             now = now,
             newFields = changes.record(flight, now),
         )?.let { model ->

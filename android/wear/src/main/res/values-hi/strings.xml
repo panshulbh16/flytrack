@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hindi translation of values/strings.xml (Wear OS). Same words as the phone's live notification and widget (values-hi/strings_live.xml). -->
+<resources>
+    <string name="app_name">FlyTrack</string>
+    <string name="wear_tile_label">अगली फ़्लाइट</string>
+    <string name="wear_tile_description">आपकी अगली फ़्लाइट: स्टेटस, रवानगी का समय और गेट</string>
+    <string name="wear_complication_label">अगली फ़्लाइट</string>
+
+    <string name="wear_status_on_time">समय पर</string>
+    <string name="wear_status_delayed">देरी से</string>
+    <string name="wear_status_delayed_by">%d मिनट देरी से</string>
+    <string name="wear_status_check_in">चेक-इन खुला</string>
+    <string name="wear_status_boarding">बोर्डिंग</string>
+    <string name="wear_status_gate_closed">गेट बंद</string>
+    <string name="wear_status_departed">रवाना</string>
+    <string name="wear_status_in_air">हवा में</string>
+    <string name="wear_status_landed">लैंड हुई</string>
+    <string name="wear_status_cancelled">रद्द</string>
+    <string name="wear_status_diverted">डायवर्ट</string>
+
+    <string name="wear_route">%1$s → %2$s</string>
+    <string name="wear_gate">गेट %s</string>
+    <string name="wear_terminal">T%s</string>
+    <string name="wear_belt">बेल्ट %s</string>
+    <!-- %s: departure time at the departure airport, "18:25". -->
+    <string name="wear_departs">रवानगी %s</string>
+
+    <string name="wear_empty_title">कोई आने वाली फ़्लाइट नहीं</string>
+    <string name="wear_empty_body">अपने फ़ोन पर FlyTrack में फ़्लाइट जोड़ें।</string>
+    <string name="wear_open">खोलें</string>
+</resources>

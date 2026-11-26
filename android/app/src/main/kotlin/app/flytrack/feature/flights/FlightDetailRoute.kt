@@ -5,6 +5,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.flytrack.feature.intel.rememberFlightIntelRefresh
 
 /** Entry point of the flight detail screen; [flightId] is `flights.id`. */
 @Composable
@@ -16,6 +17,8 @@ fun FlightDetailRoute(
         factory.create(flightId)
     }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    // P3: the timeline, prediction, aircraft and connection blocks are asked again on pull-to-refresh.
+    val refreshIntel = rememberFlightIntelRefresh(flightId)
 
     LaunchedEffect(state.isClosed) {
         if (state.isClosed) onBack()
@@ -24,7 +27,10 @@ fun FlightDetailRoute(
     FlightDetailScreen(
         state = state,
         onBack = onBack,
-        onRefresh = viewModel::refresh,
+        onRefresh = {
+            viewModel.refresh()
+            refreshIntel()
+        },
         onAlertChange = viewModel::setAlertEnabled,
         onTrack = viewModel::track,
         onArchiveChange = viewModel::setArchived,

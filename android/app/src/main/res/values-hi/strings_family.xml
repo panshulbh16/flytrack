@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hindi translation of values/strings_family.xml. -->
+<resources>
+    <string name="family_title">फ़ैमिली शेयरिंग</string>
+    <!-- %1$s is the family owner's name -->
+    <string name="family_pro_via">%1$s की फ़ैमिली से Pro</string>
+    <string name="family_pro_via_unnamed">आपकी फ़ैमिली से Pro</string>
+    <string name="family_settings_row">फ़ैमिली शेयरिंग</string>
+    <string name="family_settings_row_message">Pro को 5 लोगों तक के साथ शेयर करें</string>
+    <string name="family_load_failed">हम आपकी फ़ैमिली लोड नहीं कर पाए</string>
+    <string name="family_privacy">फ़ैमिली के सदस्य सिर्फ़ Pro शेयर करते हैं। फ़ैमिली में कोई भी किसी और की फ़्लाइट्स नहीं देखता, जब तक आप दोस्त भी न हों।</string>
+
+    <!-- Not in a family -->
+    <string name="family_start_title">अपनी फ़ैमिली के साथ Pro शेयर करें</string>
+    <!-- %1$d is the most members besides the owner -->
+    <plurals name="family_start_message">
+        <item quantity="one">%1$d व्यक्ति को बुलाएँ, ताकि उन्हें आपके प्लान की हर Pro सुविधा बिना किसी अतिरिक्त कीमत के मिले।</item>
+        <item quantity="other">%1$d लोगों तक को बुलाएँ, ताकि उन्हें आपके प्लान की हर Pro सुविधा बिना किसी अतिरिक्त कीमत के मिले।</item>
+    </plurals>
+    <string name="family_start_yearly_note">फ़ैमिली शेयरिंग सालाना और लाइफ़टाइम Pro के साथ मिलती है।</string>
+    <string name="family_start_needs_pro">फ़ैमिली शेयरिंग सालाना या लाइफ़टाइम Pro के साथ मिलती है। Pro वाला कोई व्यक्ति आपको बुला सकता है, या Pro लेने के बाद आप खुद फ़ैमिली शुरू कर सकते हैं।</string>
+    <string name="family_join_title">फ़ैमिली कोड है?</string>
+    <string name="family_join_message">आपकी फ़ैमिली के किसी सदस्य ने जो कोड भेजा है, उसे डालें और उनके प्लान से Pro पाएँ।</string>
+    <string name="family_code_label">फ़ैमिली कोड</string>
+    <string name="family_code_hint">8 अक्षर और अंक, जैसे ABCD-EF23</string>
+    <string name="family_code_invalid">यह फ़ैमिली कोड नहीं है। इसमें 8 अक्षर और अंक होते हैं।</string>
+    <string name="family_code_copied">फ़ैमिली कोड कॉपी हो गया</string>
+    <!-- %1$s is a date -->
+    <string name="family_code_expires">%1$s तक, एक व्यक्ति के लिए मान्य।</string>
+    <string name="family_action_join">फ़ैमिली में शामिल हों</string>
+
+    <!-- In a family -->
+    <string name="family_owner_headline">आप अपनी फ़ैमिली के साथ Pro शेयर कर रहे हैं</string>
+    <string name="family_owner_inactive">आपका Pro खत्म हो गया है, इसलिए अभी आपकी फ़ैमिली को Pro नहीं मिल रहा।</string>
+    <string name="family_member_own_pro">आप इस फ़ैमिली में हैं और आपके पास अपना Pro भी है</string>
+    <!-- %1$s is the owner's name -->
+    <string name="family_member_inactive">%1$s का Pro खत्म हो गया है, इसलिए अभी फ़ैमिली को Pro नहीं मिल रहा</string>
+    <!-- %1$d members, %2$d the most allowed -->
+    <plurals name="family_seats">
+        <item quantity="one">%2$d में से %1$d जगह भरी</item>
+        <item quantity="other">%2$d में से %1$d जगहें भरीं</item>
+    </plurals>
+    <string name="family_full">सारी जगहें भर चुकी हैं। किसी और को बुलाने के लिए किसी एक को हटाएँ।</string>
+    <string name="family_section_members">सदस्य</string>
+    <string name="family_role_owner">ओनर, Pro का भुगतान करते हैं</string>
+    <string name="family_owner_you">आप</string>
+    <string name="family_owner_fallback">फ़ैमिली ओनर</string>
+    <string name="family_member_fallback">फ़ैमिली सदस्य</string>
+    <!-- %1$s is a date -->
+    <string name="family_member_since">%1$s को जुड़े</string>
+    <string name="family_members_empty">अभी तक कोई नहीं जुड़ा है।</string>
+    <string name="family_action_invite">WhatsApp पर बुलाएँ</string>
+    <string name="family_action_copy">कोड कॉपी करें</string>
+    <!-- The invite message. {code} is replaced by the code; keep it exactly. -->
+    <string name="family_invite_text">मेरी HeyGate फ़ैमिली में शामिल हों और Pro फ़्लाइट अलर्ट मुफ़्त पाएँ। HeyGate खोलें → सेटिंग्स → फ़ैमिली शेयरिंग, और कोड {code} डालें</string>
+    <string name="family_invite_subject">मेरी HeyGate फ़ैमिली में शामिल हों</string>
+    <string name="family_invite_chooser">फ़ैमिली इनवाइट भेजें</string>
+    <string name="family_action_leave">फ़ैमिली छोड़ें</string>
+    <string name="family_action_end">फ़ैमिली शेयरिंग खत्म करें</string>
+    <string name="family_action_remove">हटाएँ</string>
+    <string name="family_leave_title">फ़ैमिली छोड़ें?</string>
+    <string name="family_leave_message">इस फ़ैमिली से मिलने वाला Pro आपके पास नहीं रहेगा। आपकी फ़्लाइट्स जैसी हैं, वैसी ही रहेंगी।</string>
+    <string name="family_end_title">फ़ैमिली शेयरिंग खत्म करें?</string>
+    <string name="family_end_message">आपकी फ़ैमिली में सभी का, आपके ज़रिए मिलने वाला Pro खत्म हो जाएगा। आपका अपना Pro बना रहेगा।</string>
+    <!-- %1$s is the member's name -->
+    <string name="family_remove_title">%1$s को हटाएँ?</string>
+    <string name="family_remove_message">आपकी फ़ैमिली से %1$s को मिलने वाला Pro खत्म हो जाएगा।</string>
+
+    <!-- Results -->
+    <string name="family_message_left">आपने फ़ैमिली छोड़ दी।</string>
+    <string name="family_message_ended">फ़ैमिली शेयरिंग खत्म हो गई है।</string>
+    <string name="family_message_removed">आपकी फ़ैमिली से हटा दिया गया।</string>
+    <string name="family_message_offline">आप ऑफ़लाइन हैं। इंटरनेट से जुड़ने पर फिर से कोशिश करें।</string>
+    <string name="family_message_failed">यह नहीं हो पाया। कृपया फिर से कोशिश करें।</string>
+    <string name="family_error_requires_yearly">फ़ैमिली शेयरिंग के लिए सालाना या लाइफ़टाइम Pro चाहिए।</string>
+    <string name="family_error_already">आप पहले से एक फ़ैमिली में हैं। पहले उसे छोड़ें, या अगर आप उसके ओनर हैं तो उसके सदस्यों को हटाएँ।</string>
+    <string name="family_error_invalid_code">यह कोड काम नहीं कर रहा। हो सकता है यह इस्तेमाल हो चुका हो या इसकी अवधि खत्म हो गई हो: नया कोड माँगें।</string>
+    <string name="family_error_own_code">यह आपका अपना फ़ैमिली कोड है। इसे अपनी फ़ैमिली के किसी सदस्य को भेजें।</string>
+    <string name="family_error_full">वह फ़ैमिली भर चुकी है।</string>
+    <string name="family_error_inactive">उस फ़ैमिली का Pro खत्म हो गया है, इसलिए उसमें नए सदस्य नहीं जुड़ सकते।</string>
+    <string name="family_error_not_member">वह व्यक्ति अब आपकी फ़ैमिली में नहीं है।</string>
+    <string name="family_error_not_owner">यह सिर्फ़ फ़ैमिली का ओनर कर सकता है।</string>
+</resources>

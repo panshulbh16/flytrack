@@ -68,6 +68,10 @@ fun alertTagGroup(type: AlertType): String = alertTagGroup(type.wire)
 /** Same rules as [alertTagGroup] for a wire value this app may not know yet. */
 fun alertTagGroup(eventType: String): String = when {
     eventType == AlertType.TERMINAL_CHANGE.wire -> "terminal"
+    // P3: "gate closed" replaces "Boarding now" (never a gate change), and the runway time refines "has departed".
+    eventType == AlertType.GATE_CLOSED.wire -> "boarding"
+    eventType == AlertType.TAKEOFF.wire -> "departed"
+    eventType == AlertType.CONNECTION_AT_RISK.wire -> "connection"
     eventType.startsWith("GATE") -> "gate"
     eventType.startsWith("BELT") -> "belt"
     eventType.startsWith("DELAY") || eventType == AlertType.INBOUND_LATE.wire ||
