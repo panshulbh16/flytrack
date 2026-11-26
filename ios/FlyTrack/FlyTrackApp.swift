@@ -36,6 +36,8 @@ struct FlyTrackApp: App {
             Task { await GmailBackground.appOpened(shell: shell) }
             // Delivery receipts for alerts that arrived while the app was in the background (P2 contract section 3).
             Task { await shell.receipts.sweepDelivered() }
+            // A delay heard while the app was away moves the "time to leave" reminder (P2 wave 2 section 5).
+            Task { await shell.resyncLeaveReminders() }
         }
     }
 }
@@ -110,6 +112,13 @@ final class AppShell: ObservableObject {
     let passport: LivePassport
     let alertPrefs: LiveAlertPrefs
     let receipts: PushReceipts
+    // P2 wave 2 (docs/P2_WAVE2_CONTRACTS.md).
+    let friends: LiveFriends
+    let forwarding: LiveForwarding
+    let calendarFeed: LiveCalendarFeed
+    let forecast: LiveForecast
+    let travelTimes: DeviceTravelTimes
+    let leaveReminders: LocalLeaveReminders
 
     @Published var session: SessionState = .loading
     @Published var path = NavigationPath()
@@ -139,6 +148,13 @@ final class AppShell: ObservableObject {
         airportHealth = LiveAirportHealth(stack: stack)
         passport = LivePassport(stack: stack)
         alertPrefs = LiveAlertPrefs(stack: stack)
+        let wave2 = Wave2Backend(stack: stack, auth: auth)
+        friends = LiveFriends(backend: wave2)
+        forwarding = LiveForwarding(backend: wave2)
+        calendarFeed = LiveCalendarFeed(backend: wave2)
+        forecast = LiveForecast(backend: wave2)
+        travelTimes = DeviceTravelTimes()
+        leaveReminders = LocalLeaveReminders()
         let receipts = PushReceipts(sender: LivePushAck(stack: stack))
         self.receipts = receipts
         push.receipts = receipts
@@ -243,6 +259,11 @@ final class AppShell: ObservableObject {
     }
 
     func open(_ url: URL) {
+        // heygate://friend?code=ABCDEFGH from an invite (P2 wave 2 section 1).
+        if url.host?.lowercased() == "friend" {
+            path.append(Route.acceptInvite(inviteCode(fromURL: url)))
+            return
+        }
         if url.host == "import" || url.path == "/import" {
             if let shared = ShareInbox.consume() { self.shared.offer(shared) }
             path.append(Route.importTicket)
@@ -280,6 +301,12 @@ final class AppShell: ObservableObject {
         await push.handle(data: data)
         await FlightLiveActivities.endFinished(flights: flights)
         session = await auth.session()
+        await resyncLeaveReminders()
+    }
+
+    /// Re-plans pending "time to leave" reminders from the cache (P2 wave 2 section 5).
+    func resyncLeaveReminders() async {
+        await leaveReminders.resync(flights: flights, travel: travelTimes, pro: await pro.service.proState())
     }
 
     /// After a purchase or restore the profile changed; screens read the new state from `pro`.
@@ -297,6 +324,10 @@ enum Route: Hashable {
     case gmailImport
     case paywall
     case passport
+    case friends
+    /// The accept screen, with the code from an invite link when there is one.
+    case acceptInvite(String?)
+    case forwarding
 }
 
 struct RootView: View {
@@ -324,6 +355,12 @@ struct RootView: View {
                         PaywallScreen(shell: shell)
                     case .passport:
                         PassportScreen(shell: shell)
+                    case .friends:
+                        FriendsScreen(shell: shell)
+                    case .acceptInvite(let code):
+                        AcceptInviteScreen(shell: shell, prefill: code)
+                    case .forwarding:
+                        ForwardingScreen(shell: shell)
                     }
                 }
         }

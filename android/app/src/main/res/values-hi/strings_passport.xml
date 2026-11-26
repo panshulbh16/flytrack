@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hindi translation of values/strings_passport.xml. -->
+<resources>
+    <string name="passport_title">पासपोर्ट</string>
+    <string name="passport_tab_overview_all">अब तक</string>
+    <string name="passport_tab_overview_last12">पिछले 12 महीने</string>
+    <string name="passport_tab_year">%1$d की झलक</string>
+
+    <string name="passport_heading_all">आपका पासपोर्ट</string>
+    <string name="passport_heading_last12">आपके पिछले 12 महीने</string>
+    <string name="passport_heading_year">आसमान में आपका %1$d</string>
+    <string name="passport_since">पहली फ़्लाइट %1$s</string>
+
+    <string name="passport_tile_flights">फ़्लाइट्स</string>
+    <string name="passport_tile_km">उड़े किलोमीटर</string>
+    <string name="passport_tile_hours">आसमान में घंटे</string>
+    <string name="passport_tile_airports">एयरपोर्ट</string>
+    <string name="passport_tile_countries">देश</string>
+    <string name="passport_tile_airlines">एयरलाइंस</string>
+    <string name="passport_earth_laps">यानी धरती के %1$s चक्कर</string>
+
+    <string name="passport_section_months">महीने के हिसाब से फ़्लाइट्स</string>
+    <string name="passport_month_bar">%1$s: %2$s</string>
+    <string name="passport_section_highlights">खास बातें</string>
+    <string name="passport_longest">सबसे लंबी फ़्लाइट</string>
+    <string name="passport_longest_value">%1$s %2$s · %3$s → %4$s · %5$s कि.मी.</string>
+    <string name="passport_top_route">सबसे ज़्यादा उड़ा रूट</string>
+    <plurals name="passport_top_route_value">
+        <item quantity="one">%1$s → %2$s · %3$d बार</item>
+        <item quantity="other">%1$s → %2$s · %3$d बार</item>
+    </plurals>
+    <string name="passport_on_time">समय पर रवाना</string>
+    <string name="passport_on_time_value">%1$d%%</string>
+    <string name="passport_total_delay">देरी में गया समय</string>
+    <string name="passport_worst_delay">सबसे लंबी देरी</string>
+    <string name="passport_worst_delay_value">%1$s %2$s · %3$s</string>
+
+    <string name="passport_section_airports">एयरपोर्ट</string>
+    <string name="passport_section_airlines">एयरलाइंस</string>
+    <string name="passport_section_aircraft">विमान</string>
+    <string name="passport_section_countries">देश</string>
+    <plurals name="passport_times">
+        <item quantity="one">%d फ़्लाइट</item>
+        <item quantity="other">%d फ़्लाइट्स</item>
+    </plurals>
+
+    <string name="passport_section_co2">कार्बन फ़ुटप्रिंट</string>
+    <string name="passport_co2_value">लगभग %1$s कि.ग्रा. CO₂</string>
+    <string name="passport_co2_note">उड़ी गई दूरी के आधार पर एक इकॉनमी सीट का अनुमान। असली उत्सर्जन विमान, केबिन और फ़्लाइट कितनी भरी थी, इस पर निर्भर करता है।</string>
+
+    <string name="passport_pro_title">आपका पूरा इतिहास Pro में है</string>
+    <string name="passport_pro_body">फ़्री में आपके पिछले 12 महीने और इस साल की झलक दिखती है। FlyTrack Pro आपकी अब तक ट्रैक की गई हर फ़्लाइट गिनता है।</string>
+    <string name="passport_pro_action">प्लान देखें</string>
+
+    <string name="passport_empty_title">अभी कोई फ़्लाइट नहीं</string>
+    <string name="passport_empty_message">आप जो फ़्लाइट्स ट्रैक करते हैं, वे उड़ान भरने के बाद यहाँ दिखेंगी।</string>
+    <string name="passport_empty_year_message">%1$d में अभी तक कोई उड़ान नहीं। आप जो फ़्लाइट्स ट्रैक करते हैं, वे उड़ान भरने के बाद यहाँ दिखेंगी।</string>
+    <string name="passport_error_title">आपका पासपोर्ट लोड नहीं हो पाया</string>
+
+    <!-- Year in Review share card. -->
+    <string name="passport_card_caption">साल की झलक</string>
+    <string name="passport_card_title_year">%1$d</string>
+    <string name="passport_card_title_tail">आसमान में</string>
+    <string name="passport_card_top_route">टॉप रूट</string>
+    <string name="passport_card_longest">सबसे लंबी</string>
+    <string name="passport_card_airline">सबसे ज़्यादा उड़े</string>
+    <string name="passport_card_footer">FlyTrack से ट्रैक किया गया</string>
+    <string name="passport_share_action">मेरा साल शेयर करें</string>
+    <string name="passport_share_preparing">आपका कार्ड तैयार हो रहा है…</string>
+    <string name="passport_share_text">आसमान में मेरा %1$d: %2$s फ़्लाइट्स, %3$s कि.मी.। FlyTrack से ट्रैक किया गया।</string>
+    <string name="passport_share_subject">आसमान में मेरा %1$d</string>
+    <string name="passport_share_chooser">अपना साल शेयर करें</string>
+    <string name="passport_share_failed">कार्ड शेयर नहीं हो पाया। फिर से कोशिश करें।</string>
+</resources>

@@ -43,6 +43,8 @@ import app.flytrack.R
 import app.flytrack.core.push.PushContract
 import app.flytrack.data.repo.Appearance
 import app.flytrack.feature.billing.ui.ProSettingsSection
+import app.flytrack.feature.calendar.CalendarSettingsSection
+import app.flytrack.feature.friends.Wave2SettingsRows
 import app.flytrack.feature.flights.presentation.AlertGroup
 import app.flytrack.feature.flights.presentation.AlertToggleUiModel
 import app.flytrack.push.ChannelHealth
@@ -99,7 +101,15 @@ fun SettingsRoute(onBack: () -> Unit, viewModel: SettingsViewModel = hiltViewMod
         onReconnectGmail = navigator::openGmailImport,
         onDisconnectGmail = viewModel::disconnectGmail,
         proSection = { ProSettingsSection() },
-        travelSection = { PassportSettingsEntry() },
+        travelSection = {
+            PassportSettingsEntry()
+            // P2 wave 2: Friends and Import by email rows, then the calendar feed.
+            Wave2SettingsRows()
+            Spacer(Modifier.height(12.dp))
+            HairlineDivider()
+            Spacer(Modifier.height(16.dp))
+            CalendarSettingsSection()
+        },
         alertExtrasSection = { AlertPrefsSection() },
     )
 }

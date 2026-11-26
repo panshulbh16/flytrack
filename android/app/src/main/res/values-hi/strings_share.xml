@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hindi translation of values/strings_share.xml. -->
+<resources>
+    <!-- The shared message. %1$s carrier, %2$s number, %3$s departure, %4$s arrival, %5$s the link.
+         Both lines are sent together: Hindi first, then English with the link for people who don't read Hindi. -->
+    <string name="share_text_hinglish">मेरी फ़्लाइट लाइव ट्रैक करें: %1$s %2$s %3$s→%4$s</string>
+    <string name="share_text_english">Track my flight %1$s %2$s %3$s→%4$s live: %5$s</string>
+    <!-- Subject line for e-mail apps. %1$s is a flight such as "6E 2341". -->
+    <string name="share_subject">फ़्लाइट %1$s, लाइव</string>
+
+    <string name="share_action">फ़्लाइट शेयर करें</string>
+    <string name="share_action_whatsapp">WhatsApp पर शेयर करें</string>
+    <string name="share_action_more">इससे शेयर करें…</string>
+    <string name="share_chooser_title">अपनी फ़्लाइट शेयर करें</string>
+    <string name="share_hint">परिवार वाले यह फ़्लाइट ब्राउज़र में लाइव देख सकते हैं, ऐप की ज़रूरत नहीं। आपका PNR और सीट कभी शेयर नहीं किए जाते।</string>
+
+    <string name="share_message_failed">लिंक नहीं बन पाया। कृपया फिर से कोशिश करें।</string>
+    <string name="share_message_not_tracked">शेयर करने के लिए पहले यह फ़्लाइट ट्रैक करें।</string>
+    <string name="share_message_no_app">इस फ़ोन में टेक्स्ट शेयर करने वाला कोई ऐप नहीं है।</string>
+</resources>

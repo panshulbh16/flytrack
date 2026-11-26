@@ -1,0 +1,226 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%@ %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@"
+          }
+        }
+      }
+    },
+    "%lld min late" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld मिनट लेट"
+          }
+        }
+      }
+    },
+    "Belt %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बेल्ट %@"
+          }
+        }
+      }
+    },
+    "Boarding" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बोर्डिंग"
+          }
+        }
+      }
+    },
+    "Cancelled" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रद्द"
+          }
+        }
+      }
+    },
+    "Departs %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ से रवाना"
+          }
+        }
+      }
+    },
+    "Departs in" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रवानगी में"
+          }
+        }
+      }
+    },
+    "Diverted" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "डायवर्ट हुई"
+          }
+        }
+      }
+    },
+    "Flying to %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ जा रही है"
+          }
+        }
+      }
+    },
+    "Gate %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "गेट %@"
+          }
+        }
+      }
+    },
+    "Gate closed" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "गेट बंद"
+          }
+        }
+      }
+    },
+    "Gate not announced" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "गेट घोषित नहीं"
+          }
+        }
+      }
+    },
+    "In the air" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "हवा में"
+          }
+        }
+      }
+    },
+    "Landed" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "लैंड हुई"
+          }
+        }
+      }
+    },
+    "Landed at %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ पर लैंड हुई"
+          }
+        }
+      }
+    },
+    "Lands in" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "लैंडिंग में"
+          }
+        }
+      }
+    },
+    "Now" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अभी"
+          }
+        }
+      }
+    },
+    "On time" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "समय पर"
+          }
+        }
+      }
+    },
+    "Scheduled" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "निर्धारित"
+          }
+        }
+      }
+    },
+    "T%@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "T%@"
+          }
+        }
+      }
+    },
+    "Updated %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अपडेट: %@"
+          }
+        }
+      }
+    },
+    "·" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "·"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.1"
+}

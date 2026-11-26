@@ -30,6 +30,9 @@ struct FlightsScreen: View {
             ToolbarItem(placement: .topBarLeading) {
                 Button(String(localized: "Passport"), systemImage: "globe.asia.australia") { shell.path.append(Route.passport) }
             }
+            ToolbarItem(placement: .topBarLeading) {
+                Button(String(localized: "Friends"), systemImage: "person.2") { shell.path.append(Route.friends) }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button(String(localized: "Add flight")) { shell.path.append(Route.add(AddFlightPrefill())) }
                     .buttonStyle(.glassProminent)
@@ -303,6 +306,12 @@ struct DetailScreen: View {
                         if let card = store.state.checkin {
                             CheckinCardView(card: card) { url in openURL(url) }
                         }
+                        // P2 wave 2: when to leave, arrival forecast, add to calendar, share with friends.
+                        FlightExtrasView(
+                            shell: shell, flightId: flightId,
+                            proAccess: store.state.isLoading ? nil : store.state.proAccess,
+                            revision: detail.card.asOf
+                        )
                         if case .teaser = detail.proInsight {
                             Text(String(localized: "Pro can see whether the inbound aircraft is running late."))
                                 .font(FlyFont.serifItalic(18, relativeTo: .headline))
@@ -633,7 +642,7 @@ private struct ActivitySheet: UIViewControllerRepresentable {
     func updateUIViewController(_ controller: UIActivityViewController, context: Context) {}
 }
 
-private enum WhatsApp {
+enum WhatsApp {
     /// Needs `whatsapp` in LSApplicationQueriesSchemes (project.yml).
     @MainActor
     static var isInstalled: Bool {
@@ -764,6 +773,10 @@ struct SettingsScreen: View {
                     }
                     .listRowBackground(FlyColor.paperRaised)
                     if let alertPrefs { AlertPrefsSection(store: alertPrefs) }
+                    Wave2SettingsSection(shell: shell)
+                        .listRowBackground(FlyColor.paperRaised)
+                    CalendarSettingsSection(shell: shell)
+                        .listRowBackground(FlyColor.paperRaised)
                     Section(String(localized: "Ticket reading")) {
                         Toggle(String(localized: "Allow cloud reading when the phone cannot read the ticket"), isOn: Binding(
                             get: { store.state.cloudConsent },
@@ -1079,7 +1092,7 @@ final class ImportStore {
 
 // MARK: - copy
 
-private func statusWord(_ word: FlightStatusWord) -> String {
+func statusWord(_ word: FlightStatusWord) -> String {
     switch word {
     case .scheduleOnly: String(localized: "Timetable only")
     case .scheduled: String(localized: "Scheduled")

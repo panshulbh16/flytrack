@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- When to leave for the airport (P2 wave 2 contract, section 5). Pro, computed on the phone. -->
+<resources>
+    <string name="leave_title">When to leave</string>
+    <string name="leave_by">Leave by</string>
+    <!-- %1$s time "05:40", %2$s day "Wed, 25 Nov". -->
+    <string name="leave_cd_leave_by">Leave by %1$s, %2$s</string>
+    <!-- %1$s departure time "08:55", %2$s time at the airport "170 min", %3$s travel "60 min". -->
+    <string name="leave_breakdown">Departs %1$s · %2$s at the airport + %3$s to get there</string>
+    <plurals name="leave_minutes">
+        <item quantity="one">%1$d min</item>
+        <item quantity="other">%1$d min</item>
+    </plurals>
+    <string name="leave_reason_international">International: 3 h at the airport</string>
+    <!-- %1$d extra minutes, %2$s the city, e.g. "+30 min: fog or disruption at New Delhi". -->
+    <string name="leave_reason_fog">+%1$d min: fog or disruption at %2$s</string>
+    <!-- %1$d extra minutes. -->
+    <string name="leave_reason_peak">+%1$d min: rush hour</string>
+    <!-- %1$s city "New Delhi", %2$s "60 min". -->
+    <string name="leave_travel_time">To %1$s airport: %2$s</string>
+    <string name="leave_action_change">Change</string>
+    <!-- %1$s is a time such as "05:25". -->
+    <string name="leave_reminder">We\'ll remind you at %1$s.</string>
+    <string name="leave_action_directions">Get directions</string>
+    <string name="leave_no_maps">No maps app or browser on this phone.</string>
+
+    <!-- %1$s city of the airport. -->
+    <string name="leave_dialog_title">Travel time to %1$s airport</string>
+    <string name="leave_dialog_message">How long does it usually take you to get there? We remember it for this airport.</string>
+    <string name="leave_dialog_field">Minutes</string>
+    <!-- %1$d is the maximum, 600. -->
+    <string name="leave_dialog_error">Enter 0 to %1$d minutes</string>
+
+    <string name="leave_teaser_title">When should I leave?</string>
+    <string name="leave_teaser_body">Pro works out when to leave for the airport, with fog and rush hour, and reminds you before it is time.</string>
+
+    <!-- Local notification. -->
+    <string name="leave_channel_name">Time to leave</string>
+    <string name="leave_channel_description">A reminder 15 minutes before you should leave for the airport</string>
+    <!-- %1$s time "05:40", %2$s flight "6E 2341". -->
+    <string name="leave_notification_title">Leave by %1$s for %2$s</string>
+    <!-- %1$s departure time "08:55", %2$d travel minutes, %3$s city. -->
+    <string name="leave_notification_body">Your flight departs at %1$s. Allow %2$d min to reach %3$s airport.</string>
+</resources>

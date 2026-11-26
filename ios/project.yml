@@ -81,6 +81,10 @@ targets:
       path: FlyTrack/Info.plist
       properties:
         CFBundleDisplayName: HeyGate
+        # English and Hindi. Strings: Localizable.xcstrings; Info.plist text: FlyTrack/{en,hi}.lproj/InfoPlist.strings.
+        CFBundleLocalizations:
+          - en
+          - hi
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         ITSAppUsesNonExemptEncryption: false

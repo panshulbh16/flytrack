@@ -16,6 +16,9 @@ import app.flytrack.feature.billing.ui.PaywallRoute
 import app.flytrack.feature.billing.ui.ProStateProvider
 import app.flytrack.feature.flights.FlightDetailRoute
 import app.flytrack.feature.flights.FlightsRoute
+import app.flytrack.feature.forwarding.EmailForwardingRoute
+import app.flytrack.feature.friends.AcceptFriendInviteRoute
+import app.flytrack.feature.friends.FriendsRoute
 import app.flytrack.feature.gmailimport.GmailImportRoute
 import app.flytrack.feature.gmailimport.GmailSuggestion
 import app.flytrack.feature.importticket.ImportTicketRoute
@@ -59,6 +62,18 @@ class NavControllerNavigator(private val navController: NavHostController) : App
 
     override fun openPassport() {
         navController.navigate(Passport) { launchSingleTop = true }
+    }
+
+    override fun openFriends() {
+        navController.navigate(Friends) { launchSingleTop = true }
+    }
+
+    override fun openAcceptFriendInvite(prefillCode: String?) {
+        navController.navigate(AcceptFriendInvite(prefillCode)) { launchSingleTop = true }
+    }
+
+    override fun openEmailForwarding() {
+        navController.navigate(EmailForwarding) { launchSingleTop = true }
     }
 
     override fun back() {
@@ -137,6 +152,19 @@ fun FlyTrackNavHost(
                 }
                 composable<Passport> {
                     PassportRoute(onBack = { navigator.back() })
+                }
+                composable<Friends> {
+                    FriendsRoute(onEnterCode = { navigator.openAcceptFriendInvite() }, onBack = { navigator.back() })
+                }
+                composable<AcceptFriendInvite> { entry ->
+                    AcceptFriendInviteRoute(
+                        prefillCode = entry.toRoute<AcceptFriendInvite>().prefillCode,
+                        onDone = { navigator.back() },
+                        onBack = { navigator.back() },
+                    )
+                }
+                composable<EmailForwarding> {
+                    EmailForwardingRoute(onBack = { navigator.back() })
                 }
                 composable<Paywall> {
                     PaywallRoute(onBack = { navigator.back() })

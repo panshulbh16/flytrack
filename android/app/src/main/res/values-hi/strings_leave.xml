@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hindi translation of values/strings_leave.xml. -->
+<resources>
+    <string name="leave_title">कब निकलें</string>
+    <string name="leave_by">इतने बजे तक निकलें</string>
+    <!-- %1$s time "05:40", %2$s day. -->
+    <string name="leave_cd_leave_by">%2$s, %1$s तक निकलें</string>
+    <!-- %1$s departure time, %2$s time at the airport, %3$s travel. -->
+    <string name="leave_breakdown">रवानगी %1$s · एयरपोर्ट पर %2$s + पहुँचने में %3$s</string>
+    <plurals name="leave_minutes">
+        <item quantity="one">%1$d मिनट</item>
+        <item quantity="other">%1$d मिनट</item>
+    </plurals>
+    <string name="leave_reason_international">इंटरनेशनल: एयरपोर्ट पर 3 घंटे</string>
+    <!-- %1$d extra minutes, %2$s the city. -->
+    <string name="leave_reason_fog">+%1$d मिनट: %2$s में कोहरा या रुकावट</string>
+    <!-- %1$d extra minutes. -->
+    <string name="leave_reason_peak">+%1$d मिनट: भीड़ का समय</string>
+    <!-- %1$s city, %2$s "60 मिनट". -->
+    <string name="leave_travel_time">%1$s एयरपोर्ट तक: %2$s</string>
+    <string name="leave_action_change">बदलें</string>
+    <!-- %1$s is a time such as "05:25". -->
+    <string name="leave_reminder">हम आपको %1$s बजे याद दिलाएँगे।</string>
+    <string name="leave_action_directions">रास्ता देखें</string>
+    <string name="leave_no_maps">इस फ़ोन में कोई मैप ऐप या ब्राउज़र नहीं है।</string>
+
+    <!-- %1$s city of the airport. -->
+    <string name="leave_dialog_title">%1$s एयरपोर्ट तक पहुँचने का समय</string>
+    <string name="leave_dialog_message">आपको वहाँ पहुँचने में आम तौर पर कितना समय लगता है? हम इस एयरपोर्ट के लिए इसे याद रखेंगे।</string>
+    <string name="leave_dialog_field">मिनट</string>
+    <!-- %1$d is the maximum, 600. -->
+    <string name="leave_dialog_error">0 से %1$d मिनट के बीच डालें</string>
+
+    <string name="leave_teaser_title">मुझे कब निकलना चाहिए?</string>
+    <string name="leave_teaser_body">Pro कोहरे और भीड़ के समय को ध्यान में रखकर बताता है कि एयरपोर्ट के लिए कब निकलना है, और समय होने से पहले याद दिलाता है।</string>
+
+    <!-- Local notification. -->
+    <string name="leave_channel_name">निकलने का समय</string>
+    <string name="leave_channel_description">एयरपोर्ट के लिए निकलने के समय से 15 मिनट पहले रिमाइंडर</string>
+    <!-- %1$s time, %2$s flight "6E 2341". -->
+    <string name="leave_notification_title">%2$s के लिए %1$s तक निकलें</string>
+    <!-- %1$s departure time, %2$d travel minutes, %3$s city. -->
+    <string name="leave_notification_body">आपकी फ़्लाइट %1$s बजे रवाना होगी। %3$s एयरपोर्ट पहुँचने के लिए %2$d मिनट रखें।</string>
+</resources>

@@ -27,6 +27,15 @@ interface AppNavigator {
 
     /** Passport and Year in Review (P2). */
     fun openPassport() = Unit
+
+    /** Friends (P2 wave 2). */
+    fun openFriends() = Unit
+
+    /** "Enter a friend code" (P2 wave 2). */
+    fun openAcceptFriendInvite(prefillCode: String? = null) = Unit
+
+    /** Email forwarding address (P2 wave 2). */
+    fun openEmailForwarding() = Unit
     fun back()
 }
 

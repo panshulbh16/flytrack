@@ -17,6 +17,7 @@ import { decideCheckin } from "./checkin.ts";
 import { isQuietFor } from "./quiet-hours.ts";
 import { legHistoryRow, shouldFinalize } from "./history.ts";
 import { fogEvent } from "./health.ts";
+import { isFriendEvent } from "./friend-alerts.ts";
 import type { FlightEvent, FlightRow, FlightSnapshot } from "./types.ts";
 
 const MIN = 60_000;
@@ -220,10 +221,16 @@ export async function fanOut(deps: Deps, row: FlightRow, events: (FlightEvent & 
 
   for (const e of events) {
     for (const r of recipients) {
-      if (e.proOnly && !r.is_pro) continue;
+      const friend = r.role === "friend";
+      // Friends of a tracker get only the free milestone events (P2 wave 2 section 1), never Pro ones.
+      if (friend ? !isFriendEvent(e) : e.proOnly && !r.is_pro) continue;
       if (r.notify_prefs?.[e.type] === false) continue; // user muted this alert type
       // Each recipient gets their own language; info alerts go silent in their quiet hours (P2 sections 3, 4).
-      const opts = { lang: r.alert_language ?? "en", quiet: isQuietFor(r, deps.now()) };
+      const opts = {
+        lang: r.alert_language ?? "en",
+        quiet: isQuietFor(r, deps.now()),
+        ...(friend ? { friend: { name: r.friend_name ?? null } } : {}),
+      };
       const msg = buildAlertMessage(r.fcm_token, row.id, e.id, withFlightContext(e, row), tz, opts);
       jobs.push({ kind: "alert", eventId: e.id, r, msg });
     }
@@ -232,6 +239,8 @@ export async function fanOut(deps: Deps, row: FlightRow, events: (FlightEvent & 
     const near = isNearFlight(row, deps.now());
     const seen = new Set<string>();
     for (const r of recipients) {
+      // Sync messages feed the app's cache of the user's OWN flights: a friend's flight must not land there.
+      if (r.role === "friend") continue;
       if (seen.has(r.fcm_token)) continue;
       seen.add(r.fcm_token);
       jobs.push({ kind: "sync", eventId: null, r, msg: buildSyncMessage(r.fcm_token, row, near) });

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hindi translation of values/strings_billing.xml. Prices come from Google Play, never from here. -->
+<resources>
+    <!-- Paywall -->
+    <string name="billing_paywall_title">FlyTrack Pro</string>
+    <string name="billing_paywall_subtitle">एयरलाइन के बताने से पहले जानें।</string>
+    <string name="billing_paywall_close">बंद करें</string>
+
+    <string name="billing_benefit_inbound_title">मेरा प्लेन कहाँ है</string>
+    <string name="billing_benefit_inbound_body">विमान की पिछली उड़ान देखें और जानें कि वह असल में आपके गेट पर कब पहुँचेगा।</string>
+    <string name="billing_benefit_late_title">लेट विमान के अलर्ट</string>
+    <string name="billing_benefit_late_body">जब आने वाला प्लेन आपकी फ़्लाइट को लेट करेगा, तब पुश अलर्ट, अक्सर एयरलाइन के बताने से पहले।</string>
+    <string name="billing_benefit_live_title">लाइव नोटिफ़िकेशन</string>
+    <string name="billing_benefit_live_body">लॉक स्क्रीन पर आपकी फ़्लाइट, चेक-इन से लेकर बैगेज बेल्ट तक।</string>
+    <string name="billing_benefit_limit_title">एक साथ ज़्यादा फ़्लाइट्स</string>
+    <string name="billing_benefit_limit_body">एक साथ %1$d फ़्लाइट्स तक ट्रैक करें (फ़्री: %2$d)।</string>
+
+    <string name="billing_section_plans">प्लान चुनें</string>
+    <string name="billing_plan_annual">सालाना</string>
+    <string name="billing_plan_annual_price">%1$s प्रति वर्ष</string>
+    <string name="billing_plan_annual_price_monthly">%1$s प्रति वर्ष · लगभग %2$s प्रति माह</string>
+    <string name="billing_plan_save">%1$d%% बचाएँ</string>
+    <string name="billing_plan_monthly">मासिक</string>
+    <string name="billing_plan_monthly_price">%1$s प्रति माह</string>
+    <string name="billing_plan_trip">ट्रिप पास</string>
+    <plurals name="billing_plan_trip_price">
+        <item quantity="one">%1$s एक बार · %2$d दिन के लिए Pro, अपने-आप रिन्यू नहीं होता</item>
+        <item quantity="other">%1$s एक बार · %2$d दिनों के लिए Pro, अपने-आप रिन्यू नहीं होता</item>
+    </plurals>
+    <string name="billing_plan_selected">चुना गया</string>
+
+    <string name="billing_action_continue">आगे बढ़ें</string>
+    <string name="billing_action_restore">खरीदारी बहाल करें</string>
+    <string name="billing_action_manage">सब्सक्रिप्शन मैनेज करें</string>
+    <string name="billing_action_see_plans">Pro प्लान देखें</string>
+    <string name="billing_terms">उपयोग की शर्तें</string>
+    <string name="billing_privacy">प्राइवेसी पॉलिसी</string>
+    <string name="billing_legal">सब्सक्रिप्शन अपने-आप रिन्यू होते रहते हैं, जब तक आप उन्हें Google Play में रद्द नहीं करते। ट्रिप पास एक बार की खरीदारी है।</string>
+
+    <string name="billing_coming_soon_title">Pro जल्द आ रहा है</string>
+    <string name="billing_coming_soon_message">इस वर्ज़न में अभी Pro नहीं खरीदा जा सकता। FlyTrack की बाकी सभी सुविधाएँ चलती रहेंगी।</string>
+    <string name="billing_load_failed_title">प्लान लोड नहीं हो पाए</string>
+    <string name="billing_load_failed_message">Google Play ने जवाब नहीं दिया। कृपया थोड़ी देर में फिर से कोशिश करें।</string>
+
+    <string name="billing_pro_title">आप Pro पर हैं</string>
+    <string name="billing_pro_until">%1$s तक Pro</string>
+    <string name="billing_trip_until">%1$s तक ट्रिप पास</string>
+    <string name="billing_pro_no_end">Pro, बिना किसी अंतिम तारीख के</string>
+    <string name="billing_pro_confirming">FlyTrack से आपकी खरीदारी की पुष्टि हो रही है…</string>
+
+    <string name="billing_msg_purchased">Pro में आपका स्वागत है!</string>
+    <string name="billing_msg_pending">पेमेंट बाकी है। Google Play से पुष्टि होते ही Pro शुरू हो जाएगा।</string>
+    <string name="billing_msg_already_owned">इस Google Play खाते पर पहले से Pro है। खरीदारी बहाल करें दबाएँ।</string>
+    <string name="billing_msg_failed">खरीदारी पूरी नहीं हुई। कृपया फिर से कोशिश करें।</string>
+    <string name="billing_msg_offline">आप ऑफ़लाइन हैं। इंटरनेट से जुड़ें और फिर से कोशिश करें।</string>
+    <string name="billing_msg_not_available">अभी खरीदारी उपलब्ध नहीं है।</string>
+    <string name="billing_msg_restored">खरीदारी बहाल हो गई। आप Pro पर हैं।</string>
+    <string name="billing_msg_nothing_restored">इस Google Play खाते पर कोई Pro खरीदारी नहीं मिली।</string>
+    <string name="billing_msg_restore_failed">खरीदारी बहाल नहीं हो पाई। कृपया फिर से कोशिश करें।</string>
+
+    <!-- Badges and teaser on flight screens -->
+    <string name="billing_badge_pro">Pro</string>
+    <string name="billing_badge_trial">इस फ़्लाइट के लिए Pro फ़्री</string>
+    <string name="billing_teaser_title">मेरा प्लेन कहाँ है?</string>
+    <string name="billing_teaser_body">FlyTrack Pro उस विमान को फ़ॉलो कर रहा है जो इस रूट पर उड़ेगा, और इस फ़्लाइट के लिए पहले से चेतावनी तैयार है। वह प्लेन कहाँ है और यह फ़्लाइट असल में कब निकल सकती है, यह देखने के लिए Pro लें।</string>
+
+    <!-- Settings -->
+    <string name="billing_settings_section">FlyTrack Pro</string>
+    <string name="billing_settings_free">फ़्री प्लान: एक साथ %1$d फ़्लाइट्स तक। Pro में आने वाले विमान का अनुमान, लेट विमान के अलर्ट और लाइव नोटिफ़िकेशन भी मिलते हैं।</string>
+    <string name="billing_settings_go_pro">Pro लें</string>
+</resources>

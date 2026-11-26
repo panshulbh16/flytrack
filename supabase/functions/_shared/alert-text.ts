@@ -125,7 +125,7 @@ function visibility(m: number | null): string | null {
   return m < 1000 ? `${Math.round(m)} m` : `${(m / 1000).toFixed(1).replace(/\.0$/, "")} km`;
 }
 
-function city(iata: string | null, lang: AlertLanguage, fallback: string | null): string {
+export function city(iata: string | null, lang: AlertLanguage, fallback: string | null): string {
   const c = iata ? CITY[iata.toUpperCase()] : undefined;
   if (c) return lang === "hi" ? c.hi : c.en;
   return (lang === "hi" ? null : fallback) ?? iata ?? "";

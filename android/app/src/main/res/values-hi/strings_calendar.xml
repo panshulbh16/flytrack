@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hindi translation of values/strings_calendar.xml. -->
+<resources>
+    <string name="calendar_action_add">कैलेंडर में जोड़ें</string>
+    <!-- %1$s airport name, %2$s terminal -->
+    <string name="calendar_location_terminal">%1$s, टर्मिनल %2$s</string>
+    <string name="calendar_event_description">HeyGate से ट्रैक की गई। गेट, देरी और बैगेज बेल्ट के लाइव अपडेट के लिए ऐप खोलें।</string>
+    <string name="calendar_no_app">इस फ़ोन में कोई कैलेंडर ऐप या ब्राउज़र नहीं है।</string>
+
+    <string name="calendar_section">कैलेंडर</string>
+    <string name="calendar_feed_message">अपनी सारी फ़्लाइट्स अपने कैलेंडर में देखें। समय या गेट बदलने पर ये अपने-आप अपडेट हो जाती हैं।</string>
+    <string name="calendar_action_subscribe_google">Google Calendar में सब्सक्राइब करें</string>
+    <string name="calendar_action_copy">लिंक कॉपी करें</string>
+    <string name="calendar_action_share">लिंक शेयर करें</string>
+    <string name="calendar_apple_hint">Apple Calendar या Outlook के लिए लिंक कॉपी करें और उसे सब्सक्राइब किए गए कैलेंडर के रूप में जोड़ें। इसे निजी रखें: जिसके पास यह लिंक होगा, वह आपकी फ़्लाइट्स देख सकता है।</string>
+    <string name="calendar_feed_label">HeyGate कैलेंडर लिंक</string>
+    <string name="calendar_share_title">कैलेंडर लिंक</string>
+    <string name="calendar_copied">लिंक कॉपी हो गया</string>
+    <string name="calendar_action_rotate">लिंक रीसेट करें</string>
+    <string name="calendar_rotate_title">कैलेंडर लिंक रीसेट करें?</string>
+    <string name="calendar_rotate_message">पुराना लिंक तुरंत काम करना बंद कर देगा। जिन कैलेंडर में वह लगा है, उनमें नया लिंक डालना होगा।</string>
+    <string name="calendar_message_offline">आप ऑफ़लाइन हैं। इंटरनेट से जुड़ने पर फिर से कोशिश करें।</string>
+    <string name="calendar_message_failed">आपका कैलेंडर लिंक नहीं मिल पाया। कृपया फिर से कोशिश करें।</string>
+    <string name="calendar_message_not_configured">कैलेंडर फ़ीड अभी उपलब्ध नहीं है।</string>
+    <string name="calendar_message_rotated">नया लिंक तैयार है। इसे फिर से अपने कैलेंडर में कॉपी करें।</string>
+</resources>

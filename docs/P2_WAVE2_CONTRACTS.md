@@ -35,7 +35,7 @@ Migrations take numbers 17–20. Never edit migrations 01–16.
 **`can_read_flight`** also returns true for flights tracked by an accepted friend, when that flight has `share_with_friends = true`.
 
 **Friend alerts**
-* Event types: DEPARTED, LANDED, CANCELLED, DIVERTED, DIVERTED_DEST, and DELAY only when `delayMin ≥ 30`.
+* Event types: DEPARTED, LANDED, CANCELLED, REINSTATED, DIVERTED, DIVERTED_DEST, and DELAY only when `delayMin ≥ 30`.
 * Sent to friends with alerts enabled who don't track the flight themselves.
 * Recipient role is `friend`, and the text names the friend:
   * en: "Asha's flight 6E 2341 has landed in Mumbai"
@@ -147,3 +147,35 @@ Migrations take numbers 17–20. Never edit migrations 01–16.
 | android-wave2 | `feature/friends/**`, `feature/forecast/**`, `feature/leave/**`, calendar actions, forwarding-address screen; minimal edits to detail, settings and nav |
 | ios-wave2 | everything iOS for sections 1–5 |
 | i18n | after the builders: Android `values-hi/strings*.xml` (every string file), iOS `hi` localisation |
+
+## 8. Status (26 Nov 2026)
+
+**Built**
+* **Wave 1:** map with offline estimate, Airport Health + fog alerts, Passport + Year in Review, en/hi/hinglish alerts, quiet hours, DIVERTED_DEST, delivery receipts.
+* **Wave 2:** Friends (with REINSTATED added to friend alerts), email forwarding import, calendar feed + device calendar, arrival forecast, when to leave.
+* **Hindi:** full UI translation. Android `values-hi` has all 776 strings. The iOS `Localizable.xcstrings` has 501 keys.
+
+**Verified here**
+
+| Check | Result |
+|---|---|
+| Deno tests | 191 passed |
+| `deno check` | every function passes |
+| SQL suite | all files pass |
+| Android unit tests | 840 passed |
+| Android `assembleDebug` | succeeds |
+| iOS | **not compiled**: no Swift toolchain here. On a Mac: `cd ios/FlyTrackCore && swift test`, then xcodebuild |
+
+**Before going live**
+* Apply migrations 13–20 before deploying the functions.
+* Deploy the new functions: `refresh-airport-weather`, `ack-push`, `inbound-email`, `calendar-feed`.
+* Set the secret `INBOUND_EMAIL_SECRET`.
+* Choose an inbound email provider (Postmark / SendGrid / Cloudflare Email Routing). Point MX for `in.heygate.app` at it and write the small adapter to the contract body.
+* Make sure the Vault `project_url` is set, because the calendar URL and the weather cron use it.
+
+**Open issues (decide or fix before scale)**
+* **Invite-code guessing is not rate limited.** `accept_friend_invite` raises on a bad code, so failed attempts can't be counted. The code space is 31^8 ≈ 8.5e11, which is fine at today's scale. Before a public launch, put an Edge Function with a per-user and per-IP limiter in front of it.
+* **Email forwarding addresses are open.** Anyone who knows a user's forwarding address can add flights to that account; the sender is not checked, and Flighty behaves the same way. Each user also has a daily parse limit. Consider requiring the sender to match the account's email, or a confirmation push.
+* **Friends can't open a friend's alert history.** The apps show a read-only friend view instead.
+* **Leave-by reminders are only scheduled** after a Pro user opens that flight's detail screen.
+* **No device testing yet.** Android has had no real-device or emulator run. iOS has not been compiled.

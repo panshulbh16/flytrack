@@ -1,0 +1,171 @@
+{
+  "_comment": "Shared fixtures for leaveBy and the peak-hour rule (docs/P2_WAVE2_CONTRACTS.md section 5). The same cases belong in the Swift tests (FlyTrackCore). leaveBy = depTime - buffer - max(travelMinutes, 0); buffer = 120 domestic / 180 international, +30 fog or Airport Health disrupted or worse, +20 peak. Peak hours are departure-airport local time, half-open: [05:00, 09:00) and [17:00, 21:00). An unknown or invalid zone counts as Asia/Kolkata. reminderAt = leaveBy - 15 min.",
+  "defaults": {
+    "travelMinutes": 60,
+    "reminderBeforeMinutes": 15
+  },
+  "leaveBy": [
+    {
+      "name": "domestic, nothing extra",
+      "depTime": "2026-12-10T08:30:00Z",
+      "international": false,
+      "travelMinutes": 60,
+      "fogAtDep": false,
+      "peak": false,
+      "bufferMinutes": 120,
+      "leaveBy": "2026-12-10T05:30:00Z",
+      "reminderAt": "2026-12-10T05:15:00Z"
+    },
+    {
+      "name": "international",
+      "depTime": "2026-12-10T08:30:00Z",
+      "international": true,
+      "travelMinutes": 45,
+      "fogAtDep": false,
+      "peak": false,
+      "bufferMinutes": 180,
+      "leaveBy": "2026-12-10T04:45:00Z",
+      "reminderAt": "2026-12-10T04:30:00Z"
+    },
+    {
+      "name": "domestic, fog and peak",
+      "depTime": "2026-12-10T02:00:00Z",
+      "international": false,
+      "travelMinutes": 60,
+      "fogAtDep": true,
+      "peak": true,
+      "bufferMinutes": 170,
+      "leaveBy": "2026-12-09T22:10:00Z",
+      "reminderAt": "2026-12-09T21:55:00Z"
+    },
+    {
+      "name": "domestic, peak only",
+      "depTime": "2026-12-10T12:30:00Z",
+      "international": false,
+      "travelMinutes": 30,
+      "fogAtDep": false,
+      "peak": true,
+      "bufferMinutes": 140,
+      "leaveBy": "2026-12-10T09:40:00Z",
+      "reminderAt": "2026-12-10T09:25:00Z"
+    },
+    {
+      "name": "international, fog, peak, long drive",
+      "depTime": "2026-12-10T04:00:00Z",
+      "international": true,
+      "travelMinutes": 90,
+      "fogAtDep": true,
+      "peak": true,
+      "bufferMinutes": 230,
+      "leaveBy": "2026-12-09T22:40:00Z",
+      "reminderAt": "2026-12-09T22:25:00Z"
+    },
+    {
+      "name": "zero travel",
+      "depTime": "2026-12-10T08:30:00Z",
+      "international": false,
+      "travelMinutes": 0,
+      "fogAtDep": false,
+      "peak": false,
+      "bufferMinutes": 120,
+      "leaveBy": "2026-12-10T06:30:00Z",
+      "reminderAt": "2026-12-10T06:15:00Z"
+    },
+    {
+      "name": "negative travel counts as zero",
+      "depTime": "2026-12-10T08:30:00Z",
+      "international": false,
+      "travelMinutes": -15,
+      "fogAtDep": false,
+      "peak": false,
+      "bufferMinutes": 120,
+      "leaveBy": "2026-12-10T06:30:00Z",
+      "reminderAt": "2026-12-10T06:15:00Z"
+    },
+    {
+      "name": "leave by crosses midnight",
+      "depTime": "2026-12-10T00:30:00Z",
+      "international": false,
+      "travelMinutes": 60,
+      "fogAtDep": false,
+      "peak": false,
+      "bufferMinutes": 120,
+      "leaveBy": "2026-12-09T21:30:00Z",
+      "reminderAt": "2026-12-09T21:15:00Z"
+    }
+  ],
+  "peak": [
+    {
+      "name": "04:59 IST",
+      "depTime": "2026-12-09T23:29:00Z",
+      "tz": "Asia/Kolkata",
+      "peak": false
+    },
+    {
+      "name": "05:00 IST",
+      "depTime": "2026-12-09T23:30:00Z",
+      "tz": "Asia/Kolkata",
+      "peak": true
+    },
+    {
+      "name": "08:59 IST",
+      "depTime": "2026-12-10T03:29:00Z",
+      "tz": "Asia/Kolkata",
+      "peak": true
+    },
+    {
+      "name": "09:00 IST",
+      "depTime": "2026-12-10T03:30:00Z",
+      "tz": "Asia/Kolkata",
+      "peak": false
+    },
+    {
+      "name": "14:00 IST",
+      "depTime": "2026-12-10T08:30:00Z",
+      "tz": "Asia/Kolkata",
+      "peak": false
+    },
+    {
+      "name": "17:00 IST",
+      "depTime": "2026-12-10T11:30:00Z",
+      "tz": "Asia/Kolkata",
+      "peak": true
+    },
+    {
+      "name": "20:59 IST",
+      "depTime": "2026-12-10T15:29:00Z",
+      "tz": "Asia/Kolkata",
+      "peak": true
+    },
+    {
+      "name": "21:00 IST",
+      "depTime": "2026-12-10T15:30:00Z",
+      "tz": "Asia/Kolkata",
+      "peak": false
+    },
+    {
+      "name": "08:00 Dubai",
+      "depTime": "2026-12-10T04:00:00Z",
+      "tz": "Asia/Dubai",
+      "peak": true
+    },
+    {
+      "name": "08:00 Dubai is 09:30 IST: zone matters",
+      "depTime": "2026-12-10T04:00:00Z",
+      "tz": "Asia/Kolkata",
+      "peak": false
+    },
+    {
+      "name": "unknown zone falls back to India",
+      "depTime": "2026-12-10T03:00:00Z",
+      "tz": null,
+      "peak": true
+    },
+    {
+      "name": "invalid zone falls back to India",
+      "depTime": "2026-12-10T03:00:00Z",
+      "tz": "Mars/Olympus",
+      "peak": true
+    }
+  ]
+}

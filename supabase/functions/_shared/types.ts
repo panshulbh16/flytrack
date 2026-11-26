@@ -215,4 +215,13 @@ export interface Recipient {
   quiet_start?: string | null; // Postgres time, "23:00:00"
   quiet_end?: string | null; // "07:00:00"
   quiet_tz?: string | null; // IANA, e.g. "Asia/Kolkata"
+  /**
+   * "tracker": tracks the flight. "friend": a friend of a tracker with alerts on (P2 wave 2 section 1); gets only
+   * the friend events, in friend texts. Missing = tracker (rows from before migration 17, tests).
+   */
+  role?: RecipientRole | null;
+  /** For role "friend": the tracker's display name, null when unset. */
+  friend_name?: string | null;
 }
+
+export type RecipientRole = "tracker" | "friend";

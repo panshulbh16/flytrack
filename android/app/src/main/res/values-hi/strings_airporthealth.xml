@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hindi translation of values/strings_airporthealth.xml. -->
+<resources>
+    <string name="airporthealth_title">एयरपोर्ट के हालात</string>
+    <string name="airporthealth_departure">रवानगी · %1$s</string>
+    <string name="airporthealth_arrival">आगमन · %1$s</string>
+
+    <string name="airporthealth_level_normal">सामान्य</string>
+    <string name="airporthealth_level_busy">व्यस्त</string>
+    <string name="airporthealth_level_disrupted">बाधित</string>
+    <string name="airporthealth_level_severe">गंभीर</string>
+
+    <string name="airporthealth_headline_normal">सब सामान्य चल रहा है</string>
+    <string name="airporthealth_headline_fog">कोहरा</string>
+    <string name="airporthealth_headline_fog_visibility">कोहरा: विज़िबिलिटी %1$s मी.</string>
+    <string name="airporthealth_headline_thunderstorms">एयरपोर्ट पर आंधी-तूफ़ान</string>
+    <string name="airporthealth_headline_low_visibility">कम विज़िबिलिटी: %1$s मी.</string>
+    <string name="airporthealth_headline_low_cloud">नीचे बादल: %1$s फ़ीट</string>
+    <string name="airporthealth_headline_poor_weather">उड़ान के लिए खराब मौसम</string>
+    <plurals name="airporthealth_headline_cancellations">
+        <item quantity="one">आज %d फ़्लाइट रद्द हुई</item>
+        <item quantity="other">आज %d फ़्लाइट्स रद्द हुईं</item>
+    </plurals>
+    <string name="airporthealth_headline_late">रवानगी %1$d मिनट की देरी से चल रही है</string>
+    <string name="airporthealth_headline_delayed_share">%1$d%% फ़्लाइट्स देरी से रवाना</string>
+
+    <string name="airporthealth_avg_delay">रवानगी में औसत देरी</string>
+    <string name="airporthealth_avg_delay_value">%1$d मिनट</string>
+    <string name="airporthealth_delayed_pct">देरी से रवाना फ़्लाइट्स</string>
+    <string name="airporthealth_delayed_pct_value">%1$d%%</string>
+    <string name="airporthealth_cancelled">आज रद्द</string>
+    <plurals name="airporthealth_sample">
+        <item quantity="one">पिछले 3 घंटों की %d रवानगी के आधार पर</item>
+        <item quantity="other">पिछले 3 घंटों की %d रवानगियों के आधार पर</item>
+    </plurals>
+    <string name="airporthealth_sample_small">पिछले 3 घंटों में देरी का अंदाज़ा लगाने के लिए बहुत कम फ़्लाइट्स रवाना हुईं</string>
+    <string name="airporthealth_visibility">विज़िबिलिटी</string>
+    <string name="airporthealth_visibility_value">%1$s मी.</string>
+    <string name="airporthealth_visibility_10km">10 कि.मी. या उससे ज़्यादा</string>
+    <string name="airporthealth_category">फ़्लाइट कैटेगरी</string>
+    <string name="airporthealth_wind">हवा</string>
+    <string name="airporthealth_wind_value">%1$d नॉट</string>
+    <string name="airporthealth_weather">मौसम</string>
+    <string name="airporthealth_wx_fog">कोहरा</string>
+    <string name="airporthealth_wx_mist">धुंध</string>
+    <string name="airporthealth_wx_haze">धुंधलापन</string>
+    <string name="airporthealth_wx_smoke">धुआँ</string>
+    <string name="airporthealth_wx_rain">बारिश</string>
+    <string name="airporthealth_wx_thunderstorm">आंधी-तूफ़ान</string>
+    <string name="airporthealth_wx_dust">धूल</string>
+
+    <string name="airporthealth_teaser_title">इन एयरपोर्ट्स पर देरी और मौसम</string>
+    <string name="airporthealth_teaser_body">FlyTrack Pro बताता है कि रवानगी में कितनी देरी चल रही है, आज कितनी फ़्लाइट्स रद्द हुईं और मौसम की ताज़ा रिपोर्ट क्या है।</string>
+    <string name="airporthealth_source">मौसम: aviationweather.gov METAR। देरी: FlyTrack जिन फ़्लाइट्स को फ़ॉलो करता है।</string>
+</resources>

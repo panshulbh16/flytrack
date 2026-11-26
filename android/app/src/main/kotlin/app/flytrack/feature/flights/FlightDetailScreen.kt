@@ -63,6 +63,10 @@ import app.flytrack.core.time.FlightTimeFormat
 import app.flytrack.feature.billing.ui.ProFlightBadge
 import app.flytrack.feature.airporthealth.AirportHealthBlock
 import app.flytrack.feature.checkin.CheckinCard
+import app.flytrack.feature.calendar.AddToCalendarButton
+import app.flytrack.feature.forecast.ForecastBlock
+import app.flytrack.feature.friends.ShareWithFriendsRow
+import app.flytrack.feature.leave.WhenToLeaveCard
 import app.flytrack.feature.share.ShareRequest
 import app.flytrack.feature.share.ShareTarget
 import app.flytrack.feature.share.ShareFlightEffect
@@ -262,6 +266,9 @@ private fun DetailContent(
         Section { EndpointBlock(stringResource(R.string.flights_arrival), detail.arrival) }
         // P2 Airport Health: draws its own hairline, and nothing once the flight has landed.
         AirportHealthBlock(depIata = detail.card.depCode, arrIata = detail.card.arrCode, phase = detail.card.phase)
+        // P2 wave 2: when to leave (Pro, tracked upcoming flights) and the arrival forecast. Both draw their own hairline.
+        WhenToLeaveCard(detail.card.flightId)
+        ForecastBlock(detail.card.flightId)
         Section { AircraftBlock(detail) }
         if (detail.proInsight != ProInsightUiModel.None) {
             Section { ProInsightBlock(detail.proInsight) }
@@ -275,6 +282,9 @@ private fun DetailContent(
         if (canShare) {
             Section { ShareFlightBlock(isSharing = isSharing, onShare = { onShare(ShareTarget.WHATSAPP_FIRST) }) }
         }
+        // P2 wave 2: who sees this flight among friends, and one event in the phone's calendar.
+        ShareWithFriendsRow(detail.card.flightId, tracked = detail.trackingState == TrackingState.TRACKED)
+        Section { AddToCalendarButton(detail.card.flightId) }
         if (detail.trackingState != TrackingState.NOT_TRACKED) {
             Section {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {

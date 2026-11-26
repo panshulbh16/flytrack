@@ -21,6 +21,10 @@ public enum PushContract {
     public static let quietTrue = "1"
     public static let kindAlert = "alert"
     public static let kindSync = "sync"
+    /// Flights added from a forwarded email (P2 wave 2 section 2): "Added 2 flights from your email". `flight_id`
+    /// (the first added flight) is optional.
+    public static let kindImport = "import"
+    public static let keyCount = "count"
 
     public static func notificationTag(flightId: String, group: String) -> String {
         "\(flightId):\(group)"
@@ -30,6 +34,9 @@ public enum PushContract {
 public enum IncomingPush: Equatable, Sendable {
     case sync(flightId: String, flightJSON: String?)
     case alert(PushAlert)
+    /// `kind = "import"`: flights were added from a forwarded email. The visible alert comes from APNs; the app
+    /// refreshes its list. `count` is 0 when the server did not say.
+    case imported(count: Int, flightId: String?)
     case ignored
 }
 
@@ -48,6 +55,10 @@ public struct PushAlert: Equatable, Sendable {
     public var checkinUrl: String?
     /// The server sent this info alert silently (quiet hours): show it passive and without sound.
     public var quiet: Bool
+    /// An alert about a friend's flight (`role = "friend"`, P2 wave 2 section 1); its text already names the friend.
+    public var isFriend: Bool
+    /// Friend alerts only: the friend's name (`friend_name`).
+    public var friendName: String?
 
     public init(
         flightId: String,
@@ -60,9 +71,13 @@ public struct PushAlert: Equatable, Sendable {
         notificationId: Int,
         interruptionLevel: String,
         checkinUrl: String? = nil,
-        quiet: Bool = false
+        quiet: Bool = false,
+        isFriend: Bool = false,
+        friendName: String? = nil
     ) {
         self.quiet = quiet
+        self.isFriend = isFriend
+        self.friendName = friendName
         self.flightId = flightId
         self.eventId = eventId
         self.eventType = eventType
@@ -142,6 +157,10 @@ public func notificationId(for tag: String) -> Int {
 /// and interruption level the server actually set; otherwise the Android channel rules are used.
 public func parseIncomingPush(_ data: [String: String], apns: ApnsEnvelope? = nil) -> IncomingPush {
     let flightId = data[PushContract.keyFlightId]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    if data[PushContract.keyKind] == PushContract.kindImport {
+        let count = Int(data[PushContract.keyCount]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "") ?? 0
+        return .imported(count: max(0, count), flightId: isFlightUUID(flightId) ? flightId : nil)
+    }
     if flightId.isEmpty { return .ignored }
     switch data[PushContract.keyKind] {
     case PushContract.kindSync:
@@ -186,7 +205,16 @@ private func alertOrIgnored(_ data: [String: String], flightId: String, apns: Ap
     let tag = apns?.collapseId?.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty ?? fallbackTag
     let quietFlag = data[PushContract.keyQuiet]?.trimmingCharacters(in: .whitespacesAndNewlines) == PushContract.quietTrue
         || apns?.interruptionLevel == "passive"
-    let channel = channelId(interruptionLevel: apns?.interruptionLevel, type: type, quiet: quietFlag)
+    let friend = isFriendAlert(data)
+    // Friend alerts: only cancellation and diversion are critical (friend-alerts.ts), so a friend's delay in quiet
+    // hours is passive even though DELAY is critical for the tracker. A time-sensitive APNs level still wins.
+    let channel: String
+    if friend {
+        let serverCritical = apns?.interruptionLevel == "time-sensitive" || apns?.interruptionLevel == "critical"
+        channel = serverCritical ? PushContract.channelCritical : friendAlertChannelId(eventType: wire, quiet: quietFlag)
+    } else {
+        channel = channelId(interruptionLevel: apns?.interruptionLevel, type: type, quiet: quietFlag)
+    }
     return .alert(PushAlert(
         flightId: flightId,
         eventId: data[PushContract.keyEventId].flatMap { $0.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty },
@@ -198,7 +226,9 @@ private func alertOrIgnored(_ data: [String: String], flightId: String, apns: Ap
         notificationId: notificationId(for: tag),
         interruptionLevel: interruptionLevel(for: channel),
         checkinUrl: safeCheckinURL(data[PushContract.keyCheckinUrl])?.absoluteString,
-        quiet: channel == PushContract.channelQuiet
+        quiet: channel == PushContract.channelQuiet,
+        isFriend: friend,
+        friendName: friend ? data[FriendPushContract.keyFriendName]?.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty : nil
     ))
 }
 

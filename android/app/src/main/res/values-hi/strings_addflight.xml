@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hindi translation of values/strings_addflight.xml. -->
+<resources>
+    <string name="addflight_title">फ़्लाइट जोड़ें</string>
+    <!-- Screen headline. %1$s is addflight_headline_key, shown in italics. -->
+    <string name="addflight_headline">कौन-सी फ़्लाइट %1$s?</string>
+    <string name="addflight_headline_key">ट्रैक करनी है</string>
+
+    <!-- Flight number field -->
+    <string name="addflight_flight_label">फ़्लाइट नंबर</string>
+    <string name="addflight_flight_hint">एयरलाइन कोड और नंबर, जैसा टिकट पर छपा है: 6E 2341 या AI 101।</string>
+    <string name="addflight_flight_valid">हम %1$s ढूँढेंगे।</string>
+    <string name="addflight_flight_error_required">फ़्लाइट नंबर डालें, जैसे 6E 2341।</string>
+    <string name="addflight_flight_error_invalid">यह फ़्लाइट नंबर नहीं लगता। दो अक्षरों वाला एयरलाइन कोड और नंबर लिखें, जैसे 6E 2341 या AI 101।</string>
+    <string name="addflight_flight_clear">फ़्लाइट नंबर मिटाएँ</string>
+
+    <!-- Date -->
+    <string name="addflight_date_label">रवानगी की तारीख</string>
+    <string name="addflight_date_hint">जिस दिन फ़्लाइट उड़ान भरती है, रवानगी वाले एयरपोर्ट के स्थानीय समय के हिसाब से।</string>
+    <string name="addflight_date_other">दूसरी तारीख</string>
+    <string name="addflight_date_pick_description">%1$s, कैलेंडर से चुनें</string>
+    <string name="addflight_date_picker_title">रवानगी की तारीख</string>
+    <string name="addflight_date_error">यह तारीख नहीं खोजी जा सकती। %1$s से %2$s के बीच की कोई तारीख चुनें।</string>
+
+    <!-- Optional booking details -->
+    <string name="addflight_details_label">आपके टिकट पर (वैकल्पिक)</string>
+    <string name="addflight_pnr_label">PNR</string>
+    <string name="addflight_pnr_hint">बुकिंग रेफ़रेंस</string>
+    <string name="addflight_pnr_error">PNR में %1$d से %2$d अक्षर और अंक होते हैं।</string>
+    <string name="addflight_seat_label">सीट</string>
+    <string name="addflight_seat_hint">जैसे 12A</string>
+    <string name="addflight_seat_error">छोटा सीट कोड लिखें, जैसे 12A।</string>
+
+    <!-- Actions -->
+    <string name="addflight_search">फ़्लाइट खोजें</string>
+    <string name="addflight_searching">%1$s खोज रहे हैं…</string>
+    <string name="addflight_import">टिकट से इंपोर्ट करें</string>
+    <string name="addflight_import_hint">PDF टिकट या स्क्रीनशॉट है? हम उससे फ़्लाइट पढ़ सकते हैं।</string>
+
+    <!-- Notes shown when the form was filled in from a ticket -->
+    <string name="addflight_prefill_ok">आपके टिकट से भरा गया है। ट्रैक करने से पहले जानकारी जाँच लें।</string>
+    <string name="addflight_prefill_flight_unreadable">हम आपके टिकट पर फ़्लाइट नंबर नहीं पढ़ पाए। जैसा छपा है, वैसा लिखें।</string>
+    <string name="addflight_prefill_date_unreadable">हम आपके टिकट पर तारीख नहीं पढ़ पाए। जिस दिन फ़्लाइट रवाना होती है, वह दिन चुनें।</string>
+    <string name="addflight_prefill_date_out_of_range">आपके टिकट की तारीख (%1$s) हमारी खोज की सीमा से बाहर है। %2$s से %3$s के बीच की कोई तारीख चुनें।</string>
+
+    <!-- Results -->
+    <string name="addflight_results_caption">%1$s · %2$s</string>
+    <!-- %1$s is addflight_results_headline_single_key, in italics -->
+    <string name="addflight_results_headline_single">क्या यही %1$s है?</string>
+    <string name="addflight_results_headline_single_key">आपकी फ़्लाइट</string>
+    <!-- %1$d is the number of legs, %2$s is addflight_results_headline_legs_key, in italics -->
+    <plurals name="addflight_results_headline_legs">
+        <item quantity="one">इस फ़्लाइट का %1$d हिस्सा है। %2$s चुनें।</item>
+        <item quantity="other">इस फ़्लाइट के %1$d हिस्से हैं। %2$s चुनें।</item>
+    </plurals>
+    <string name="addflight_results_headline_legs_key">अपना वाला</string>
+    <string name="addflight_results_legs_hint">एक फ़्लाइट नंबर में कई पड़ाव हो सकते हैं। जिसमें आप सफ़र कर रहे हैं, उसे ट्रैक करें।</string>
+    <string name="addflight_results_times_note">समय हर एयरपोर्ट के स्थानीय समय में हैं।</string>
+
+    <!-- One leg -->
+    <string name="addflight_leg_route_description">%1$s से %2$s</string>
+    <string name="addflight_leg_cities">%1$s से %2$s</string>
+    <string name="addflight_leg_departs">रवानगी</string>
+    <string name="addflight_leg_arrives">आगमन</string>
+    <string name="addflight_leg_time_unknown">अभी घोषित नहीं</string>
+    <string name="addflight_leg_track">ट्रैक करें</string>
+    <string name="addflight_leg_track_description">%2$s से %3$s जाने वाली %1$s ट्रैक करें</string>
+    <string name="addflight_leg_tracked">आप इसे ट्रैक कर रहे हैं</string>
+    <string name="addflight_leg_open">खोलें</string>
+    <string name="addflight_leg_open_description">%2$s से %3$s जाने वाली %1$s खोलें</string>
+
+    <!-- Plain-language status of a leg -->
+    <string name="addflight_status_scheduled">निर्धारित</string>
+    <string name="addflight_status_on_time">समय पर</string>
+    <plurals name="addflight_status_late_minutes">
+        <item quantity="one">%d मिनट की देरी से चल रही है</item>
+        <item quantity="other">%d मिनट की देरी से चल रही है</item>
+    </plurals>
+    <string name="addflight_status_late_hours_minutes">%1$d घंटे %2$d मिनट की देरी से चल रही है</string>
+    <string name="addflight_status_boarding">बोर्डिंग</string>
+    <string name="addflight_status_in_air">हवा में</string>
+    <string name="addflight_status_landed">लैंड हो गई</string>
+    <string name="addflight_status_cancelled">रद्द</string>
+    <string name="addflight_status_diverted">डायवर्ट हुई</string>
+    <string name="addflight_status_schedule_only">सिर्फ़ टाइमटेबल, अभी लाइव स्टेटस नहीं</string>
+
+    <!-- Not found. %1$s flight number, %2$s date -->
+    <string name="addflight_not_found_title">%2$s को कोई %1$s फ़्लाइट नहीं</string>
+    <string name="addflight_not_found_message">पहले तारीख जाँचें: यह वही दिन होना चाहिए जिस दिन फ़्लाइट उड़ान भरती है, रवानगी वाले एयरपोर्ट के स्थानीय समय में। आधी रात के ठीक बाद निकलने वाली फ़्लाइट नए दिन में गिनी जाती है। फिर एयरलाइन कोड जाँचें, जैसे IndiGo के लिए 6E और Air India के लिए AI।</string>
+    <string name="addflight_not_found_change_date">तारीख बदलें</string>
+
+    <!-- Daily search limit -->
+    <string name="addflight_rate_limited_title">खोज की सीमा पूरी हो गई</string>
+    <string name="addflight_rate_limited_message">पिछले 24 घंटों की आपकी सारी फ़्लाइट खोजें इस्तेमाल हो चुकी हैं। समय बीतने के साथ ये फिर मिल जाती हैं, इसलिए थोड़ी देर बाद कोशिश करें। जिन फ़्लाइट्स को आप पहले से ट्रैक कर रहे हैं, वे अपडेट होती रहेंगी।</string>
+    <string name="addflight_rate_limited_google_hint">सेटिंग्स में Google खाता जोड़ने से आपकी रोज़ की सीमा बढ़ जाती है।</string>
+    <string name="addflight_rate_limited_open_settings">सेटिंग्स खोलें</string>
+
+    <!-- Provider error -->
+    <string name="addflight_provider_error_title">फ़्लाइट डेटा जवाब नहीं दे रहा</string>
+    <string name="addflight_provider_error_message">अभी हम अपने फ़्लाइट-डेटा स्रोत तक नहीं पहुँच पाए। आपकी खोज में कोई गलती नहीं है: थोड़ी देर में फिर से कोशिश करें।</string>
+
+    <!-- The server rejected the search for a reason the app does not know -->
+    <string name="addflight_rejected_title">यह खोज नहीं हो पाई</string>
+    <string name="addflight_rejected_message">फ़्लाइट नंबर और तारीख जाँचें, फिर से कोशिश करें।</string>
+
+    <!-- Problems when tracking a leg -->
+    <string name="addflight_limit_title">ट्रैकिंग की सीमा पूरी हो गई</string>
+    <!-- %1$d is the free limit (also the plural count), %2$d the Pro limit -->
+    <plurals name="addflight_limit_message_free">
+        <item quantity="one">आप पहले से %1$d फ़्लाइट ट्रैक कर रहे हैं, जो फ़्री प्लान की अधिकतम सीमा है। Pro में %2$d तक फ़्लाइट्स ट्रैक होती हैं। जिस फ़्लाइट की अब ज़रूरत नहीं, उसे आर्काइव करें या हटाएँ, फिर इसे ट्रैक करें।</item>
+        <item quantity="other">आप पहले से %1$d फ़्लाइट्स ट्रैक कर रहे हैं, जो फ़्री प्लान की अधिकतम सीमा है। Pro में %2$d तक फ़्लाइट्स ट्रैक होती हैं। जिस फ़्लाइट की अब ज़रूरत नहीं, उसे आर्काइव करें या हटाएँ, फिर इसे ट्रैक करें।</item>
+    </plurals>
+    <plurals name="addflight_limit_message_pro">
+        <item quantity="one">आप पहले से %1$d फ़्लाइट ट्रैक कर रहे हैं, जो Pro की अधिकतम सीमा है। जिस फ़्लाइट की अब ज़रूरत नहीं, उसे आर्काइव करें या हटाएँ, फिर इसे ट्रैक करें।</item>
+        <item quantity="other">आप पहले से %1$d फ़्लाइट्स ट्रैक कर रहे हैं, जो Pro की अधिकतम सीमा है। जिस फ़्लाइट की अब ज़रूरत नहीं, उसे आर्काइव करें या हटाएँ, फिर इसे ट्रैक करें।</item>
+    </plurals>
+    <string name="addflight_limit_action">मेरी फ़्लाइट्स पर जाएँ</string>
+    <string name="addflight_track_offline">आप ऑफ़लाइन हैं, इसलिए यह फ़्लाइट नहीं जुड़ी। अपना कनेक्शन जाँचें और फिर से ट्रैक करें दबाएँ।</string>
+    <string name="addflight_track_gone">यह फ़्लाइट अब उपलब्ध नहीं है। नई जानकारी के लिए फिर से खोजें।</string>
+    <string name="addflight_track_gone_action">फिर से खोजें</string>
+    <string name="addflight_track_invalid_details">ऊपर PNR और सीट जाँचें, फिर से कोशिश करें।</string>
+    <string name="addflight_track_details_not_saved">हम इस फ़्लाइट में PNR और सीट सेव नहीं कर पाए। अपना कनेक्शन जाँचकर फिर से कोशिश करें, या उन्हें मिटाकर फ़्लाइट को वैसे ही खोलें।</string>
+    <string name="addflight_track_failed">हम यह फ़्लाइट नहीं जोड़ पाए। कृपया फिर से कोशिश करें।</string>
+</resources>

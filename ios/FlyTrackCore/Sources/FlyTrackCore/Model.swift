@@ -91,7 +91,8 @@ public enum Cabin: String, CaseIterable, Sendable, Equatable {
 
 public enum TrackSource: String, CaseIterable, Sendable, Equatable {
     /// `scan` is a boarding-pass barcode read with the camera or from a photo (P1 contract section 5).
-    case manual, pdf, share, screenshot, gmail, scan
+    /// `email` is a booking email forwarded to the user's HeyGate address (P2 wave 2 contract section 2).
+    case manual, pdf, share, screenshot, gmail, scan, email
 
     public var wire: String { rawValue }
 

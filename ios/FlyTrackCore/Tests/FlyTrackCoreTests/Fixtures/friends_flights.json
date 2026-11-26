@@ -1,0 +1,30 @@
+[
+  {
+    "friend_id": "aaaaaaaa-1111-4111-8111-111111111111",
+    "display_name": "Asha",
+    "flight_id": "11111111-2222-4333-8444-555555555555",
+    "flight": {
+      "carrier": "6E", "number": "2341", "date": "2026-11-25", "airline": "IndiGo", "status": "scheduled",
+      "sched_dep": "2026-11-25T12:55:00+00:00", "est_dep": "2026-11-25T13:20:00+00:00", "act_dep": null,
+      "sched_arr": "2026-11-25T15:10:00+00:00", "est_arr": null, "act_arr": null,
+      "dep": { "iata": "DEL", "name": "Indira Gandhi International", "city": "Delhi", "lat": 28.5665, "lon": 77.1031, "tz": "Asia/Kolkata", "terminal": "1", "gate": "12" },
+      "arr": { "iata": "BOM", "name": "Chhatrapati Shivaji Maharaj International", "city": "Mumbai", "lat": 19.0887, "lon": 72.8679, "tz": "Asia/Kolkata", "terminal": "2", "gate": null, "belt": "5" },
+      "aircraft": { "model": "A320neo" },
+      "live": null,
+      "updated_at": "2026-11-25T12:00:00+00:00"
+    }
+  },
+  {
+    "friend_id": "bbbbbbbb-2222-4222-8222-222222222222",
+    "display_name": null,
+    "flight_id": "22222222-3333-4444-8555-666666666666",
+    "flight": {
+      "carrier": "AI", "number": "101", "date": "2026-11-25", "status": "en_route",
+      "sched_dep": "2026-11-25T08:00:00Z", "act_dep": "2026-11-25T08:10:00Z", "sched_arr": "2026-11-25T23:00:00Z",
+      "dep": { "iata": "DEL", "tz": "Asia/Kolkata", "lat": 28.5665, "lon": 77.1031 },
+      "arr": { "iata": "JFK" },
+      "live": { "lat": 55.1, "lon": 40.2, "alt_ft": 36000, "speed_kts": 480, "heading": 310, "at": "2026-11-25T12:00:00Z" }
+    }
+  },
+  { "friend_id": "cccccccc-3333-4333-8333-333333333333", "display_name": "No flight", "flight_id": "33333333-4444-4555-8666-777777777777", "flight": null }
+]

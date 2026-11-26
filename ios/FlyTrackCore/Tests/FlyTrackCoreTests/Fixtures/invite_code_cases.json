@@ -1,0 +1,34 @@
+{
+  "description": "Friend invite codes (P2 wave 2 contract section 1): 8 characters from ABCDEFGHJKMNPQRSTUVWXYZ23456789. normalize ignores whitespace and dashes and upper-cases; extract finds a code in a pasted message (bare code, then the first ABCD-EFGH group, then the first 8-character alphabet word that contains a digit). Shared by the Android and iOS tests.",
+  "normalize": [
+    { "input": "ABCDEFGH", "expected": "ABCDEFGH" },
+    { "input": "abcd-efgh", "expected": "ABCDEFGH" },
+    { "input": "  ABCD EFGH ", "expected": "ABCDEFGH" },
+    { "input": "ABCD\tEFGH", "expected": "ABCDEFGH" },
+    { "input": "23456789", "expected": "23456789" },
+    { "input": "k7mn-p2qr", "expected": "K7MNP2QR" },
+    { "input": "", "expected": null },
+    { "input": "ABCDEFG", "expected": null },
+    { "input": "ABCDEFGHJ", "expected": null },
+    { "input": "ABCDEFG0", "expected": null },
+    { "input": "ABCDEFG1", "expected": null },
+    { "input": "ABCDEFGI", "expected": null },
+    { "input": "ABCDEFGL", "expected": null },
+    { "input": "ABCDEFGO", "expected": null },
+    { "input": "ABCD_EFG", "expected": null }
+  ],
+  "extract": [
+    { "input": "abcd efgh", "expected": "ABCDEFGH" },
+    { "input": "WEEKENDS", "expected": "WEEKENDS" },
+    { "input": "Follow my flights on HeyGate. My friend code is ABCD-EFGH", "expected": "ABCDEFGH" },
+    { "input": "code: k7mn-p2qr thanks!", "expected": "K7MNP2QR" },
+    { "input": "Big WEEKENDS trip, code X7Y8Z9AB", "expected": "X7Y8Z9AB" },
+    { "input": "ABCD-EFGH-JKMN", "expected": null },
+    { "input": "No code here", "expected": null },
+    { "input": "Only WEEKENDS and HOLIDAYS", "expected": null }
+  ],
+  "format": [
+    { "input": "ABCDEFGH", "expected": "ABCD-EFGH" },
+    { "input": "ABC", "expected": "ABC" }
+  ]
+}

@@ -133,6 +133,9 @@ final class LivePush: PushControlling {
             await post(alert)
             receipts?.received([(eventId: alert.eventId, receivedAt: Date())])
             _ = await flights.applyServerSync(flightId: alert.flightId, compactFlightJSON: nil)
+        case .imported:
+            // Flights added from a forwarded email (P2 wave 2 section 2). APNs shows the alert; refresh the list.
+            _ = await flights.refresh()
         case .ignored:
             break
         }

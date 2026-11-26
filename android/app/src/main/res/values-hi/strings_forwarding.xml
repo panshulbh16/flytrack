@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hindi translation of values/strings_forwarding.xml. -->
+<resources>
+    <string name="forwarding_title">ईमेल से इंपोर्ट करें</string>
+    <string name="forwarding_settings_row">ईमेल से इंपोर्ट करें</string>
+    <string name="forwarding_settings_row_message">बुकिंग ईमेल अपने HeyGate पते पर फ़ॉरवर्ड करें</string>
+    <string name="forwarding_intro">एयरलाइन या ट्रैवल साइट का बुकिंग ईमेल अपने HeyGate पते पर फ़ॉरवर्ड करें। हम फ़्लाइट्स जोड़ देंगे और आपको अलर्ट भेजेंगे।</string>
+    <string name="forwarding_address_label">आपका फ़ॉरवर्डिंग पता</string>
+    <string name="forwarding_action_copy">पता कॉपी करें</string>
+    <string name="forwarding_copied">पता कॉपी हो गया</string>
+    <string name="forwarding_howto_title">यह कैसे काम करता है</string>
+    <string name="forwarding_step_1">अपने ईमेल ऐप में IndiGo, Air India, MakeMyTrip या किसी भी एयरलाइन का बुकिंग कन्फ़र्मेशन खोलें।</string>
+    <string name="forwarding_step_2">इसे ऊपर दिए गए अपने पते पर फ़ॉरवर्ड करें। PDF टिकट भी चलते हैं।</string>
+    <string name="forwarding_step_3">एक मिनट में फ़्लाइट्स HeyGate में दिखने लगेंगी, अलर्ट चालू के साथ।</string>
+    <string name="forwarding_privacy">सिर्फ़ फ़्लाइट की जानकारी रखी जाती है; ईमेल खुद सेव नहीं होता। जब आप Pro पर नहीं होते, तब आने वाले ईमेल अनदेखे कर दिए जाते हैं।</string>
+    <string name="forwarding_failed">आपका फ़ॉरवर्डिंग पता नहीं मिल पाया</string>
+    <string name="forwarding_teaser_title">ईमेल फ़ॉरवर्ड करके फ़्लाइट्स जोड़ें</string>
+    <string name="forwarding_teaser_body">Pro आपको एक निजी ईमेल पता देता है। कोई भी बुकिंग उस पर फ़ॉरवर्ड करें और फ़्लाइट्स आपके लिए ट्रैक होने लगेंगी।</string>
+</resources>

@@ -5,6 +5,9 @@ import app.flytrack.core.push.PushContract
 import app.flytrack.feature.checkin.CHECKIN_EVENT_OPEN
 import app.flytrack.feature.checkin.KEY_CHECKIN_URL
 import app.flytrack.feature.checkin.checkinUrlFromPush
+import app.flytrack.feature.friends.friendAlertChannelId
+import app.flytrack.feature.friends.friendNameOf
+import app.flytrack.feature.friends.isFriendAlert
 
 /**
  * One FCM data payload, parsed without any Android type so it can be unit-tested against the
@@ -31,6 +34,10 @@ sealed interface IncomingPush {
         val checkinUrl: String? = null,
         /** The server sent this info alert silently (the user's quiet hours): it goes on [PushContract.CHANNEL_QUIET]. */
         val quiet: Boolean = false,
+        /** P2 wave 2: an alert about a friend's flight (`role = "friend"`); its text already names the friend. */
+        val isFriend: Boolean = false,
+        /** Friend alerts only: the friend's name (`friend_name`). */
+        val friendName: String? = null,
     ) : IncomingPush
 
     /** Not a message this app understands (missing kind, missing flight, empty alert). */
@@ -116,7 +123,9 @@ private fun alertOrIgnored(data: Map<String, String>, flightId: String): Incomin
     val group = if (wire.isEmpty()) "alert" else alertTagGroup(wire)
     val tag = PushContract.notificationTag(flightId, group)
     val quiet = data[PushContract.KEY_QUIET]?.trim() == PushContract.QUIET_TRUE
-    val channelId = alertChannelId(type, wire, quiet)
+    val friend = isFriendAlert(data)
+    // Friend alerts: only cancellation and diversion are critical (friend-alerts.ts), so a friend's delay is not loud.
+    val channelId = if (friend) friendAlertChannelId(wire, quiet) else alertChannelId(type, wire, quiet)
     return IncomingPush.Alert(
         flightId = flightId,
         eventId = data[PushContract.KEY_EVENT_ID]?.takeIf { it.isNotBlank() },
@@ -128,5 +137,7 @@ private fun alertOrIgnored(data: Map<String, String>, flightId: String): Incomin
         notificationId = notificationIdFor(tag),
         checkinUrl = checkinUrlFromPush(wire, data[KEY_CHECKIN_URL]),
         quiet = channelId == PushContract.CHANNEL_QUIET,
+        isFriend = friend,
+        friendName = if (friend) friendNameOf(data) else null,
     )
 }

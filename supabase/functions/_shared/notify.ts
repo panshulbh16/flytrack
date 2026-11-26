@@ -1,6 +1,7 @@
 import type { AlertLanguage, EventType, FlightEvent, FlightRow } from "./types.ts";
 import { safeCheckinUrl } from "./checkin.ts";
 import { renderAlert, type Tz } from "./alert-text.ts";
+import { friendNameForData, isFriendCritical, renderFriendAlert } from "./friend-alerts.ts";
 
 /** Android notification channels (created by the app with the same ids). */
 export const CHANNEL_CRITICAL = "flight_critical"; // gate/belt/delay/cancel/boarding — heads-up + sound
@@ -134,16 +135,28 @@ export interface AlertOptions {
   lang?: AlertLanguage | string | null;
   /** The recipient is inside their quiet hours (see quiet-hours.ts). Only info alerts get quieter. */
   quiet?: boolean;
+  /**
+   * Set when the recipient is a friend of a tracker (get_flight_recipients role "friend"): the text names that
+   * friend ("Asha's flight 6E 2341 has landed in Mumbai") and the data carries role="friend" + friend_name.
+   * Only CANCELLED / DIVERTED / DIVERTED_DEST stay critical for friends. P2 wave 2 section 1.
+   */
+  friend?: { name: string | null };
 }
 
 export function buildAlertMessage(
   token: string, flightId: string, eventId: string, e: FlightEvent, tz: Tz, opts: AlertOptions = {},
 ): FcmMessage {
-  const { title, body } = renderEvent(e, tz, opts.lang ?? "en");
-  const critical = CRITICAL.includes(e.type);
+  const lang = opts.lang ?? "en";
+  const friendText = opts.friend ? renderFriendAlert(e, tz, lang, opts.friend.name) : null;
+  const { title, body } = friendText ?? renderEvent(e, tz, lang);
+  const critical = opts.friend ? isFriendCritical(e.type) : CRITICAL.includes(e.type);
   const silent = !!opts.quiet && !critical; // critical alerts are always loud
   const tag = `${flightId}:${tagGroup(e.type)}`;
   const data: Record<string, string> = { kind: "alert", flight_id: flightId, event_id: eventId, event_type: e.type, title, body };
+  if (opts.friend) {
+    data.role = "friend";
+    data.friend_name = friendNameForData(opts.friend.name, lang);
+  }
   // The app posts foreground alerts itself: tell it to use the quiet channel too.
   if (silent) data.quiet = "1";
   // Check-in reminders: a tap opens the airline's page (top-level data key, also top level of APNs userInfo).

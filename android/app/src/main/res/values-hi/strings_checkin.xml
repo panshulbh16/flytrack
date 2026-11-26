@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hindi translation of values/strings_checkin.xml. -->
+<resources>
+    <string name="checkin_title">वेब चेक-इन</string>
+    <!-- %s is a relative time, e.g. "6 घंटे में" -->
+    <string name="checkin_opens_in">वेब चेक-इन %s खुलेगा</string>
+    <!-- %1$s weekday and date, %2$s time, both at the departure airport -->
+    <string name="checkin_opens_at">%1$s, %2$s (एयरपोर्ट का समय) पर खुलेगा</string>
+    <string name="checkin_open">वेब चेक-इन खुला है</string>
+    <!-- %s is a relative time, e.g. "20 मिनट में" -->
+    <string name="checkin_closes_in">%s बंद होगा</string>
+    <!-- %s is a time at the departure airport -->
+    <string name="checkin_closes_at">%s (एयरपोर्ट का समय) पर बंद होगा</string>
+    <string name="checkin_closing_soon">जल्द बंद होगा</string>
+    <string name="checkin_closed">वेब चेक-इन बंद हो गया है। एयरलाइन काउंटर पर चेक-इन करें।</string>
+    <string name="checkin_now">अभी चेक-इन करें →</string>
+    <string name="checkin_open_airline_page">एयरलाइन का चेक-इन पेज</string>
+    <string name="checkin_unverified">इस एयरलाइन का आम समय। एयरलाइन की साइट पर पुष्टि कर लें।</string>
+    <string name="checkin_no_browser">इस फ़ोन का कोई ब्राउज़र एयरलाइन का पेज नहीं खोल सकता।</string>
+</resources>

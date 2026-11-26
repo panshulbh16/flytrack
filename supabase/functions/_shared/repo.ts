@@ -104,6 +104,18 @@ export interface MemTracker {
   profile?: Pick<Recipient, "alert_language" | "quiet_hours_enabled" | "quiet_start" | "quiet_end" | "quiet_tz">;
 }
 
+/**
+ * A friend of one of the flight's trackers, as get_flight_recipients returns them (role "friend"): alerts on,
+ * the tracker shares the flight. Users who track the flight themselves are dropped, as in SQL.
+ */
+export interface MemFriend {
+  userId: string;
+  /** The tracker's display name (friend_name), null when unset. */
+  friendName: string | null;
+  devices: { id: string; token: string }[];
+  profile?: MemTracker["profile"];
+}
+
 export class MemoryRepo implements Repo {
   flights = new Map<string, FlightRow>();
   history: { flightId: string; source: string; changed: TrackedField[]; at: string }[] = [];
@@ -112,6 +124,7 @@ export class MemoryRepo implements Repo {
   liveActivities: (LiveActivityTarget & { flightId: string })[] = [];
   providerCalls: (ProviderCallLog & { at: string })[] = [];
   trackers = new Map<string, MemTracker[]>(); // flightId -> trackers
+  friends = new Map<string, MemFriend[]>(); // flightId -> friends of its trackers (friend alerts)
   tz: Record<string, string> = {};
   /** Airport countries for the domestic/international check-in close (unknown → "IN", DXB → "AE"). */
   country: Record<string, string> = {};
@@ -135,6 +148,11 @@ export class MemoryRepo implements Repo {
     f.pro_tracker_count = list.filter((x) => x.isPro).length;
     const nowIso = this.now().toISOString();
     if (!f.next_poll_at || Date.parse(f.next_poll_at) > Date.parse(nowIso)) f.next_poll_at = nowIso;
+  }
+
+  /** Test helper: a friend of a tracker of this flight, with friend alerts on (get_flight_recipients). */
+  addFriend(flightId: string, f: MemFriend) {
+    this.friends.set(flightId, [...(this.friends.get(flightId) ?? []), f]);
   }
 
   claimDueFlights(limit: number, leaseSeconds: number): Promise<FlightRow[]> {
@@ -232,6 +250,20 @@ export class MemoryRepo implements Repo {
       for (const d of t.devices) {
         out.push({
           user_id: t.userId, is_pro: t.isPro, notify_prefs: t.prefs, device_id: d.id, fcm_token: d.token, ...t.profile,
+          role: "tracker", friend_name: null,
+        });
+      }
+    }
+    const trackerIds = new Set((this.trackers.get(flightId) ?? []).map((t) => t.userId));
+    const seen = new Set<string>();
+    for (const f of this.friends.get(flightId) ?? []) {
+      if (trackerIds.has(f.userId)) continue; // tracking it themselves: the tracker alert only
+      for (const d of f.devices) {
+        if (seen.has(d.id)) continue; // two friends track it: one row per device (the first one's name)
+        seen.add(d.id);
+        out.push({
+          user_id: f.userId, is_pro: false, notify_prefs: {}, device_id: d.id, fcm_token: d.token, ...f.profile,
+          role: "friend", friend_name: f.friendName,
         });
       }
     }
@@ -252,6 +284,9 @@ export class MemoryRepo implements Repo {
   deleteDeviceByToken(token: string) {
     for (const list of this.trackers.values()) {
       for (const t of list) t.devices = t.devices.filter((d) => d.token !== token);
+    }
+    for (const list of this.friends.values()) {
+      for (const f of list) f.devices = f.devices.filter((d) => d.token !== token);
     }
     return Promise.resolve();
   }

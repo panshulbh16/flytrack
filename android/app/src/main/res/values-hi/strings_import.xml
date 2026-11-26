@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hindi translation of values/strings_import.xml. -->
+<resources>
+    <string name="import_title">टिकट इंपोर्ट करें</string>
+    <string name="import_intro">टिकट PDF या स्क्रीनशॉट चुनें। FlyTrack इसे इसी फ़ोन पर पढ़ता है और टेक्स्ट तभी भेजता है जब आप क्लाउड से पढ़ने की अनुमति दें।</string>
+    <string name="import_action_file">PDF या फ़ाइल चुनें</string>
+    <string name="import_action_image">स्क्रीनशॉट चुनें</string>
+    <string name="import_reading">टिकट पढ़ रहे हैं…</string>
+    <string name="import_pnr">बुकिंग रेफ़रेंस %1$s</string>
+    <string name="import_choose">कौन-सी फ़्लाइट जोड़ें?</string>
+    <string name="import_flight_row">%1$s, %2$s</string>
+    <string name="import_date_unknown">तारीख नहीं मिली</string>
+    <string name="import_route">%1$s से %2$s</string>
+    <string name="import_action_use">यह फ़्लाइट इस्तेमाल करें</string>
+    <string name="import_empty_title">कोई फ़्लाइट नंबर नहीं मिला</string>
+    <string name="import_empty_message">टिकट के टेक्स्ट में ऐसा कोई फ़्लाइट नंबर नहीं था जिसे हम पढ़ सकें।</string>
+    <string name="import_cloud_title">पढ़ने के लिए टेक्स्ट भेजें</string>
+    <string name="import_cloud_message">टिकट से पढ़े गए सिर्फ़ शब्द भेजे जाते हैं, फ़ाइल कभी नहीं। आप इसे सेटिंग्स में बंद कर सकते हैं।</string>
+    <string name="import_action_cloud">क्लाउड में पढ़ें</string>
+    <string name="import_notice_truncated">टिकट का सिर्फ़ पहला हिस्सा पढ़ा गया।</string>
+    <string name="import_notice_cloud_failed">क्लाउड से पढ़ना काम नहीं किया। आप फ़्लाइट नंबर खुद टाइप कर सकते हैं।</string>
+    <string name="import_notice_rate_limited">आज बहुत ज़्यादा टिकट पढ़े जा चुके हैं। कल फिर से कोशिश करें, या फ़्लाइट नंबर टाइप करें।</string>
+    <string name="import_notice_offline">आप ऑफ़लाइन हैं, इसलिए क्लाउड रीडर नहीं चल सकता।</string>
+    <string name="import_notice_not_configured">इस बिल्ड में क्लाउड से पढ़ना सेट नहीं है।</string>
+    <string name="import_notice_nothing">अब भी कोई फ़्लाइट नंबर नहीं मिला। अगली स्क्रीन पर उसे टाइप करें।</string>
+    <string name="import_action_type">फ़्लाइट नंबर टाइप करें</string>
+    <string name="scan_action">बोर्डिंग पास स्कैन करें</string>
+    <string name="scan_not_a_boarding_pass">यह बारकोड बोर्डिंग पास का नहीं है।</string>
+    <string name="scan_unavailable">बारकोड स्कैनर अभी उपलब्ध नहीं है। इसके बजाय टिकट इंपोर्ट करके देखें।</string>
+    <string name="scan_choose_flight">इस बोर्डिंग पास में कई फ़्लाइट्स हैं। एक चुनें।</string>
+</resources>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hindi translation of values/strings_forecast.xml. -->
+<resources>
+    <string name="forecast_title">आगमन का अनुमान</string>
+    <string name="forecast_likely_arrival">संभावित आगमन</string>
+    <!-- %1$s is a time such as "20:46". -->
+    <string name="forecast_cd_likely_arrival">संभावित आगमन %1$s</string>
+    <!-- %1$s is a time such as "21:01": four in five past flights arrived by then. -->
+    <string name="forecast_p80">%1$s तक पहुँचने की पूरी संभावना</string>
+    <plurals name="forecast_after_schedule">
+        <item quantity="one">तय समय से %1$d मिनट बाद</item>
+        <item quantity="other">तय समय से %1$d मिनट बाद</item>
+    </plurals>
+    <plurals name="forecast_before_schedule">
+        <item quantity="one">तय समय से %1$d मिनट पहले</item>
+        <item quantity="other">तय समय से %1$d मिनट पहले</item>
+    </plurals>
+    <string name="forecast_at_schedule">बिल्कुल तय समय पर</string>
+
+    <!-- %1$s confidence, %2$s the basis. -->
+    <string name="forecast_basis">%1$s · %2$s</string>
+    <string name="forecast_confidence_high">ज़्यादा भरोसा</string>
+    <string name="forecast_confidence_medium">मध्यम भरोसा</string>
+    <string name="forecast_confidence_low">कम भरोसा</string>
+    <!-- %1$d flights, %2$d days. -->
+    <plurals name="forecast_basis_history">
+        <item quantity="one">%2$d दिनों में %1$d फ़्लाइट के आधार पर</item>
+        <item quantity="other">%2$d दिनों में %1$d फ़्लाइट्स के आधार पर</item>
+    </plurals>
+    <string name="forecast_basis_schedule">टाइमटेबल के आधार पर</string>
+
+    <!-- %1$d days, e.g. "पिछले 60 दिन". -->
+    <plurals name="forecast_history_title">
+        <item quantity="one">पिछला %1$d दिन</item>
+        <item quantity="other">पिछले %1$d दिन</item>
+    </plurals>
+    <string name="forecast_on_time">समय पर रवाना</string>
+    <!-- %1$d is a whole percentage. -->
+    <string name="forecast_percent">%1$d%%</string>
+    <string name="forecast_avg_dep_delay">औसत रवानगी</string>
+    <string name="forecast_median_arr_delay">आम तौर पर आगमन</string>
+    <plurals name="forecast_minutes_late">
+        <item quantity="one">%1$d मिनट देरी</item>
+        <item quantity="other">%1$d मिनट देरी</item>
+    </plurals>
+    <plurals name="forecast_minutes_early">
+        <item quantity="one">%1$d मिनट जल्दी</item>
+        <item quantity="other">%1$d मिनट जल्दी</item>
+    </plurals>
+    <string name="forecast_on_schedule">समय पर</string>
+    <string name="forecast_cancelled">रद्द</string>
+    <!-- %1$d cancelled flights of %2$d flights. -->
+    <string name="forecast_cancelled_value">%2$d में से %1$d</string>
+
+    <string name="forecast_teaser_title">यह असल में कब लैंड होगी?</string>
+    <string name="forecast_teaser_body">Pro इस फ़्लाइट के पिछले 60 दिनों के आधार पर आगमन का अनुमान लगाता है, और बताता है कि यह कितनी बार समय पर रवाना हुई।</string>
+</resources>

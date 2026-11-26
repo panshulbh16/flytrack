@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hindi translation of values/strings_live.xml. -->
+<resources>
+    <!-- Notification channel flight_live -->
+    <string name="live_channel_name">लाइव फ़्लाइट</string>
+    <string name="live_channel_description">आपकी फ़्लाइट के लिए एक शांत, लगातार दिखने वाली नोटिफ़िकेशन, रवानगी से 3 घंटे पहले से लैंडिंग के 45 मिनट बाद तक।</string>
+
+    <!-- Status words -->
+    <string name="live_status_on_time">समय पर</string>
+    <string name="live_status_delayed">देरी से</string>
+    <!-- %d is the delay in minutes -->
+    <string name="live_status_delayed_by">%d मिनट देरी से</string>
+    <string name="live_status_check_in">चेक-इन खुला</string>
+    <string name="live_status_boarding">बोर्डिंग</string>
+    <string name="live_status_gate_closed">गेट बंद</string>
+    <string name="live_status_departed">रवाना</string>
+    <string name="live_status_in_air">हवा में</string>
+    <string name="live_status_landed">लैंड हुई</string>
+    <string name="live_status_cancelled">रद्द</string>
+    <string name="live_status_diverted">डायवर्ट</string>
+    <!-- Label of the offline estimate -->
+    <string name="live_estimated">अनुमानित</string>
+
+    <!-- %1$s departure airport code, %2$s arrival airport code -->
+    <string name="live_route">%1$s → %2$s</string>
+    <!-- %1$s flight number, %2$s route -->
+    <string name="live_title">%1$s · %2$s</string>
+    <!-- %s is an airport-local time such as 18:25 -->
+    <string name="live_departs">रवानगी %s</string>
+    <string name="live_arrives">आगमन %s</string>
+    <string name="live_landed_at">लैंड हुई %s</string>
+    <!-- %s is a gate such as 42B -->
+    <string name="live_gate">गेट %s</string>
+    <!-- %s is a terminal such as 1. "T1" is how terminals are signposted in Indian airports. -->
+    <string name="live_terminal">T%s</string>
+    <!-- %s is a baggage belt such as 5 -->
+    <string name="live_belt">बेल्ट %s</string>
+
+    <!-- Countdowns -->
+    <plurals name="live_countdown_days">
+        <item quantity="one">%d दिन</item>
+        <item quantity="other">%d दिन</item>
+    </plurals>
+    <!-- %1$d hours, %2$02d minutes -->
+    <string name="live_countdown_hours_minutes">%1$d घं %2$02d मि</string>
+    <!-- %d minutes -->
+    <string name="live_countdown_minutes">%d मिनट</string>
+    <!-- %s is a countdown such as "2 घं 05 मि" -->
+    <string name="live_departs_in">%s में रवानगी</string>
+    <string name="live_lands_in">%s में लैंडिंग</string>
+
+    <!-- Next flight widget -->
+    <string name="live_widget_name">अगली फ़्लाइट</string>
+    <string name="live_widget_description">आपकी अगली या मौजूदा फ़्लाइट: स्टेटस, समय, गेट, बेल्ट और काउंटडाउन।</string>
+    <string name="live_widget_empty_title">कोई आने वाली फ़्लाइट नहीं</string>
+    <string name="live_widget_empty_message">फ़्लाइट जोड़ने के लिए टैप करें</string>
+    <string name="live_widget_caption">अगली फ़्लाइट</string>
+</resources>

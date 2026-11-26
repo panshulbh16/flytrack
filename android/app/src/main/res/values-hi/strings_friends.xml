@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hindi translation of values/strings_friends.xml. -->
+<resources>
+    <string name="friends_title">दोस्त</string>
+    <string name="friends_settings_row">दोस्त</string>
+    <string name="friends_settings_row_message">परिवार की फ़्लाइट्स फ़ॉलो करें और “लैंड हो गई” अलर्ट पाएँ</string>
+    <!-- Shown when a friend set no display name. -->
+    <string name="friends_name_fallback">आपका दोस्त</string>
+
+    <string name="friends_invite_title">परिवार और दोस्तों को बुलाएँ</string>
+    <string name="friends_invite_message">जब वे आपका कोड जोड़ेंगे, तो आप दोनों एक-दूसरे की फ़्लाइट्स देख पाएँगे और किसी की फ़्लाइट के उड़ान भरने या लैंड होने पर अलर्ट पाएँगे।</string>
+    <string name="friends_code_label">फ़्रेंड कोड</string>
+    <string name="friends_code_expiry">7 दिन तक, एक व्यक्ति के लिए मान्य।</string>
+    <string name="friends_code_copied">कोड कॉपी हो गया</string>
+    <string name="friends_action_invite_whatsapp">WhatsApp पर बुलाएँ</string>
+    <string name="friends_action_invite_more">शेयर करें…</string>
+    <string name="friends_action_copy_code">कोड कॉपी करें</string>
+    <string name="friends_action_enter_code">कोड है? यहाँ डालें</string>
+    <!-- The invite message. %1$s is the code. Both lines are sent together; the second stays in English for friends who don't read Hindi. -->
+    <string name="friends_invite_text_hinglish">HeyGate पर मुझे जोड़ें और मेरी फ़्लाइट्स लाइव देखें। कोड: %1$s</string>
+    <string name="friends_invite_text_english">Add me on HeyGate to follow my flights: Settings → Friends → Enter a code: %1$s</string>
+    <string name="friends_invite_subject">HeyGate पर मेरी फ़्लाइट्स फ़ॉलो करें</string>
+    <string name="friends_invite_chooser">किसी दोस्त को बुलाएँ</string>
+
+    <string name="friends_section_list">आपके दोस्त</string>
+    <string name="friends_empty">अभी कोई दोस्त नहीं। अपना कोड परिवार को भेजें, ताकि आपको पता चले कि वे कब लैंड हुए।</string>
+    <string name="friends_alerts_on">उनकी फ़्लाइट्स के अलर्ट: चालू</string>
+    <string name="friends_alerts_off">उनकी फ़्लाइट्स के अलर्ट: बंद</string>
+    <!-- %1$s is the friend's name. -->
+    <string name="friends_alerts_switch">%1$s की फ़्लाइट्स के अलर्ट</string>
+    <!-- %1$s is a date. -->
+    <string name="friends_since">%1$s से दोस्त</string>
+    <string name="friends_action_remove">हटाएँ</string>
+    <!-- %1$s is the friend's name. -->
+    <string name="friends_remove_title">%1$s को हटाएँ?</string>
+    <string name="friends_remove_message">आप एक-दूसरे की फ़्लाइट्स नहीं देख पाएँगे। %1$s को इसकी सूचना नहीं दी जाएगी।</string>
+    <string name="friends_privacy">दोस्त आपकी आने वाली फ़्लाइट्स और उनका स्टेटस देखते हैं, आपका PNR या सीट कभी नहीं। आप किसी फ़्लाइट को उसकी स्क्रीन से दोस्तों से छिपा सकते हैं।</string>
+    <string name="friends_load_failed">आपके दोस्त लोड नहीं हो पाए</string>
+    <string name="friends_message_offline">आप ऑफ़लाइन हैं। इंटरनेट से जुड़ने पर फिर से कोशिश करें।</string>
+    <string name="friends_message_failed">कुछ गड़बड़ हो गई। कृपया फिर से कोशिश करें।</string>
+    <string name="friends_message_removed">दोस्त हटा दिया गया</string>
+
+    <string name="friends_accept_title">फ़्रेंड कोड डालें</string>
+    <string name="friends_accept_message">आपके दोस्त ने जो 8 अक्षरों का कोड भेजा है, वह लिखें, या उनका पूरा मैसेज पेस्ट करें।</string>
+    <string name="friends_action_paste">पेस्ट करें</string>
+    <string name="friends_action_add_friend">दोस्त जोड़ें</string>
+    <string name="friends_accept_privacy">आपका दोस्त भी आपकी आने वाली फ़्लाइट्स देख पाएगा। आप उन्हें कभी भी हटा सकते हैं।</string>
+    <!-- %1$s is the friend's name. -->
+    <string name="friends_accept_done_title">आप और %1$s अब दोस्त हैं</string>
+    <string name="friends_accept_done_message">उनकी फ़्लाइट्स आपकी फ़्लाइट्स वाली स्क्रीन पर दिखेंगी, और उनके उड़ान भरने और लैंड होने पर आपको अलर्ट मिलेगा।</string>
+    <string name="friends_error_invalid_code">यह कोड काम नहीं कर रहा। हो सकता है यह गलत लिखा हो, पहले इस्तेमाल हो चुका हो या 7 दिन से पुराना हो।</string>
+    <string name="friends_error_own_code">यह आपका अपना कोड है। इसे किसी दोस्त को भेजें।</string>
+    <string name="friends_error_already_friends">आप पहले से दोस्त हैं।</string>
+    <string name="friends_error_limit">आपके या आपके दोस्त के पहले से 50 दोस्त हैं।</string>
+
+    <string name="friends_flights_section">दोस्तों की फ़्लाइट्स</string>
+    <!-- %1$s is the friend's name, e.g. "आशा की फ़्लाइट". -->
+    <string name="friends_flight_of">%1$s की फ़्लाइट</string>
+
+    <string name="friends_share_title">दोस्तों को दिखाएँ</string>
+    <string name="friends_share_on">आपके दोस्त यह फ़्लाइट देख सकते हैं और इसके अलर्ट पा सकते हैं</string>
+    <string name="friends_share_off">आपके दोस्तों से छिपी हुई</string>
+</resources>

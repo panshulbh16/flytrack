@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hindi translation of values/strings_push.xml. -->
+<resources>
+    <string name="push_channel_critical_name">गेट, देरी और रद्द होना</string>
+    <string name="push_channel_critical_description">गेट बदलना, बैगेज बेल्ट, देरी, रद्द होना और बोर्डिंग। तुरंत, आवाज़ के साथ दिखाई जाती हैं।</string>
+    <string name="push_channel_updates_name">फ़्लाइट अपडेट</string>
+    <string name="push_channel_updates_description">रवानगी, लैंडिंग और पहली बार गेट मिलना।</string>
+
+    <string name="push_permission_title">गेट बदलने की खबर इसी फ़ोन पर पाएँ</string>
+    <string name="push_permission_message">गेट, बेल्ट या रवानगी का समय बदलने पर FlyTrack आपको अलर्ट करता है। ये अलर्ट दिखाने से पहले Android को अनुमति चाहिए।</string>
+    <string name="push_permission_allow">अलर्ट की अनुमति दें</string>
+    <string name="push_permission_later">अभी नहीं</string>
+    <string name="push_permission_blocked_title">अलर्ट बंद हैं</string>
+    <string name="push_permission_blocked_message">सिस्टम सेटिंग्स में FlyTrack की नोटिफ़िकेशन बंद हैं, इसलिए गेट बदलने की खबर नहीं दिखेगी।</string>
+    <string name="push_permission_open_settings">नोटिफ़िकेशन सेटिंग्स</string>
+
+    <!-- Gmail import: channel ticket_suggestions and its notifications. -->
+    <string name="gmail_channel_name">आपके ईमेल में मिली</string>
+    <string name="gmail_channel_description">आपके Gmail में मिली फ़्लाइट बुकिंग। हर एक के लिए पूछा जाता है कि फ़्लाइट ट्रैक करनी है या नहीं।</string>
+    <string name="gmail_notification_title">%2$s की %1$s ट्रैक करें?</string>
+    <string name="gmail_notification_title_route">%2$s की %1$s (%3$s) ट्रैक करें?</string>
+    <string name="gmail_notification_body">आपके Gmail में मिली।</string>
+    <string name="gmail_notification_track">ट्रैक करें</string>
+    <string name="gmail_notification_not_now">अभी नहीं</string>
+    <plurals name="gmail_notification_summary">
+        <item quantity="one">आपके Gmail में %d फ़्लाइट मिली</item>
+        <item quantity="other">आपके Gmail में %d फ़्लाइट्स मिलीं</item>
+    </plurals>
+</resources>

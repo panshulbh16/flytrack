@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hindi translation of values/strings_gmail.xml. -->
+<resources>
+    <string name="gmail_chooser_title">टिकट इंपोर्ट करें</string>
+    <string name="gmail_chooser_file">फ़ाइल या स्क्रीनशॉट से</string>
+    <string name="gmail_chooser_file_detail">इस फ़ोन में रखा टिकट PDF या स्क्रीनशॉट</string>
+    <string name="gmail_chooser_gmail">Gmail से</string>
+    <string name="gmail_chooser_gmail_detail">अपने ईमेल में बुकिंग ढूँढें</string>
+    <string name="gmail_title">Gmail से इंपोर्ट करें</string>
+    <string name="gmail_disclosure">इंपोर्ट करने के लिए टिकट ढूँढने के लिए FlyTrack आपके बुकिंग ईमेल पढ़ता है (Gmail का सिर्फ़ पढ़ने वाला एक्सेस)। यह उन्हें सिर्फ़ इसी फ़ोन पर पढ़ता है। आपके मेल से कुछ भी FlyTrack को नहीं भेजा जाता।</string>
+    <string name="gmail_action_connect">Gmail कनेक्ट करें</string>
+    <string name="gmail_reconnect_title">FlyTrack अब आपका Gmail नहीं पढ़ सकता</string>
+    <string name="gmail_action_reconnect">Gmail फिर से कनेक्ट करें</string>
+    <string name="gmail_scanning">बुकिंग ईमेल ढूँढ रहे हैं…</string>
+    <string name="gmail_results_title">आपके ईमेल में मिली</string>
+    <string name="gmail_flight_row">%1$s, %2$s</string>
+    <string name="gmail_route">%1$s से %2$s</string>
+    <string name="gmail_empty_title">आपके हाल के बुकिंग ईमेल में कोई आने वाली फ़्लाइट नहीं</string>
+    <string name="gmail_more_to_read">कुछ बुकिंग ईमेल अभी पढ़े नहीं गए हैं। और ढूँढने के लिए फिर से स्कैन करें।</string>
+    <string name="gmail_action_scan_again">फिर से स्कैन करें</string>
+    <string name="gmail_action_import_manually">खुद इंपोर्ट करें</string>
+    <string name="gmail_action_type">इसके बजाय टाइप करें</string>
+    <string name="gmail_notice_offline">आप ऑफ़लाइन हैं। इंटरनेट से जुड़ें और फिर से कोशिश करें।</string>
+    <string name="gmail_notice_not_configured">इस बिल्ड में Gmail इंपोर्ट सेट नहीं है।</string>
+    <string name="gmail_notice_failed">Gmail से कनेक्ट नहीं हो पाया। फिर से कोशिश करें।</string>
+</resources>

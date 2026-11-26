@@ -76,7 +76,27 @@ Billing setup:
 | Delivery receipts (section 3) | `PushAck.swift`: `parsePushEventId`, `PushAckRequest` (`{event_id, received_at}`), `AckedEvents` (once per event), `pushAcks` | `PushReceipts` + `LivePushAck` (`POST ack-push`, failures ignored). Acked on `willPresent`, on open (with the delivery time), when the app posts an alert itself, and on every foreground for alerts from the last 24 h still in Notification Center (stamped with `UNNotification.date`, i.e. when iOS delivered them) |
 | New alert types | `AlertType.fogAlert` / `.divertedDest` (both critical), `AlertGroup.weather` (FOG_ALERT), DIVERTED_DEST in `.disruption`, tag group `diverted` | "Fog and low visibility" toggle |
 
+## P2 wave 2 (docs/P2_WAVE2_CONTRACTS.md)
+
+| Feature | Core (XCTest in `Wave2Tests.swift`) | App |
+|---|---|---|
+| Friends (section 1) | `Friends.swift`: invite codes (`normalizeInviteCode`, `extractInviteCode`, `formatInviteCode`, `inviteInput`, `heygate://friend?code=` links; `invite_code_cases.json`), parsers for `my_friends` / `friends_flights` (`flight_public_json` → `Flight`) / `accept_friend_invite`, `acceptInviteError` (P0002 / 22023 / 23505 / P0001), `FriendsModel`, `AcceptInviteModel`, `FriendsFlightsModel`, `ShareWithFriendsModel`; friend alerts in `Push.swift` (`PushAlert.isFriend` / `friendName`; only CANCELLED / DIVERTED / DIVERTED_DEST are time-sensitive for friends, as `friend-alerts.ts`) | `FriendsScreen.swift` (invite on WhatsApp / share sheet / copy code, friends' flights, friends with an alert switch and remove), `AcceptInviteScreen` (also opened by `heygate://friend?code=…`), toolbar `person.2` button and Settings row; `LiveFriends`; "Friends can see this flight" switch on the detail screen (`user_flights.share_with_friends`). A tap on a friend's flight or friend alert opens the normal detail screen read-only (`can_read_flight` lets `flight_view` return it) |
+| Email forwarding (section 2) | `isForwardingAddress`, `TrackSource.email`, `IncomingPush.imported` (`kind = "import"`) | `ForwardingScreen` (Settings → Import by email): address, copy, share, Pro note; `LiveForwarding`. An import push refreshes the flight list |
+| Calendar (section 3) | `CalendarLinks.swift`: `isFeedURL`, `webcalURL`, `googleCalendarSubscribeURL`, `calendarEvent(for:)` (same SUMMARY as the feed, departure + 2 h when the arrival is unknown) | "Add to calendar" on the detail screen: `EKEventEditViewController` (EventKitUI, out of process, so no calendar permission is asked); Settings → Calendar: subscribe in Apple Calendar (`webcal://`), Google Calendar, copy link, reset link (`rotate_calendar_token`). The feed URL is only created when the user taps one of them |
+| Forecast (section 4) | `Forecast.swift`: `parseFlightForecast`, `forecastCardState` (times at the arrival airport, minutes against schedule), `FlightForecastModel` (asks again only when est/act departure or est arrival change; errors keep the earlier answer) | `ForecastCardView` / Pro teaser on the detail screen; `LiveForecast` |
+| When to leave (section 5) | `LeaveBy.swift`: `LeaveRules`, `leaveBy`, `isPeakHour`, `leavePlan`, `AirportHealth.slowsDeparture`, directions links, `whenToLeaveState`, `reminderAction`, `replanReminder`, `WhenToLeaveModel`; tested on Android's `leave_by_cases.json` (copied unchanged) | `WhenToLeaveCardView` (leave-by time, reasons, travel-time stepper remembered per airport in UserDefaults, Apple Maps / Google Maps); `LocalLeaveReminders`: a time-sensitive local notification `<flightId>:leave` at `leaveBy − 15 min` |
+
+iOS cannot re-check a reminder when it fires (Android's WorkManager job does). Instead `AppShell.resyncLeaveReminders()` re-plans every pending reminder from the cache after each push and whenever the app comes to the foreground, so a delay moves it and a cancellation removes it. The fog flag travels in the pending request because Airport Health is not asked from there. Without Pro the resync leaves a reminder alone; the detail screen cancels it once it knows the Pro state.
+
 Not done here: a Notification Service Extension. It would ack the moment an alert lands even when the app is never opened, but it needs the user's JWT in a shared keychain group; the foreground sweep stamps the true delivery time instead, so only alerts the user never opens and clears before opening the app go unacknowledged.
+
+## Languages (English, Hindi)
+
+* Code uses `String(localized:)` (or SwiftUI string literals); English text is the key. `SWIFT_EMIT_LOC_STRINGS` lets Xcode add new keys to the catalog on build.
+* `FlyTrack/Localizable.xcstrings` holds every app key with an `hi` translation; `FlightActivity/Localizable.xcstrings` holds the Live Activity's own keys (the extension is a separate bundle). Plurals use catalog plural variations, with substitutions where a string has two counts (`%lld hr %lld min`).
+* Info.plist text (camera prompt, display name) is in `FlyTrack/{en,hi}.lproj/InfoPlist.strings`; `CFBundleLocalizations` lists `en`, `hi`.
+* Hindi keeps brand names, flight numbers, IATA codes, times and Latin digits. A new string needs its Hindi value before release (Xcode marks it "New" in the hi column).
+* The share text stays bilingual: in Hindi the Hinglish line is Devanagari and the English line with the link is kept.
 
 ## Push
 
