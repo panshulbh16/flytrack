@@ -129,6 +129,9 @@ dependencies {
 
     implementation(libs.mlkit.text.recognition)
     implementation(libs.play.services.code.scanner)
+    implementation(libs.revenuecat.purchases)
+    implementation(libs.glance.appwidget)
+    implementation(libs.glance.material3)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
