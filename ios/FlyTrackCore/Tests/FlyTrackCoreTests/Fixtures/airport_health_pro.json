@@ -1,0 +1,4 @@
+{ "iata": "DEL", "level": "severe", "headline": "Fog: visibility 300 m",
+  "updated_at": "2026-11-22T09:30:00+00:00",
+  "detail": { "avg_dep_delay_min": 34, "delayed_pct": 41, "cancelled_today": 3, "sample_size": 58,
+    "weather": { "visibility_m": 300, "category": "LIFR", "fog": true, "wind_kts": 4, "wx": "FG", "observed_at": "2026-11-22T09:30:00+00:00" } } }

@@ -61,6 +61,7 @@ import app.flytrack.core.model.TrackExtras
 import app.flytrack.core.result.TrackField
 import app.flytrack.core.time.FlightTimeFormat
 import app.flytrack.feature.billing.ui.ProFlightBadge
+import app.flytrack.feature.airporthealth.AirportHealthBlock
 import app.flytrack.feature.checkin.CheckinCard
 import app.flytrack.feature.share.ShareRequest
 import app.flytrack.feature.share.ShareTarget
@@ -86,6 +87,8 @@ import app.flytrack.feature.flights.ui.cabinText
 import app.flytrack.feature.flights.ui.flightDateText
 import app.flytrack.feature.flights.ui.flightInfoLabel
 import app.flytrack.feature.flights.ui.minutesAmountText
+import app.flytrack.feature.map.FlightMapButton
+import app.flytrack.feature.map.ProgressSourceRow
 import app.flytrack.ui.components.ErrorState
 import app.flytrack.ui.components.FlyTrackTopBar
 import app.flytrack.ui.components.HairlineDivider
@@ -254,8 +257,11 @@ private fun DetailContent(
             )
             LittleNumbers(detail)
         }
+        Section { FlightMapButton(detail.card.flightId) } // map: opens the offline map sheet
         Section { EndpointBlock(stringResource(R.string.flights_departure), detail.departure) }
         Section { EndpointBlock(stringResource(R.string.flights_arrival), detail.arrival) }
+        // P2 Airport Health: draws its own hairline, and nothing once the flight has landed.
+        AirportHealthBlock(depIata = detail.card.depCode, arrIata = detail.card.arrCode, phase = detail.card.phase)
         Section { AircraftBlock(detail) }
         if (detail.proInsight != ProInsightUiModel.None) {
             Section { ProInsightBlock(detail.proInsight) }
@@ -338,6 +344,8 @@ private fun DetailHeader(detail: FlightDetailUiModel) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
+        // map: "Live" / "Estimated" and the time left, from the same fix as the progress (core/estimate).
+        card.progressSource?.let { source -> ProgressSourceRow(source, card.progressArrival, card.asOf) }
     }
     card.updatedAt?.let { updatedAt ->
         Spacer(Modifier.height(8.dp))

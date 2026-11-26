@@ -88,17 +88,24 @@ public struct FlightCard: Hashable, Sendable {
     public var duration: TimeInterval?
     public var info: [FlightInfo]
     public var countdown: Countdown?
+    /// Share flown (0...1) while airborne, or estimated airborne while offline (`Flight.progressFix`); else nil.
     public var progress: Double?
     public var updatedAt: Date?
     public var asOf: Date
+    /// Where `progress` comes from: a fresh live fix ("Live") or the estimate ("Estimated"). Nil without progress.
+    public var progressSource: PositionSource?
+    /// The expected touchdown `progress` runs to; the remaining time counts down to it.
+    public var progressArrival: Date?
 
     public init(
         flightId: String, designator: String, airlineName: String?, depCode: String, arrCode: String,
         depCity: String, arrCity: String, phase: FlightPhase, statusWord: FlightStatusWord, tone: FlightStatusTone,
         statusLine: StatusLine, departure: FlightTimeModel?, arrival: FlightTimeModel?, departureDate: LocalDate,
         departureDay: RelativeDay, duration: TimeInterval?, info: [FlightInfo], countdown: Countdown?,
-        progress: Double?, updatedAt: Date?, asOf: Date
+        progress: Double?, updatedAt: Date?, asOf: Date, progressSource: PositionSource? = nil, progressArrival: Date? = nil
     ) {
+        self.progressSource = progressSource
+        self.progressArrival = progressArrival
         self.flightId = flightId
         self.designator = designator
         self.airlineName = airlineName
@@ -143,6 +150,9 @@ extension Flight {
         let bestDep = bestDepartureTime
         let bestArr = bestArrivalTime
         let departureDate = bestDep.map { FlightTimeFormat.localDate($0.instant, tz: depTz) } ?? flightDate
+        // Estimate.swift: a fresh live fix ("Live"), else the shared time estimate ("Estimated"), which also
+        // covers a flight whose stale data still says "not departed" (airplane mode).
+        let fix = progressFix(now: now)
         let arrival: FlightTimeModel? = bestArr.map { arrival in
             let offset = bestDep.map { FlightTimeFormat.arrivalDayOffset(dep: $0.instant, depTz: depTz, arr: arrival.instant, arrTz: arrTz) } ?? 0
             return timeModel(arrival, scheduled: schedArr, tz: arrTz, punctuality: arrivalPunctuality, dayOffset: offset)
@@ -166,9 +176,11 @@ extension Flight {
             duration: duration,
             info: cardInfo(newFields),
             countdown: countdown(now),
-            progress: phase == .inAir ? progress(now: now) : nil,
+            progress: fix?.progress,
             updatedAt: [lastPolledAt, updatedAt].compactMap { $0 }.max(),
-            asOf: now
+            asOf: now,
+            progressSource: fix?.source,
+            progressArrival: fix?.arrival
         )
     }
 
@@ -341,6 +353,8 @@ private func nextFlight(_ upcoming: [FlightCard]) -> NextFlight? {
 
 public enum AlertGroup: String, CaseIterable, Sendable, Equatable {
     case delays, gate, boarding, takeoffAndLanding, baggage, disruption, inboundAircraft, checkin
+    /// Fog and low visibility at either airport (FOG_ALERT, free). Same group as Android's WEATHER.
+    case weather
 
     public var types: [AlertType] {
         switch self {
@@ -349,9 +363,10 @@ public enum AlertGroup: String, CaseIterable, Sendable, Equatable {
         case .boarding: return [.boarding]
         case .takeoffAndLanding: return [.departed, .landed]
         case .baggage: return [.beltAssigned, .beltChange]
-        case .disruption: return [.cancelled, .diverted, .reinstated]
+        case .disruption: return [.cancelled, .diverted, .reinstated, .divertedDest]
         case .inboundAircraft: return [.inboundLate]
         case .checkin: return [.checkinOpen, .checkinClosing]
+        case .weather: return [.fogAlert]
         }
     }
 

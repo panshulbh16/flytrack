@@ -45,3 +45,7 @@ data object GmailImport
 /** FlyTrack Pro paywall (plans from Google Play via RevenueCat, restore). Opened through LocalPaywallLauncher. */
 @Serializable
 data object Paywall
+
+/** Passport and Year in Review: the user's flown flights, counted by `my_passport`. */
+@Serializable
+data object Passport

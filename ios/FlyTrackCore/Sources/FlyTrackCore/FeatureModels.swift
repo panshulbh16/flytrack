@@ -195,12 +195,19 @@ public struct FlightDetailState: Equatable, Sendable {
     public var isSharing: Bool
     /// Set when a share link is ready; the screen opens WhatsApp or the share sheet, then calls `shareHandled()`.
     public var shareReady: FlightShareReady?
+    /// The flight map (P2 contract section 5); nil while an airport's coordinates are unknown.
+    public var map: FlightMapModel?
+    /// Airport Health rows for the airports that still matter (P2 contract section 1); empty hides the card.
+    public var airportHealth: [AirportHealthRow]
 
     public init(
         isLoading: Bool = true, detail: FlightDetailModel? = nil, isRefreshing: Bool = false,
         isWorking: Bool = false, editor: BookingEditor? = nil, message: FlightDetailMessage? = nil, isClosed: Bool = false,
-        proAccess: FlightProAccess = .locked, checkin: CheckinCard? = nil, isSharing: Bool = false, shareReady: FlightShareReady? = nil
+        proAccess: FlightProAccess = .locked, checkin: CheckinCard? = nil, isSharing: Bool = false, shareReady: FlightShareReady? = nil,
+        map: FlightMapModel? = nil, airportHealth: [AirportHealthRow] = []
     ) {
+        self.map = map
+        self.airportHealth = airportHealth
         self.isLoading = isLoading
         self.detail = detail
         self.isRefreshing = isRefreshing
@@ -229,13 +236,21 @@ public final class FlightDetailScreenModel {
     private let checkinRules: CheckinRuleSource?
     private let sharing: FlightSharing?
     private let shareBaseURL: String?
+    private let airportHealthSource: AirportHealthSource?
+    private var healthLoadedAt: Date?
 
-    /// `pro` nil: Pro comes from the profile alone. `checkinRules` / `sharing` nil: no check-in card / no sharing.
+    /// Airport Health is refreshed at most this often by `reload()` (the server refreshes METARs every 15 min).
+    public static let airportHealthMaxAge: TimeInterval = 15 * 60
+
+    /// `pro` nil: Pro comes from the profile alone. `checkinRules` / `sharing` / `airportHealth` nil: no check-in
+    /// card / no sharing / no Airport Health card.
     public init(
         flightId: String, flights: FlightRepository, profiles: ProfileRepository, clock: FlyClock,
         changes: FlightChangeTracker = FlightChangeTracker(), pro: ProStateProviding? = nil,
-        checkinRules: CheckinRuleSource? = nil, sharing: FlightSharing? = nil, shareBaseURL: String? = nil
+        checkinRules: CheckinRuleSource? = nil, sharing: FlightSharing? = nil, shareBaseURL: String? = nil,
+        airportHealth: AirportHealthSource? = nil
     ) {
+        self.airportHealthSource = airportHealth
         self.flightId = flightId
         self.flights = flights
         self.profiles = profiles
@@ -252,6 +267,7 @@ public final class FlightDetailScreenModel {
         await render()
         state.isLoading = false
         publish()
+        await refreshAirportHealth()
         // The free trial is granted by a server trigger when the first flight is added, so the cached profile does
         // not know `trial_flight_id` yet. Refresh it once so the badge and the unlocked Pro show straight away.
         if await profileMayLackTrial(), (await profiles.refresh()).isSuccess {
@@ -273,6 +289,7 @@ public final class FlightDetailScreenModel {
         if case .offline = result { state.message = .offline }
         else if case .failed = result { state.message = .refreshFailed }
         await render()
+        await refreshAirportHealth()
     }
 
     public func archive(_ archived: Bool) async {
@@ -395,8 +412,29 @@ public final class FlightDetailScreenModel {
         publish()
     }
 
-    /// Re-renders without a network call, e.g. after the Pro state changed or a minute passed (check-in countdown).
-    public func reload() async { await render() }
+    /// Re-renders without a network call, e.g. after the Pro state changed or a minute passed (check-in countdown,
+    /// the plane on the map). Airport Health is asked again once it is older than `airportHealthMaxAge`.
+    public func reload() async {
+        await render()
+        if let loaded = healthLoadedAt, clock.now().timeIntervalSince(loaded) < Self.airportHealthMaxAge { return }
+        await refreshAirportHealth()
+    }
+
+    /// Departure and/or arrival airport conditions. A failed answer keeps the rows already shown.
+    private func refreshAirportHealth() async {
+        guard let airportHealthSource else { return }
+        let flight: Flight?
+        if let details = await flights.trackedFlight(flightId: flightId) {
+            flight = details.flight
+        } else {
+            flight = await flights.flight(id: flightId)
+        }
+        guard let flight else { return }
+        healthLoadedAt = clock.now()
+        let rows = await loadAirportHealth(for: flight, source: airportHealthSource)
+        if !rows.isEmpty || healthSides(flight.phase).isEmpty { state.airportHealth = rows }
+        publish()
+    }
 
     private func render() async {
         let now = clock.now()
@@ -422,6 +460,7 @@ public final class FlightDetailScreenModel {
             state.detail = nil
         }
         state.proAccess = access
+        state.map = shown?.mapModel(now: now)
         if let shown, let checkinRules {
             let rule = await checkinRules.rule(carrier: shown.carrierIata)
             state.checkin = checkinCard(rule: rule, flight: shown, now: now)

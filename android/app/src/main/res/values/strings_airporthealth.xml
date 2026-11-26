@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Airport Health card on the flight detail screen (P2 contract, section 1). -->
+<resources>
+    <string name="airporthealth_title">Airport conditions</string>
+    <string name="airporthealth_departure">Departure · %1$s</string>
+    <string name="airporthealth_arrival">Arrival · %1$s</string>
+
+    <string name="airporthealth_level_normal">Normal</string>
+    <string name="airporthealth_level_busy">Busy</string>
+    <string name="airporthealth_level_disrupted">Disrupted</string>
+    <string name="airporthealth_level_severe">Severe</string>
+
+    <string name="airporthealth_headline_normal">Operating normally</string>
+    <string name="airporthealth_headline_fog">Fog</string>
+    <string name="airporthealth_headline_fog_visibility">Fog: visibility %1$s m</string>
+    <string name="airporthealth_headline_thunderstorms">Thunderstorms at the airport</string>
+    <string name="airporthealth_headline_low_visibility">Low visibility: %1$s m</string>
+    <string name="airporthealth_headline_low_cloud">Low cloud: %1$s ft</string>
+    <string name="airporthealth_headline_poor_weather">Poor flying weather</string>
+    <plurals name="airporthealth_headline_cancellations">
+        <item quantity="one">%d flight cancelled today</item>
+        <item quantity="other">%d flights cancelled today</item>
+    </plurals>
+    <string name="airporthealth_headline_late">Departures running %1$d min late</string>
+    <string name="airporthealth_headline_delayed_share">%1$d%% of departures delayed</string>
+
+    <string name="airporthealth_avg_delay">Average departure delay</string>
+    <string name="airporthealth_avg_delay_value">%1$d min</string>
+    <string name="airporthealth_delayed_pct">Departures delayed</string>
+    <string name="airporthealth_delayed_pct_value">%1$d%%</string>
+    <string name="airporthealth_cancelled">Cancelled today</string>
+    <plurals name="airporthealth_sample">
+        <item quantity="one">From %d departure in the last 3 hours</item>
+        <item quantity="other">From %d departures in the last 3 hours</item>
+    </plurals>
+    <string name="airporthealth_sample_small">Too few departures in the last 3 hours to judge delays</string>
+    <string name="airporthealth_visibility">Visibility</string>
+    <string name="airporthealth_visibility_value">%1$s m</string>
+    <string name="airporthealth_visibility_10km">10 km or more</string>
+    <string name="airporthealth_category">Flight category</string>
+    <string name="airporthealth_wind">Wind</string>
+    <string name="airporthealth_wind_value">%1$d kt</string>
+    <string name="airporthealth_weather">Weather</string>
+    <string name="airporthealth_wx_fog">Fog</string>
+    <string name="airporthealth_wx_mist">Mist</string>
+    <string name="airporthealth_wx_haze">Haze</string>
+    <string name="airporthealth_wx_smoke">Smoke</string>
+    <string name="airporthealth_wx_rain">Rain</string>
+    <string name="airporthealth_wx_thunderstorm">Thunderstorm</string>
+    <string name="airporthealth_wx_dust">Dust</string>
+
+    <string name="airporthealth_teaser_title">Delays and weather at these airports</string>
+    <string name="airporthealth_teaser_body">FlyTrack Pro shows how late departures are running, cancellations today and the latest weather report.</string>
+    <string name="airporthealth_source">Weather: aviationweather.gov METAR. Delays: flights FlyTrack follows.</string>
+</resources>

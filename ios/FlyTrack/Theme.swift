@@ -19,6 +19,20 @@ enum FlyColor {
     static let onTime = adaptive(0x4C7B41, 0xA9CFA0)
     static let delayed = adaptive(0x8D542D, 0xE8C98A)
     static let cancelled = adaptive(0xA34831, 0xF2BDA3)
+    /// 1 pt borders that must be seen (3:1 on every surface): the "Estimated" chip, progress tracks.
+    static let outline = adaptive(0x768775, 0x7A927E)
+    /// Decorative hairlines only.
+    static let outlineVariant = adaptive(0xD6DCCF, 0x4C6450)
+
+    // Map (docs/design-brief.md "Map"; same values as Android's FlightMapStyle). Dark uses the Night palette.
+    static let mapOcean = adaptive(0xE2E9DF, 0x253E36)
+    static let mapLand = adaptive(0x3E6B56, 0x8CA890)
+    static let mapGraticule = adaptive(0xC2D0C1, 0x466055)
+    /// Great-circle route: solid where flown, dashed for the rest.
+    static let mapRoute = adaptive(0xDF754E, 0xDF754E)
+    /// Airport dots: cream with an orange (`mapRoute`) ring.
+    static let mapAirport = adaptive(0xF6F5EF, 0xF6F5EF)
+    static let mapPlane = adaptive(0x244735, 0xF6F4E7)
 
     static func tone(_ tone: FlightStatusTone) -> Color {
         switch tone {

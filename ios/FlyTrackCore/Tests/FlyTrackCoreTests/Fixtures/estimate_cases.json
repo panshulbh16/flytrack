@@ -1,0 +1,39 @@
+{
+  "_comment": "Shared fixtures for estimatePosition (docs/P2_CONTRACTS.md section 5). Copied verbatim from android/app/src/test/resources/fixtures; keep both in sync. Expected positions come from independent formulas (spherical midpoint and destination-point along the initial bearing), not from slerp itself. Tolerances: lat/lon 0.001 deg, progress 1e-6, bearing 0.01 deg.",
+  "routes": {
+    "DEL-BOM": {
+      "dep": { "iata": "DEL", "lat": 28.5665, "lon": 77.1031 },
+      "arr": { "iata": "BOM", "lat": 19.0887, "lon": 72.8679 },
+      "distanceKm": 1138.230,
+      "initialBearing": 203.1239,
+      "finalBearing": 201.4064,
+      "midBearing": 202.1537,
+      "depTime": "2026-11-25T12:55:00Z",
+      "arrTime": "2026-11-25T15:05:00Z"
+    },
+    "DEL-DXB": {
+      "dep": { "iata": "DEL", "lat": 28.5665, "lon": 77.1031 },
+      "arr": { "iata": "DXB", "lat": 25.2528, "lon": 55.3644 },
+      "distanceKm": 2183.598,
+      "initialBearing": 265.3840,
+      "finalBearing": 255.4465,
+      "midBearing": 260.2013,
+      "depTime": "2026-11-22T04:30:00Z",
+      "arrTime": "2026-11-22T08:10:00Z"
+    }
+  },
+  "cases": [
+    { "route": "DEL-BOM", "now": "2026-11-25T12:25:00Z", "phase": "pre_departure", "progress": 0.0, "lat": 28.5665, "lon": 77.1031 },
+    { "route": "DEL-BOM", "now": "2026-11-25T12:55:00Z", "phase": "airborne", "progress": 0.0, "lat": 28.5665, "lon": 77.1031 },
+    { "route": "DEL-BOM", "now": "2026-11-25T13:27:30Z", "phase": "airborne", "progress": 0.25, "lat": 26.20844, "lon": 75.98323 },
+    { "route": "DEL-BOM", "now": "2026-11-25T14:00:00Z", "phase": "airborne", "progress": 0.5, "lat": 23.84205, "lon": 74.90794 },
+    { "route": "DEL-BOM", "now": "2026-11-25T14:32:30Z", "phase": "airborne", "progress": 0.75, "lat": 21.46847, "lon": 73.87127 },
+    { "route": "DEL-BOM", "now": "2026-11-25T15:05:00Z", "phase": "arrived", "progress": 1.0, "lat": 19.0887, "lon": 72.8679 },
+    { "route": "DEL-BOM", "now": "2026-11-25T18:00:00Z", "phase": "arrived", "progress": 1.0, "lat": 19.0887, "lon": 72.8679 },
+    { "route": "DEL-DXB", "now": "2026-11-22T01:00:00Z", "phase": "pre_departure", "progress": 0.0, "lat": 28.5665, "lon": 77.1031 },
+    { "route": "DEL-DXB", "now": "2026-11-22T05:25:00Z", "phase": "airborne", "progress": 0.25, "lat": 28.05866, "lon": 71.556 },
+    { "route": "DEL-DXB", "now": "2026-11-22T06:20:00Z", "phase": "airborne", "progress": 0.5, "lat": 27.33039, "lon": 66.07224 },
+    { "route": "DEL-DXB", "now": "2026-11-22T07:15:00Z", "phase": "airborne", "progress": 0.75, "lat": 26.3912, "lon": 60.67022 },
+    { "route": "DEL-DXB", "now": "2026-11-22T08:10:00Z", "phase": "arrived", "progress": 1.0, "lat": 25.2528, "lon": 55.3644 }
+  ]
+}

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Passport and Year in Review (P2 contract, section 2). -->
+<resources>
+    <string name="passport_title">Passport</string>
+    <string name="passport_tab_overview_all">All time</string>
+    <string name="passport_tab_overview_last12">Last 12 months</string>
+    <string name="passport_tab_year">%1$d in review</string>
+
+    <string name="passport_heading_all">Your passport</string>
+    <string name="passport_heading_last12">Your last 12 months</string>
+    <string name="passport_heading_year">%1$d in the air</string>
+    <string name="passport_since">First flight %1$s</string>
+
+    <string name="passport_tile_flights">Flights</string>
+    <string name="passport_tile_km">Km flown</string>
+    <string name="passport_tile_hours">Hours in the sky</string>
+    <string name="passport_tile_airports">Airports</string>
+    <string name="passport_tile_countries">Countries</string>
+    <string name="passport_tile_airlines">Airlines</string>
+    <string name="passport_earth_laps">That\'s %1$s times around the Earth</string>
+
+    <string name="passport_section_months">Flights by month</string>
+    <string name="passport_month_bar">%1$s: %2$s</string>
+    <string name="passport_section_highlights">Highlights</string>
+    <string name="passport_longest">Longest flight</string>
+    <string name="passport_longest_value">%1$s %2$s · %3$s → %4$s · %5$s km</string>
+    <string name="passport_top_route">Most flown route</string>
+    <plurals name="passport_top_route_value">
+        <item quantity="one">%1$s → %2$s · %3$d time</item>
+        <item quantity="other">%1$s → %2$s · %3$d times</item>
+    </plurals>
+    <string name="passport_on_time">Departed on time</string>
+    <string name="passport_on_time_value">%1$d%%</string>
+    <string name="passport_total_delay">Time lost to delays</string>
+    <string name="passport_worst_delay">Longest delay</string>
+    <string name="passport_worst_delay_value">%1$s %2$s · %3$s</string>
+
+    <string name="passport_section_airports">Airports</string>
+    <string name="passport_section_airlines">Airlines</string>
+    <string name="passport_section_aircraft">Aircraft</string>
+    <string name="passport_section_countries">Countries</string>
+    <plurals name="passport_times">
+        <item quantity="one">%d flight</item>
+        <item quantity="other">%d flights</item>
+    </plurals>
+
+    <string name="passport_section_co2">Carbon footprint</string>
+    <string name="passport_co2_value">About %1$s kg CO₂</string>
+    <string name="passport_co2_note">Estimate for one economy seat, from the distance flown. Real emissions depend on the aircraft, the cabin and how full the flight was.</string>
+
+    <string name="passport_pro_title">Your full history is in Pro</string>
+    <string name="passport_pro_body">Free shows your last 12 months and this year\'s review. FlyTrack Pro counts every flight you have ever tracked.</string>
+    <string name="passport_pro_action">See plans</string>
+
+    <string name="passport_empty_title">No flights yet</string>
+    <string name="passport_empty_message">Flights you track show up here once they take off.</string>
+    <string name="passport_empty_year_message">Nothing flown in %1$d yet. Flights you track show up here once they take off.</string>
+    <string name="passport_error_title">Couldn\'t load your passport</string>
+
+    <!-- Year in Review share card. -->
+    <string name="passport_card_caption">Year in review</string>
+    <string name="passport_card_title_year">%1$d</string>
+    <string name="passport_card_title_tail">in the air</string>
+    <string name="passport_card_top_route">Top route</string>
+    <string name="passport_card_longest">Longest</string>
+    <string name="passport_card_airline">Flew most with</string>
+    <string name="passport_card_footer">Tracked with FlyTrack</string>
+    <string name="passport_share_action">Share my year</string>
+    <string name="passport_share_preparing">Preparing your card…</string>
+    <string name="passport_share_text">My %1$d in the air: %2$s flights, %3$s km. Tracked with FlyTrack.</string>
+    <string name="passport_share_subject">My %1$d in the air</string>
+    <string name="passport_share_chooser">Share your year</string>
+    <string name="passport_share_failed">Couldn\'t share the card. Try again.</string>
+</resources>

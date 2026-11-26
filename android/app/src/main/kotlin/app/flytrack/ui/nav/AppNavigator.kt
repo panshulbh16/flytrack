@@ -24,6 +24,9 @@ interface AppNavigator {
     /** A Gmail suggestion was picked (Gmail screen, Found in Gmail card, notification): add-flight filled in from it. */
     fun openAddFlightFromGmail(s: GmailSuggestion)
     fun openSettings()
+
+    /** Passport and Year in Review (P2). */
+    fun openPassport() = Unit
     fun back()
 }
 

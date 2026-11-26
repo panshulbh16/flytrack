@@ -27,7 +27,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Creates the two channels the backend addresses by id, plus the local Gmail suggestions channel when
+ * Creates the three channels the backend addresses by id (critical, updates, quiet), plus the local Gmail suggestions channel when
  * that feature is built in. Safe to call on every process start.
  */
 internal object NotificationChannels {
@@ -50,8 +50,19 @@ internal object NotificationChannels {
         ).apply {
             description = context.getString(R.string.push_channel_updates_description)
         }
+        // Info alerts during the user's quiet hours (P2 section 3): low importance, so no sound and no heads-up.
+        val quiet = NotificationChannel(
+            PushContract.CHANNEL_QUIET,
+            context.getString(R.string.push_channel_quiet_name),
+            NotificationManager.IMPORTANCE_LOW,
+        ).apply {
+            description = context.getString(R.string.push_channel_quiet_description)
+            setSound(null, null)
+            enableVibration(false)
+        }
         manager.createNotificationChannel(critical)
         manager.createNotificationChannel(updates)
+        manager.createNotificationChannel(quiet)
         // Not created while the release switch is off, so system settings do not list an unreleased feature.
         if (BuildConfig.GMAIL_IMPORT_ENABLED) {
             val suggestions = NotificationChannel(

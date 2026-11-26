@@ -200,6 +200,16 @@ export function evaluateAlerts(
       dedupeKey: `${flightId}:DIVERTED`,
       payload: { origArr: planned, newArr: destChanged ? next.arrIata : null, estArr: destChanged ? next.estArr : null },
     });
+    // The DIVERTED alert already named the new airport: no second alert for the same news.
+    if (destChanged) mark("DIVERTED_DEST");
+  } else if (has("DIVERTED") && !has("DIVERTED_DEST") && destChanged && next.arrIata) {
+    // DIVERTED went out as "new destination not announced yet"; the airport is known now. Sent once.
+    mark("DIVERTED_DEST");
+    push({
+      type: "DIVERTED_DEST", severity: "critical", oldValue: planned, newValue: next.arrIata,
+      dedupeKey: `${flightId}:DIVERTED_DEST`,
+      payload: { origArr: planned, newArr: next.arrIata, estArr: next.estArr },
+    });
   }
   if (isLanded(next) && !has("LANDED")) {
     mark("LANDED");

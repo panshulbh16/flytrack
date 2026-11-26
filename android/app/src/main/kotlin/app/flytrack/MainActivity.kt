@@ -52,6 +52,8 @@ class MainActivity : ComponentActivity() {
 
     @Inject lateinit var settings: SettingsStore
 
+    @Inject lateinit var pushAck: app.flytrack.push.PushAckSender
+
     // Lazy: a build with Gmail import off never builds the scanner or its HTTP client.
     @Inject lateinit var gmailAppOpenCheck: dagger.Lazy<GmailAppOpenCheck>
 
@@ -62,6 +64,7 @@ class MainActivity : ComponentActivity() {
         if (savedInstanceState == null) {
             viewModel.onIntent(intent.toIncomingIntent())
             openCheckinPageIfAsked(intent)
+            ackOpenedAlert(intent)
         }
         setContent {
             val appearance by settings.appearance.collectAsStateWithLifecycle(initialValue = Appearance.SYSTEM)
@@ -95,6 +98,14 @@ class MainActivity : ComponentActivity() {
         setIntent(intent)
         viewModel.onIntent(intent.toIncomingIntent())
         openCheckinPageIfAsked(intent)
+        ackOpenedAlert(intent)
+    }
+
+    /** A tapped alert Play services showed while the app was in the background: send its delivery receipt (P2 section 3). */
+    private fun ackOpenedAlert(intent: Intent) {
+        if (intent.action != PushContract.ACTION_OPEN_FLIGHT) return
+        if (intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY != 0) return
+        pushAck.ack(intent.getStringExtra(PushContract.KEY_EVENT_ID))
     }
 
     /** A tapped CHECKIN_OPEN / CHECKIN_CLOSING alert also opens the airline's page (the flight stays underneath). */

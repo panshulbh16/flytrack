@@ -111,6 +111,8 @@ export const EVENT_TYPES = [
   "INBOUND_LATE", // Pro: the aircraft operating your flight is late
   "CHECKIN_OPEN", // web check-in window opened (free, from checkin_rules; no provider call)
   "CHECKIN_CLOSING", // web check-in closes in 30 min or less (free)
+  "FOG_ALERT", // fog / visibility < 1000 m at the departure or arrival airport (free, critical)
+  "DIVERTED_DEST", // after DIVERTED: the diversion airport became known (critical)
 ] as const;
 export type EventType = typeof EVENT_TYPES[number];
 
@@ -131,7 +133,7 @@ export interface AlertState {
   depTerminal?: string | null;
   baggageBelt?: string | null;
   depDelayMin?: number; // last delay value we notified (0 = on time)
-  milestones?: string[]; // BOARDING, DEPARTED, LANDED, CANCELLED, DIVERTED already sent
+  milestones?: string[]; // BOARDING, DEPARTED, LANDED, CANCELLED, DIVERTED, DIVERTED_DEST already sent
   schedDep?: string | null; // scheduled departure users were last told (detects airline retimes)
   plannedArr?: string | null; // original destination (diversion messages)
   alertSeq?: number; // generation counter mixed into dedupe keys
@@ -197,10 +199,20 @@ export interface FlightRow {
   updated_at?: string;
 }
 
+/** Language of push texts (profiles.alert_language). Hinglish exists only for alerts. */
+export const ALERT_LANGUAGES = ["en", "hi", "hinglish"] as const;
+export type AlertLanguage = typeof ALERT_LANGUAGES[number];
+
+/** One row of get_flight_recipients(). The language and quiet-hours fields come from profiles. */
 export interface Recipient {
   user_id: string;
   is_pro: boolean;
   notify_prefs: Record<string, boolean>;
   device_id: string;
   fcm_token: string;
+  alert_language?: AlertLanguage | string | null; // unknown values render in English
+  quiet_hours_enabled?: boolean | null;
+  quiet_start?: string | null; // Postgres time, "23:00:00"
+  quiet_end?: string | null; // "07:00:00"
+  quiet_tz?: string | null; // IANA, e.g. "Asia/Kolkata"
 }

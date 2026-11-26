@@ -87,6 +87,7 @@ class FirebasePushInitializer @Inject constructor(
     private val settings: SettingsStore,
     private val facts: DeviceFactsProvider,
     @ApplicationScope private val scope: CoroutineScope,
+    private val alertPrefs: app.flytrack.feature.settings.AlertPrefsRepository,
 ) : PushInitializer {
 
     private val _availability = MutableStateFlow<PushAvailability>(PushAvailability.Checking)
@@ -107,7 +108,11 @@ class FirebasePushInitializer @Inject constructor(
                 .map { (it as? SessionState.SignedIn)?.userId }
                 .distinctUntilChanged()
                 .collect { userId ->
-                    if (userId != null) registrar.syncForUser(userId)
+                    if (userId != null) {
+                        registrar.syncForUser(userId)
+                        // P2 section 4: a Hindi phone gets Hindi alerts unless the user chose otherwise.
+                        alertPrefs.applyDefaultLanguageOnce(userId)
+                    }
                 }
         }
     }

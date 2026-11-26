@@ -140,5 +140,15 @@
                 android:value="androidx.startup"
                 tools:node="remove" />
         </provider>
+        <!-- Passport: the Year in Review card PNG is shared through this provider (cache/shared_cards only). -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/passport_share_paths" />
+        </provider>
     </application>
 </manifest>

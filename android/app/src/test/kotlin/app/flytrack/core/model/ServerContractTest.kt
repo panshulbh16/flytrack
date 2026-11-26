@@ -52,9 +52,31 @@ class ServerContractTest {
         val notify = source("notify.ts")
         assertTrue(notify.contains("""CHANNEL_CRITICAL = "${PushContract.CHANNEL_CRITICAL}""""))
         assertTrue(notify.contains("""CHANNEL_UPDATES = "${PushContract.CHANNEL_UPDATES}""""))
+        assertTrue(notify.contains("""CHANNEL_QUIET = "${PushContract.CHANNEL_QUIET}""""))
         assertTrue(notify.contains("""click_action: "${PushContract.ACTION_OPEN_FLIGHT}""""))
         assertTrue(notify.contains("""kind: "${PushContract.KIND_ALERT}", ${PushContract.KEY_FLIGHT_ID}: flightId, ${PushContract.KEY_EVENT_ID}: eventId, ${PushContract.KEY_EVENT_TYPE}: e.type, ${PushContract.KEY_TITLE}, ${PushContract.KEY_BODY}"""))
         assertTrue(notify.contains("""kind: "${PushContract.KIND_SYNC}", ${PushContract.KEY_FLIGHT_ID}: row.id, ${PushContract.KEY_FLIGHT} }"""))
+    }
+
+    @Test
+    fun `quiet hours and the P2 tags match notify_ts`() {
+        val notify = source("notify.ts")
+        // foreground alerts: the app reads the same flag to pick the quiet channel
+        assertTrue(notify.contains("""data.${PushContract.KEY_QUIET} = "${PushContract.QUIET_TRUE}""""))
+        assertTrue(notify.contains("""critical ? CHANNEL_CRITICAL : silent ? CHANNEL_QUIET : CHANNEL_UPDATES"""))
+        // DIVERTED_DEST shares the "diverted" tag; FOG_ALERT falls through to its lower-cased name
+        assertTrue(notify.contains("""if (t === "DIVERTED_DEST") return "diverted""""))
+        assertFalse(Regex("""t === "FOG_ALERT"[^\n]*return""").containsMatchIn(notify.substringAfter("function tagGroup").substringBefore("\n}")))
+        assertEquals("diverted", app.flytrack.push.alertTagGroup(AlertType.DIVERTED_DEST))
+        assertEquals("fog_alert", app.flytrack.push.alertTagGroup(AlertType.FOG_ALERT))
+    }
+
+    @Test
+    fun `P2 alert types are appended in the order of types_ts`() {
+        val wires = AlertType.entries.map { it.wire }
+        assertEquals(listOf("FOG_ALERT", "DIVERTED_DEST"), wires.takeLast(2))
+        assertTrue(AlertType.FOG_ALERT.critical && AlertType.DIVERTED_DEST.critical)
+        assertFalse(AlertType.FOG_ALERT.proOnly || AlertType.DIVERTED_DEST.proOnly)
     }
 
     @Test

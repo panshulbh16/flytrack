@@ -34,6 +34,8 @@ struct FlyTrackApp: App {
         .onChange(of: scenePhase, initial: true) { _, phase in
             guard phase == .active else { return }
             Task { await GmailBackground.appOpened(shell: shell) }
+            // Delivery receipts for alerts that arrived while the app was in the background (P2 contract section 3).
+            Task { await shell.receipts.sweepDelivered() }
         }
     }
 }
@@ -104,6 +106,10 @@ final class AppShell: ObservableObject {
     let pro: ProCenter
     let sharing: LiveFlightSharing
     let checkinRules: LiveCheckinRules
+    let airportHealth: LiveAirportHealth
+    let passport: LivePassport
+    let alertPrefs: LiveAlertPrefs
+    let receipts: PushReceipts
 
     @Published var session: SessionState = .loading
     @Published var path = NavigationPath()
@@ -130,6 +136,13 @@ final class AppShell: ObservableObject {
         ))
         sharing = LiveFlightSharing(stack: stack, auth: auth)
         checkinRules = LiveCheckinRules(stack: stack)
+        airportHealth = LiveAirportHealth(stack: stack)
+        passport = LivePassport(stack: stack)
+        alertPrefs = LiveAlertPrefs(stack: stack)
+        let receipts = PushReceipts(sender: LivePushAck(stack: stack))
+        self.receipts = receipts
+        push.receipts = receipts
+        PushBridge.shared.onDelivered = { items in receipts.received(items) }
         PushBridge.shared.onToken = { token in
             Task { @MainActor in await DeviceRegistrar.register(token: token, client: stack.client) }
         }
@@ -219,6 +232,7 @@ final class AppShell: ObservableObject {
         if session != .notConfigured {
             _ = await flights.refresh()
             _ = await profiles.refresh()
+            await alertPrefs.applyDeviceDefaultOnce()
         }
         await pro.identifyAndReload()
         await FlightLiveActivities.resume(client: stack.client, push: push, flights: flights)
@@ -282,6 +296,7 @@ enum Route: Hashable {
     case scanBoardingPass
     case gmailImport
     case paywall
+    case passport
 }
 
 struct RootView: View {
@@ -307,6 +322,8 @@ struct RootView: View {
                         GmailImportScreen(shell: shell)
                     case .paywall:
                         PaywallScreen(shell: shell)
+                    case .passport:
+                        PassportScreen(shell: shell)
                     }
                 }
         }

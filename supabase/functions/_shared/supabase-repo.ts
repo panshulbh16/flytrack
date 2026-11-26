@@ -4,6 +4,7 @@ import type { LiveActivityTarget, ProviderCallLog, PushLogRow, Repo } from "./re
 import { secretKey } from "./supabase-keys.ts";
 import type { CheckinRule } from "./checkin.ts";
 import type { LegHistoryRow } from "./history.ts";
+import type { FogCandidate } from "./health.ts";
 
 /** Service-role client (bypasses RLS). Only ever used inside Edge Functions. */
 export function serviceClient(): SupabaseClient {
@@ -185,5 +186,9 @@ export class SupabaseRepo implements Repo {
 
   async getSharedFlight(token: string): Promise<Record<string, unknown> | null> {
     return must(await this.db.rpc("get_shared_flight", { p_token: token }), "sharedFlight") as Record<string, unknown> | null;
+  }
+
+  async getFogCandidates(limit: number): Promise<FogCandidate[]> {
+    return must(await this.db.rpc("fog_alert_candidates", { p_limit: limit }), "fogCandidates") ?? [];
   }
 }

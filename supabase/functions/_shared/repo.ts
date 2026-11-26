@@ -3,6 +3,7 @@ import type { FcmMessage } from "./notify.ts";
 import type { PushResult } from "./fcm.ts";
 import { type CheckinRule, checkinWindow, isCheckinDue } from "./checkin.ts";
 import type { LegHistoryRow } from "./history.ts";
+import { type FogCandidate, fogCandidates, type FogWeather } from "./health.ts";
 
 export interface ProviderCallLog {
   provider: string;
@@ -63,6 +64,8 @@ export interface Repo {
   upsertLegHistory(row: LegHistoryRow): Promise<void>;
   /** public.get_shared_flight(token): public fields, or null for an unknown / revoked / expired token. */
   getSharedFlight(token: string): Promise<Record<string, unknown> | null>;
+  /** public.fog_alert_candidates(): tracked flights near a foggy airport without a FOG_ALERT yet (DB only). */
+  getFogCandidates(limit: number): Promise<FogCandidate[]>;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -97,6 +100,8 @@ export interface MemTracker {
   isPro: boolean;
   prefs: Record<string, boolean>;
   devices: { id: string; token: string }[];
+  /** profiles fields returned by get_flight_recipients (P2): language and quiet hours. */
+  profile?: Pick<Recipient, "alert_language" | "quiet_hours_enabled" | "quiet_start" | "quiet_end" | "quiet_tz">;
 }
 
 export class MemoryRepo implements Repo {
@@ -114,6 +119,8 @@ export class MemoryRepo implements Repo {
   checkinRules = new Map<string, CheckinRule>();
   legHistory = new Map<string, LegHistoryRow>();
   shares: MemShare[] = [];
+  /** airport_weather rows by IATA (fog alerts). */
+  weather = new Map<string, FogWeather>();
   private seq = 0;
 
   constructor(private readonly now: () => Date) {}
@@ -223,7 +230,9 @@ export class MemoryRepo implements Repo {
     const out: Recipient[] = [];
     for (const t of this.trackers.get(flightId) ?? []) {
       for (const d of t.devices) {
-        out.push({ user_id: t.userId, is_pro: t.isPro, notify_prefs: t.prefs, device_id: d.id, fcm_token: d.token });
+        out.push({
+          user_id: t.userId, is_pro: t.isPro, notify_prefs: t.prefs, device_id: d.id, fcm_token: d.token, ...t.profile,
+        });
       }
     }
     return Promise.resolve(out);
@@ -313,6 +322,14 @@ export class MemoryRepo implements Repo {
         : null,
       updated_at: f.updated_at ?? null,
     });
+  }
+
+  getFogCandidates(limit: number): Promise<FogCandidate[]> {
+    const sent = new Set(this.events.map((e) => e.dedupeKey));
+    const tz = (iata: string) => this.tz[iata] ?? (iata === "DXB" ? "Asia/Dubai" : "Asia/Kolkata");
+    return Promise.resolve(
+      fogCandidates([...this.flights.values()], (iata) => this.weather.get(iata), tz, sent, this.now(), limit),
+    );
   }
 }
 

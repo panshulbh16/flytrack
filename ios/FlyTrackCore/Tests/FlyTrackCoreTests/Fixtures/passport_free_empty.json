@@ -1,0 +1,6 @@
+{ "scope": "last12", "year": 2026, "pro_limited": true,
+  "flights": 0, "distance_km": 0, "airborne_minutes": 0,
+  "airports": [], "countries": [], "airlines": [], "aircraft": [],
+  "longest": null, "top_route": null,
+  "delay": {"total_min": 0, "on_time_pct": null, "worst": null},
+  "co2_kg": 0, "co2_method": "estimate-v1", "by_month": [], "first_flight_date": null }

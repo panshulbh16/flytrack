@@ -1,14 +1,18 @@
-import type { EventType, FlightEvent, FlightRow } from "./types.ts";
+import type { AlertLanguage, EventType, FlightEvent, FlightRow } from "./types.ts";
 import { safeCheckinUrl } from "./checkin.ts";
+import { renderAlert, type Tz } from "./alert-text.ts";
 
 /** Android notification channels (created by the app with the same ids). */
 export const CHANNEL_CRITICAL = "flight_critical"; // gate/belt/delay/cancel/boarding — heads-up + sound
 export const CHANNEL_UPDATES = "flight_updates"; // departed/landed/gate assigned — normal
+/** Info alerts during the recipient's quiet hours: low importance, no sound (P2 section 3). */
+export const CHANNEL_QUIET = "flight_quiet";
 
 /** Events that are always user-visible and time-critical. */
 const CRITICAL: EventType[] = [
   "GATE_CHANGE", "TERMINAL_CHANGE", "BOARDING", "BELT_ASSIGNED", "BELT_CHANGE",
   "DELAY", "SCHEDULE_CHANGE", "CANCELLED", "DIVERTED", "REINSTATED", "INBOUND_LATE", "CHECKIN_CLOSING",
+  "FOG_ALERT", "DIVERTED_DEST",
 ];
 
 /** How long FCM should keep trying to deliver — a stale gate change is worse than none. */
@@ -16,6 +20,7 @@ const TTL_SECONDS: Partial<Record<EventType, number>> = {
   GATE_ASSIGNED: 2 * 3600, GATE_CHANGE: 2 * 3600, BOARDING: 3600, TERMINAL_CHANGE: 3 * 3600,
   BELT_ASSIGNED: 2 * 3600, BELT_CHANGE: 2 * 3600, DEPARTED: 3 * 3600, LANDED: 2 * 3600,
   CHECKIN_CLOSING: 30 * 60, // after the close it is useless
+  FOG_ALERT: 4 * 3600, // sent at most 4 h before the departure/arrival it is about
 };
 
 /** Same tag → a newer notification REPLACES the older one in the shade (no 3 stale gate alerts). */
@@ -24,113 +29,36 @@ function tagGroup(t: EventType): string {
   if (t.startsWith("GATE")) return "gate";
   if (t.startsWith("BELT")) return "belt";
   if (t.startsWith("DELAY") || t === "INBOUND_LATE" || t === "SCHEDULE_CHANGE") return "delay";
+  if (t === "DIVERTED_DEST") return "diverted"; // replaces "new destination not announced yet"
   return t.toLowerCase();
 }
 
-export function fmtTime(iso: unknown, tz: string | null): string {
-  if (typeof iso !== "string" || !iso) return "--:--";
-  return new Intl.DateTimeFormat("en-IN", {
-    hour: "2-digit", minute: "2-digit", hour12: false, timeZone: tz ?? "Asia/Kolkata",
-  }).format(new Date(iso));
+export type { Tz };
+
+/**
+ * Title and body of one alert in the recipient's language (profiles.alert_language).
+ * Templates live in alert-text.ts; every event type has one in en, hi and hinglish.
+ */
+export function renderEvent(e: FlightEvent, tz: Tz, lang: AlertLanguage | string | null = "en"): { title: string; body: string } {
+  return renderAlert(e, tz, lang);
 }
 
-/** null when the time is unknown — we never print a made-up or placeholder time in an alert. */
-function fmtTimeOrNull(iso: unknown, tz: string | null): string | null {
-  if (typeof iso !== "string" || !iso || Number.isNaN(Date.parse(iso))) return null;
-  return fmtTime(iso, tz);
+/**
+ * Fills the flight, dep and arr every template uses from the flight row when the event's payload lacks them
+ * (FOG_ALERT payloads carry only the weather fields). Values already in the payload win.
+ */
+export function withFlightContext(e: FlightEvent, row: Pick<FlightRow, "carrier_iata" | "flight_number" | "dep_iata" | "arr_iata">): FlightEvent {
+  const p = (e.payload ?? {}) as Record<string, unknown>;
+  if (p.flight && p.dep && p.arr) return e;
+  return {
+    ...e,
+    payload: { flight: `${row.carrier_iata} ${row.flight_number}`, dep: row.dep_iata, arr: row.arr_iata, ...p },
+  };
 }
 
-export interface Tz {
-  dep: string | null;
-  arr: string | null;
-}
-
-export function renderEvent(e: FlightEvent, tz: Tz): { title: string; body: string } {
-  const p = e.payload as Record<string, unknown>;
-  const f = String(p.flight ?? "");
-  const route = `${p.dep}→${p.arr}`;
-  switch (e.type) {
-    case "GATE_CHANGE":
-      return {
-        title: `Gate change: ${f} → Gate ${e.newValue}${p.terminal ? ` (T${p.terminal})` : ""}`,
-        body: `Was gate ${e.oldValue}. ${route}, departs ${fmtTime(p.estDep, tz.dep)}.`,
-      };
-    case "GATE_ASSIGNED":
-      return { title: `${f}: Gate ${e.newValue}`, body: `${p.terminal ? `Terminal ${p.terminal}, ` : ""}departs ${fmtTime(p.estDep, tz.dep)}.` };
-    case "TERMINAL_CHANGE":
-      return { title: `Terminal change: ${f} now T${e.newValue}`, body: `Was T${e.oldValue} at ${p.airport}. Leave extra time.` };
-    case "DELAY":
-      return {
-        title: `Delayed ${p.delayMin} min: ${f}`,
-        body: `${route} now departs ${fmtTime(p.estDep, tz.dep)} (was ${fmtTime(p.schedDep, tz.dep)}).${p.reason ? ` Reason: ${p.reason}` : ""}`,
-      };
-    case "SCHEDULE_CHANGE":
-      return {
-        title: `Rescheduled: ${f} now ${fmtTime(p.newDep, tz.dep)}`,
-        body: `The airline moved ${route} ${Math.abs(Number(p.shiftMin))} min ${p.direction} (was ${fmtTime(p.oldDep, tz.dep)}).`,
-      };
-    case "DELAY_REDUCED":
-      return {
-        title: Number(p.delayMin) < 5 ? `${f} back on time` : `${f}: delay reduced to ${p.delayMin} min`,
-        body: `${route} now departs ${fmtTime(p.estDep, tz.dep)}.`,
-      };
-    case "BOARDING":
-      return { title: `Boarding now: ${f}`, body: p.gate ? `Gate ${p.gate}${p.terminal ? `, T${p.terminal}` : ""}.` : `${route}` };
-    case "DEPARTED": {
-      const off = fmtTimeOrNull(p.actDep, tz.dep), eta = fmtTimeOrNull(p.estArr, tz.arr);
-      return {
-        title: `${f} has departed`,
-        body: [off && `Took off ${off}.`, eta ? `Expected at ${p.arr} ${eta}.` : `Heading to ${p.arr}.`].filter(Boolean).join(" "),
-      };
-    }
-    case "LANDED": {
-      const on = fmtTimeOrNull(p.actArr, tz.arr);
-      return {
-        title: `${f} landed at ${p.arr}`,
-        body: [on && `Landed ${on}.`, p.belt && `Baggage belt ${p.belt}.`].filter(Boolean).join(" ") || `Welcome to ${p.arr}.`,
-      };
-    }
-    case "BELT_ASSIGNED":
-      return { title: `Baggage belt ${e.newValue}: ${f}`, body: `${p.arrTerminal ? `Terminal ${p.arrTerminal}, ` : ""}${p.arr}.` };
-    case "BELT_CHANGE":
-      return { title: `Belt change: ${f} → Belt ${e.newValue}`, body: `Was belt ${e.oldValue}.` };
-    case "CANCELLED":
-      return { title: `Cancelled: ${f}`, body: `${route} has been cancelled. Check with the airline for rebooking/refund.` };
-    case "REINSTATED":
-      return { title: `${f} is back on`, body: `The cancellation was withdrawn. Departs ${fmtTime(p.estDep, tz.dep)}.` };
-    case "DIVERTED": {
-      // tz.arr is the row's CURRENT arrival airport (= diversion airport once known)
-      const eta = p.newArr ? fmtTimeOrNull(p.estArr, tz.arr) : null;
-      return {
-        title: `Diverted: ${f}`,
-        body: p.newArr
-          ? `Not landing at ${p.origArr}. Now heading to ${p.newArr}${eta ? `, ETA ${eta} local` : ""}.`
-          : `Not landing at ${p.origArr} as planned. New destination not announced yet.`,
-      };
-    }
-    case "CHECKIN_OPEN": {
-      const closes = fmtTimeOrNull(p.closes_at, tz.dep);
-      const dep = fmtTimeOrNull(p.estDep, tz.dep);
-      return {
-        title: `Web check-in is open: ${f}`,
-        body: [`${route}${dep ? ` departs ${dep}` : ""}.`, closes && `Check in online before ${closes}.`].filter(Boolean).join(" "),
-      };
-    }
-    case "CHECKIN_CLOSING": {
-      const closes = fmtTimeOrNull(p.closes_at, tz.dep);
-      return {
-        title: `Check-in closes soon: ${f}`,
-        body: `Web check-in for ${route} closes${closes ? ` at ${closes}` : " soon"}. Check in now.`,
-      };
-    }
-    case "INBOUND_LATE": {
-      const ib = p.inbound as Record<string, unknown>;
-      return {
-        title: `${f} likely ~${p.lateMin} min late`,
-        body: `Your plane (${ib.flight} from ${ib.from}) is running late. Expected departure ~${fmtTime(p.predictedDep, tz.dep)}. Airline hasn't announced yet.`,
-      };
-    }
-  }
+/** Is this alert type always loud (critical channel, time-sensitive on iOS)? */
+export function isCriticalAlert(t: EventType): boolean {
+  return CRITICAL.includes(t);
 }
 
 // ---- FCM HTTP v1 message builders -------------------------------------------------------------
@@ -151,9 +79,15 @@ function apnsCollapseId(value: string): string {
   return new TextEncoder().encode(value).length <= 64 ? value : value.slice(-64);
 }
 
-/** flight_critical → time-sensitive (breaks through Focus). flight_updates → a normal active alert. */
-function apnsAlert(title: string, body: string, tag: string, critical: boolean, extra: Record<string, string>): Record<string, unknown> {
+/**
+ * flight_critical → time-sensitive (breaks through Focus). flight_updates → a normal active alert.
+ * quiet (info alert in the recipient's quiet hours) → passive and without sound.
+ */
+function apnsAlert(
+  title: string, body: string, tag: string, critical: boolean, extra: Record<string, string>, quiet = false,
+): Record<string, unknown> {
   const collapse = apnsCollapseId(tag);
+  const silent = quiet && !critical;
   return {
     headers: {
       "apns-push-type": "alert",
@@ -163,9 +97,9 @@ function apnsAlert(title: string, body: string, tag: string, critical: boolean, 
     payload: {
       aps: {
         alert: { title, body },
-        sound: "default",
+        ...(silent ? {} : { sound: "default" }),
         "thread-id": collapse,
-        "interruption-level": critical ? "time-sensitive" : "active",
+        "interruption-level": critical ? "time-sensitive" : silent ? "passive" : "active",
         category: "OPEN_FLIGHT",
       },
       ...extra,
@@ -195,11 +129,23 @@ function apnsSync(collapse: string, extra: Record<string, string>): Record<strin
  * so data messages may never wake our code. Notification messages are shown by Google Play
  * services itself → the user sees the gate change even if our app is dead.
  */
-export function buildAlertMessage(token: string, flightId: string, eventId: string, e: FlightEvent, tz: Tz): FcmMessage {
-  const { title, body } = renderEvent(e, tz);
+export interface AlertOptions {
+  /** profiles.alert_language of the recipient; unknown → English. */
+  lang?: AlertLanguage | string | null;
+  /** The recipient is inside their quiet hours (see quiet-hours.ts). Only info alerts get quieter. */
+  quiet?: boolean;
+}
+
+export function buildAlertMessage(
+  token: string, flightId: string, eventId: string, e: FlightEvent, tz: Tz, opts: AlertOptions = {},
+): FcmMessage {
+  const { title, body } = renderEvent(e, tz, opts.lang ?? "en");
   const critical = CRITICAL.includes(e.type);
+  const silent = !!opts.quiet && !critical; // critical alerts are always loud
   const tag = `${flightId}:${tagGroup(e.type)}`;
   const data: Record<string, string> = { kind: "alert", flight_id: flightId, event_id: eventId, event_type: e.type, title, body };
+  // The app posts foreground alerts itself: tell it to use the quiet channel too.
+  if (silent) data.quiet = "1";
   // Check-in reminders: a tap opens the airline's page (top-level data key, also top level of APNs userInfo).
   if (e.type === "CHECKIN_OPEN" || e.type === "CHECKIN_CLOSING") {
     const url = safeCheckinUrl((e.payload as Record<string, unknown>)?.checkin_url);
@@ -214,14 +160,14 @@ export function buildAlertMessage(token: string, flightId: string, eventId: stri
       notification: {
         title,
         body,
-        channel_id: critical ? CHANNEL_CRITICAL : CHANNEL_UPDATES,
+        channel_id: critical ? CHANNEL_CRITICAL : silent ? CHANNEL_QUIET : CHANNEL_UPDATES,
         tag,
-        notification_priority: critical ? "PRIORITY_MAX" : "PRIORITY_DEFAULT",
-        default_sound: true,
+        notification_priority: critical ? "PRIORITY_MAX" : silent ? "PRIORITY_LOW" : "PRIORITY_DEFAULT",
+        default_sound: !silent,
         click_action: "OPEN_FLIGHT", // app's intent-filter action
       },
     },
-    apns: apnsAlert(title, body, tag, critical, data),
+    apns: apnsAlert(title, body, tag, critical, data, silent),
   };
 }
 

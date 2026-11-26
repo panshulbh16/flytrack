@@ -40,7 +40,7 @@ class IncomingPushTest {
         val critical = setOf(
             "GATE_CHANGE", "TERMINAL_CHANGE", "BOARDING", "BELT_ASSIGNED", "BELT_CHANGE",
             "DELAY", "SCHEDULE_CHANGE", "CANCELLED", "DIVERTED", "REINSTATED", "INBOUND_LATE",
-            "CHECKIN_CLOSING",
+            "CHECKIN_CLOSING", "FOG_ALERT", "DIVERTED_DEST",
         )
         val tags = mapOf(
             "TERMINAL_CHANGE" to "terminal",
@@ -60,6 +60,8 @@ class IncomingPushTest {
             "REINSTATED" to "reinstated",
             "CHECKIN_OPEN" to "checkin_open",
             "CHECKIN_CLOSING" to "checkin_closing",
+            "FOG_ALERT" to "fog_alert",
+            "DIVERTED_DEST" to "diverted", // replaces the DIVERTED alert in the shade
         )
         assertEquals(AlertType.entries.map { it.wire }.toSet(), tags.keys)
         for (type in AlertType.entries) {
@@ -75,6 +77,28 @@ class IncomingPushTest {
             assertEquals(type.wire, if (type.wire in critical) PushContract.CHANNEL_CRITICAL else PushContract.CHANNEL_UPDATES, parsed.channelId)
             assertEquals("flight-1:${tags.getValue(type.wire)}", parsed.tag)
         }
+    }
+
+    @Test
+    fun `quiet info alerts go on the quiet channel, critical ones stay loud`() {
+        fun parse(type: String, quiet: String?) = parseIncomingPush(
+            buildMap {
+                put("kind", "alert"); put("flight_id", "flight-1"); put("event_type", type); put("title", "t"); put("body", "b")
+                quiet?.let { put(PushContract.KEY_QUIET, it) }
+            },
+        ) as IncomingPush.Alert
+
+        for (type in AlertType.entries) {
+            val quiet = parse(type.wire, "1")
+            val expected = if (type.critical) PushContract.CHANNEL_CRITICAL else PushContract.CHANNEL_QUIET
+            assertEquals(type.wire, expected, quiet.channelId)
+            assertEquals(type.wire, !type.critical, quiet.quiet)
+            // the tag does not change with quiet hours, so a loud alert later still replaces it
+            assertEquals(parse(type.wire, null).tag, quiet.tag)
+        }
+        assertEquals(PushContract.CHANNEL_UPDATES, parse("LANDED", "0").channelId)
+        assertEquals(PushContract.CHANNEL_UPDATES, parse("LANDED", null).channelId)
+        assertEquals("server only marks info alerts quiet", PushContract.CHANNEL_QUIET, parse("SOMETHING_NEW", "1").channelId)
     }
 
     @Test

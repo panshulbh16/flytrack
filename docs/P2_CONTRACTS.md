@@ -48,7 +48,7 @@ Migrations take numbers 13–16 (section 7). Never edit a migration that already
 | Level | When |
 |---|---|
 | `severe` | fog with visibility < 550 m, or cancelled ≥ 10 today |
-| `disrupted` | visibility < 1500 m or category IFR/LIFR, or average delay ≥ 45 min |
+| `disrupted` | visibility < 1500 m or category LIFR (IFR alone is not enough: North Indian winter haze is routinely IFR), or average delay ≥ 45 min |
 | `busy` | average delay ≥ 20 min or delayed ≥ 30 % |
 | `normal` | otherwise |
 

@@ -19,6 +19,9 @@ verify_jwt = true
 [functions.poll-flights]
 verify_jwt = false # protected by x-cron-secret instead (called from pg_cron)
 
+[functions.refresh-airport-weather]
+verify_jwt = false # protected by x-cron-secret (called from pg_cron every 15 min); fetches aviationweather.gov METARs
+
 [functions.provider-webhook]
 verify_jwt = false # protected by ?token= secret (called by AeroDataBox)
 
@@ -34,6 +37,9 @@ verify_jwt = false # protected by the Authorization secret REVENUECAT_WEBHOOK_AU
 
 [functions.sync-entitlement]
 verify_jwt = true
+
+[functions.ack-push]
+verify_jwt = true # delivery receipts: the caller's own push_log rows only
 
 [functions.shared-flight]
 verify_jwt = false # public share link: the unguessable ?t= token is the only key; returns public fields only

@@ -63,6 +63,21 @@ Billing setup:
 
 `SHARE_BASE_URL` (Info.plist `ShareBaseURL`) defaults to `https://heygate.app/f/`. In an xcconfig `//` starts a comment, so URLs are written `https:/$()/host/path`; a value cut short falls back to the default. `LSApplicationQueriesSchemes` lists `whatsapp` so `canOpenURL` can see WhatsApp.
 
+## P2 (docs/P2_CONTRACTS.md, wave 1)
+
+| Feature | Core (XCTest in `P2Tests.swift`) | App |
+|---|---|---|
+| Offline estimate (section 5) | `Estimate.swift`: `GreatCircle`, `estimatePosition` (same algorithm as Android `core/estimate`, tested on the same `estimate_cases.json`), `Flight.position(now:)` (Live when the fix is < 20 min old, else Estimated; fresh data that says "not departed" keeps the plane at the gate, fresh data that says "in the air" past the planned arrival keeps it airborne, same rules as Android), `Flight.progressFix(now:)`; `FlightCard.progress` / `progressSource` / `progressArrival` | `FlightProgressLine` (bar, "Lands in …", Live/Estimated chip) on the flight row and the detail screen; the list and the detail re-render from the cache every minute, so airplane mode still moves the bar |
+| Map (section 5) | `FlightMap.swift`: `Flight.mapModel(now:)` (flown/remaining split under the plane, state, bounds) | `FlightMapView.swift`: SwiftUI `Map`, `.standard(emphasis: .muted)` (= `.mutedStandard`), `MKGeodesicPolyline` route in #DF754E (flown solid, rest dashed), cream airport dots with an orange ring, SF `airplane` rotated to the bearing (no map rotation, so north stays up), Live/Estimated chip. Card on the detail screen, full-screen on tap. Offline: no tiles, but route, airports and the estimated plane still draw |
+| Airport Health (section 1) | `AirportHealth.swift`: parser, `typedHeadline` (the server's fixed English sentences → localised text), `healthSides(phase)`, `presentWeather`, `loadAirportHealth`; `FlightDetailScreenModel(airportHealth:)` loads on open/refresh and again after 15 min | `LiveAirportHealth` (`get_airport_health`, 5 min cache); `AirportHealthCard` (level pill + headline for all, delays/cancellations/METAR line for Pro, upsell for free) |
+| Passport + Year in Review (section 2) | `Passport.swift`: parser, `monthBars`, stat tiles, `shareCard` / `yearInReviewCard`, `PassportModel` (overview / year tabs, cached per tab) | `PassportScreen.swift` (toolbar globe button on My flights): stats, by-month chart, highlights, lists, CO₂ estimate, Pro upsell when `pro_limited`; share image via `ImageRenderer` (360 × 450 pt at 3×, Paper or Night palette) + `UIActivityViewController` |
+| Quiet hours + alert language (sections 3, 4) | `AlertPrefs.swift`: `AlertPrefs`, `alertPrefsPatch` (every quiet-hours change also writes `quiet_tz` = phone zone), `AlertPrefsModel` (optimistic; a refused save rolls back only itself, overlapping saves are kept) | `AlertPrefsSection` in Settings; `LiveAlertPrefs` reads/PATCHes `profiles`. First launch on a Hindi phone sets `alert_language = hi` once, only while the server still has the default `en` |
+| Passive alerts (section 3) | `PushContract.keyQuiet` / `channelQuiet`; `parseIncomingPush` marks an info alert quiet on `quiet = "1"` or APNs `interruption-level: passive`; critical alerts are never quiet | Foreground: a passive alert is listed without banner or sound; alerts the app posts itself use `.passive` and no sound |
+| Delivery receipts (section 3) | `PushAck.swift`: `parsePushEventId`, `PushAckRequest` (`{event_id, received_at}`), `AckedEvents` (once per event), `pushAcks` | `PushReceipts` + `LivePushAck` (`POST ack-push`, failures ignored). Acked on `willPresent`, on open (with the delivery time), when the app posts an alert itself, and on every foreground for alerts from the last 24 h still in Notification Center (stamped with `UNNotification.date`, i.e. when iOS delivered them) |
+| New alert types | `AlertType.fogAlert` / `.divertedDest` (both critical), `AlertGroup.weather` (FOG_ALERT), DIVERTED_DEST in `.disruption`, tag group `diverted` | "Fog and low visibility" toggle |
+
+Not done here: a Notification Service Extension. It would ack the moment an alert lands even when the app is never opened, but it needs the user's JWT in a shared keychain group; the foreground sweep stamps the true delivery time instead, so only alerts the user never opens and clears before opening the app go unacknowledged.
+
 ## Push
 
 One backend path. FCM HTTP v1 already delivers to Android. The same message now includes an `apns` object, which FCM applies only when the token is an iOS app. Android still reads `android.notification.channel_id` and `tag`. Nothing in the Android block changed.
@@ -71,6 +86,7 @@ One backend path. FCM HTTP v1 already delivers to Android. The same message now 
 |---|---|
 | channel `flight_critical` | `aps.interruption-level = time-sensitive` |
 | channel `flight_updates` | `aps.interruption-level = active` |
+| channel `flight_quiet` (info alert in quiet hours, data `quiet = "1"`) | `aps.interruption-level = passive`, no `sound` |
 | notification tag `<flightId>:<group>` | `apns-collapse-id` and `aps.thread-id` set to that same tag |
 | data-only `sync`, collapse key `sync:<id>` | background push, `apns-push-type: background`, priority 5, collapse id `sync:<id>`, `content-available: 1` |
 

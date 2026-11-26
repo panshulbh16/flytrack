@@ -51,6 +51,10 @@ public enum AlertType: String, CaseIterable, Sendable, Equatable, Hashable {
     /// Web check-in reminders (P1 contract section 3). Free, never Pro-only.
     case checkinOpen = "CHECKIN_OPEN"
     case checkinClosing = "CHECKIN_CLOSING"
+    /// Fog or visibility < 1000 m at the departure or arrival airport (P2 contract section 1). Critical, free.
+    case fogAlert = "FOG_ALERT"
+    /// After DIVERTED: the diversion airport became known (P2 contract section 3). Critical.
+    case divertedDest = "DIVERTED_DEST"
 
     public var wire: String { rawValue }
 

@@ -27,6 +27,9 @@ struct FlightsScreen: View {
             ToolbarItem(placement: .topBarLeading) {
                 Button(String(localized: "Settings"), systemImage: "gearshape") { shell.path.append(Route.settings) }
             }
+            ToolbarItem(placement: .topBarLeading) {
+                Button(String(localized: "Passport"), systemImage: "globe.asia.australia") { shell.path.append(Route.passport) }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button(String(localized: "Add flight")) { shell.path.append(Route.add(AddFlightPrefill())) }
                     .buttonStyle(.glassProminent)
@@ -44,6 +47,12 @@ struct FlightsScreen: View {
                 await gmail?.refresh()
             }
             await askForNotifications()
+            // The progress line and its offline estimate move with the clock: re-render from the cache each minute.
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(60))
+                if Task.isCancelled { break }
+                await store?.reload(session: shell.session)
+            }
         }
         // Background and app-open checks, Not now and the sign-out wipe change suggestions behind this screen.
         .onChange(of: shell.gmailRevision) { Task { await gmail?.refresh() } }
@@ -271,10 +280,25 @@ struct DetailScreen: View {
                             .accessibilityAddTraits(.isHeader)
                         Text(statusSentence(detail.card.statusLine))
                             .font(FlyFont.sans(16, relativeTo: .body))
+                        if let progress = detail.card.progress {
+                            FlightProgressLine(
+                                progress: progress, source: detail.card.progressSource,
+                                remaining: detail.card.progressArrival.map { max(0, $0.timeIntervalSince(detail.card.asOf)) }
+                            )
+                        }
+                        if let map = store.state.map {
+                            FlightMapCard(model: map)
+                        }
                         endpoint(String(localized: "Departure"), detail.departure)
                         endpoint(String(localized: "Arrival"), detail.arrival)
                         if let reason = detail.delayReason {
                             Text(reason).font(FlyFont.sans(14, relativeTo: .footnote))
+                        }
+                        if !store.state.airportHealth.isEmpty {
+                            AirportHealthCard(
+                                rows: store.state.airportHealth,
+                                showProUpsell: !store.state.proAccess.unlocked
+                            ) { shell.path.append(Route.paywall) }
                         }
                         if let card = store.state.checkin {
                             CheckinCardView(card: card) { url in openURL(url) }
@@ -395,12 +419,13 @@ struct DetailScreen: View {
                 store = DetailStore(model: FlightDetailScreenModel(
                     flightId: flightId, flights: shell.flights, profiles: shell.profiles, clock: shell.clock,
                     pro: shell.pro.service, checkinRules: shell.checkinRules, sharing: shell.sharing,
-                    shareBaseURL: AppConfig.shareBaseURL
+                    shareBaseURL: AppConfig.shareBaseURL, airportHealth: shell.airportHealth
                 ))
             }
             await store?.load()
             live = await FlightLiveActivities.offer(flightId, flights: shell.flights)
-            // Keeps the check-in countdown and the trip-pass expiry current while the screen is open.
+            // Keeps the check-in countdown, the trip-pass expiry, the plane on the map and the offline estimate
+            // current while the screen is open.
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(60))
                 if Task.isCancelled { break }
@@ -682,6 +707,7 @@ struct SettingsScreen: View {
     @State private var gmail: GmailImportStore?
     @State private var testAlertSending = false
     @State private var testAlertText: String?
+    @State private var alertPrefs: AlertPrefsStore?
     @AppStorage(Appearance.storageKey) private var appearance = Appearance.system
 
     var body: some View {
@@ -737,6 +763,7 @@ struct SettingsScreen: View {
                         }
                     }
                     .listRowBackground(FlyColor.paperRaised)
+                    if let alertPrefs { AlertPrefsSection(store: alertPrefs) }
                     Section(String(localized: "Ticket reading")) {
                         Toggle(String(localized: "Allow cloud reading when the phone cannot read the ticket"), isOn: Binding(
                             get: { store.state.cloudConsent },
@@ -786,8 +813,12 @@ struct SettingsScreen: View {
                 store = SettingsStoreBox(model: model)
             }
             if AppConfig.isGmailImportEnabled, gmail == nil { gmail = GmailImportStore(model: shell.gmailModel()) }
+            if alertPrefs == nil {
+                alertPrefs = AlertPrefsStore(model: AlertPrefsModel(repository: shell.alertPrefs, deviceTz: { TimeZone.current.identifier }))
+            }
             await gmail?.refresh()
             await store?.load()
+            await alertPrefs?.load()
         }
     }
 
@@ -920,6 +951,14 @@ private struct FlightRow: View {
                     Text("\(card.depCode) → \(card.arrCode)").font(FlyFont.sans(17, weight: .medium, relativeTo: .headline))
                     Text(String(localized: "\(card.depCity) to \(card.arrCity)")).font(FlyFont.sans(14, relativeTo: .subheadline))
                     Text(statusWord(card.statusWord)).font(FlyFont.serifItalic(18, relativeTo: .headline)).foregroundStyle(FlyColor.tone(card.tone))
+                    // Airborne, or estimated airborne while offline (P2 contract section 5).
+                    if let progress = card.progress {
+                        FlightProgressLine(
+                            progress: progress, source: card.progressSource,
+                            remaining: card.progressArrival.map { max(0, $0.timeIntervalSince(card.asOf)) }
+                        )
+                        .padding(.top, 4)
+                    }
                 }
                 Spacer()
                 if let time = card.departure?.time {
@@ -930,6 +969,7 @@ private struct FlightRow: View {
         .hitTarget()
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(card.designator), \(card.depCity) to \(card.arrCity), \(statusWord(card.statusWord)), \(statusSentence(card.statusLine))")
+        .accessibilityValue(card.progress.map { String(localized: "\(Int(($0 * 100).rounded())) percent flown") } ?? "")
     }
 }
 
@@ -1124,6 +1164,7 @@ private func alertTitle(_ group: AlertGroup) -> String {
     case .disruption: String(localized: "Cancellation and diversion")
     case .inboundAircraft: String(localized: "Inbound aircraft (Pro)")
     case .checkin: String(localized: "Web check-in reminders")
+    case .weather: String(localized: "Fog and low visibility")
     }
 }
 

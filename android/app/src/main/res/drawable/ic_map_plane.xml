@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- feature/map: the plane on the map, nose up (north), so MapLibre's icon-rotate equals the bearing.
+     Filled terracotta with a paper outline so it reads on land and ocean in both themes. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="30dp"
+    android:height="30dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFDF754E"
+        android:pathData="M12,1.8C12.8,1.8 13.3,2.8 13.3,4L13.3,9.2L21.2,13.7L21.2,15.7L13.3,13.3L13.3,18.2L15.7,19.9L15.7,21.6L12,20.5L8.3,21.6L8.3,19.9L10.7,18.2L10.7,13.3L2.8,15.7L2.8,13.7L10.7,9.2L10.7,4C10.7,2.8 11.2,1.8 12,1.8Z"
+        android:strokeWidth="1.1"
+        android:strokeColor="#FFFFFDF6"
+        android:strokeLineJoin="round" />
+</vector>

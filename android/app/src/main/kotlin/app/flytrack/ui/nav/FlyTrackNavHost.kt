@@ -19,6 +19,7 @@ import app.flytrack.feature.flights.FlightsRoute
 import app.flytrack.feature.gmailimport.GmailImportRoute
 import app.flytrack.feature.gmailimport.GmailSuggestion
 import app.flytrack.feature.importticket.ImportTicketRoute
+import app.flytrack.feature.passport.PassportRoute
 import app.flytrack.feature.settings.SettingsRoute
 
 /** [AppNavigator] on top of a NavController. Also used by MainActivity to act on incoming intents. */
@@ -54,6 +55,10 @@ class NavControllerNavigator(private val navController: NavHostController) : App
 
     override fun openSettings() {
         navController.navigate(Settings) { launchSingleTop = true }
+    }
+
+    override fun openPassport() {
+        navController.navigate(Passport) { launchSingleTop = true }
     }
 
     override fun back() {
@@ -129,6 +134,9 @@ fun FlyTrackNavHost(
                         onParsed = { flight, date, pnr, source -> navigator.openAddFlightFromImport(flight, date, pnr, source) },
                         onBack = { navigator.back() },
                     )
+                }
+                composable<Passport> {
+                    PassportRoute(onBack = { navigator.back() })
                 }
                 composable<Paywall> {
                     PaywallRoute(onBack = { navigator.back() })

@@ -29,6 +29,8 @@ sealed interface IncomingPush {
         val notificationId: Int,
         /** CHECKIN_OPEN / CHECKIN_CLOSING only: the airline's https check-in page a tap opens. */
         val checkinUrl: String? = null,
+        /** The server sent this info alert silently (the user's quiet hours): it goes on [PushContract.CHANNEL_QUIET]. */
+        val quiet: Boolean = false,
     ) : IncomingPush
 
     /** Not a message this app understands (missing kind, missing flight, empty alert). */
@@ -63,6 +65,8 @@ fun alertTagGroup(eventType: String): String = when {
     eventType.startsWith("BELT") -> "belt"
     eventType.startsWith("DELAY") || eventType == AlertType.INBOUND_LATE.wire ||
         eventType == AlertType.SCHEDULE_CHANGE.wire -> "delay"
+    // Replaces the "diverted, new destination not announced yet" alert.
+    eventType == AlertType.DIVERTED_DEST.wire -> "diverted"
     else -> eventType.lowercase()
 }
 
@@ -77,6 +81,17 @@ fun alertChannelId(type: AlertType?): String =
  */
 fun alertChannelId(type: AlertType?, wire: String): String =
     if (type == null && wire == CHECKIN_EVENT_OPEN) PushContract.CHANNEL_UPDATES else alertChannelId(type)
+
+/**
+ * [alertChannelId] for an alert the server may have sent silently (`quiet = "1"`, P2 contract section 3).
+ * Critical alerts are always loud, so a quiet flag on a critical type is ignored. The server only marks
+ * info alerts quiet, so an unknown type that carries the flag goes on the quiet channel too.
+ */
+fun alertChannelId(type: AlertType?, wire: String, quiet: Boolean): String = when {
+    !quiet -> alertChannelId(type, wire)
+    type?.critical == true -> PushContract.CHANNEL_CRITICAL
+    else -> PushContract.CHANNEL_QUIET
+}
 
 /**
  * Stable notification id for a tag. Android replaces a notification only when both the tag and
@@ -100,15 +115,18 @@ private fun alertOrIgnored(data: Map<String, String>, flightId: String): Incomin
     val type = AlertType.fromWire(wire)
     val group = if (wire.isEmpty()) "alert" else alertTagGroup(wire)
     val tag = PushContract.notificationTag(flightId, group)
+    val quiet = data[PushContract.KEY_QUIET]?.trim() == PushContract.QUIET_TRUE
+    val channelId = alertChannelId(type, wire, quiet)
     return IncomingPush.Alert(
         flightId = flightId,
         eventId = data[PushContract.KEY_EVENT_ID]?.takeIf { it.isNotBlank() },
         eventType = type,
         title = title,
         body = body,
-        channelId = alertChannelId(type, wire),
+        channelId = channelId,
         tag = tag,
         notificationId = notificationIdFor(tag),
         checkinUrl = checkinUrlFromPush(wire, data[KEY_CHECKIN_URL]),
+        quiet = channelId == PushContract.CHANNEL_QUIET,
     )
 }

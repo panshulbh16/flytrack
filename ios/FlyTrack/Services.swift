@@ -83,6 +83,8 @@ final class LiveHealth: NotificationHealthSource {
 final class LivePush: PushControlling {
     private let flights: FlightRepository
     private let client: SupabaseClient?
+    /// Delivery receipts (P2 contract section 3); set by AppShell.
+    var receipts: PushReceipts?
     init(flights: FlightRepository, client: SupabaseClient?) {
         self.flights = flights
         self.client = client
@@ -129,6 +131,7 @@ final class LivePush: PushControlling {
             _ = await flights.applyServerSync(flightId: flightId, compactFlightJSON: json)
         case .alert(let alert):
             await post(alert)
+            receipts?.received([(eventId: alert.eventId, receivedAt: Date())])
             _ = await flights.applyServerSync(flightId: alert.flightId, compactFlightJSON: nil)
         case .ignored:
             break
@@ -139,14 +142,20 @@ final class LivePush: PushControlling {
         let content = UNMutableNotificationContent()
         content.title = alert.title
         content.body = alert.body
-        content.sound = .default
+        // Quiet hours: info alerts arrive silently (passive, no sound). Critical alerts are never quiet.
+        content.sound = alert.quiet ? nil : .default
         content.threadIdentifier = alert.tag
         content.categoryIdentifier = PushContract.actionOpenFlight
         var userInfo: [String: String] = [PushContract.keyFlightId: alert.flightId, PushContract.keyKind: PushContract.kindAlert]
         if let type = alert.eventType { userInfo[PushContract.keyEventType] = type.wire }
         if let url = alert.checkinUrl { userInfo[PushContract.keyCheckinUrl] = url }
+        if let eventId = alert.eventId { userInfo[PushContract.keyEventId] = eventId }
         content.userInfo = userInfo
-        content.interruptionLevel = alert.interruptionLevel == "time-sensitive" ? .timeSensitive : .active
+        switch alert.interruptionLevel {
+        case "time-sensitive": content.interruptionLevel = .timeSensitive
+        case "passive": content.interruptionLevel = .passive
+        default: content.interruptionLevel = .active
+        }
         let request = UNNotificationRequest(identifier: alert.tag, content: content, trigger: nil)
         try? await UNUserNotificationCenter.current().add(request)
     }
@@ -164,10 +173,18 @@ final class PushBridge: NSObject, UNUserNotificationCenterDelegate {
     var onToken: ((String) -> Void)?
     /// Suggestion id, and true for Not now (dismiss) or false for Track and a tap on the body.
     var onGmailSuggestion: ((String, Bool) -> Void)?
+    /// Alerts the app saw arrive or open: (`event_id`, when). Feeds the delivery receipts.
+    var onDelivered: (([(eventId: String?, receivedAt: Date)]) -> Void)?
 
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
+        let content = notification.request.content
         // While the app is open the Found in Gmail card shows these finds instead.
-        if notification.request.content.categoryIdentifier == GmailNotice.category { return [] }
+        if content.categoryIdentifier == GmailNotice.category { return [] }
+        let eventId = content.userInfo[PushContract.keyEventId] as? String
+        let receivedAt = notification.date
+        await MainActor.run { PushBridge.shared.onDelivered?([(eventId: eventId, receivedAt: receivedAt)]) }
+        // Quiet hours (P2 contract section 3): a passive alert goes to Notification Center without a banner or sound.
+        if content.interruptionLevel == .passive { return [.list] }
         return [.banner, .list, .sound]
     }
 
@@ -183,6 +200,10 @@ final class PushBridge: NSObject, UNUserNotificationCenterDelegate {
         for (key, value) in content.userInfo {
             if let key = key as? String, let value = value as? String { strings[key] = value }
         }
+        // Opened before the app saw it arrive: the open is the receipt. Delivery time is the better stamp.
+        let eventId = strings[PushContract.keyEventId]
+        let deliveredAt = response.notification.date
+        await MainActor.run { PushBridge.shared.onDelivered?([(eventId: eventId, receivedAt: deliveredAt)]) }
         switch notificationTap(userInfo: strings) {
         case .checkin(let url, let flightId):
             await MainActor.run { PushBridge.shared.onCheckin?(url, flightId) }

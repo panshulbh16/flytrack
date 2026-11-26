@@ -24,7 +24,13 @@ enum class AlertType(val critical: Boolean, val proOnly: Boolean = false) {
     REINSTATED(critical = true),
     INBOUND_LATE(critical = true, proOnly = true),
     CHECKIN_OPEN(critical = false),
-    CHECKIN_CLOSING(critical = true);
+    CHECKIN_CLOSING(critical = true),
+
+    /** Fog or visibility < 1000 m at the departure or arrival airport (P2 contract, section 1). */
+    FOG_ALERT(critical = true),
+
+    /** After [DIVERTED]: the diversion airport became known (P2 contract, section 3). */
+    DIVERTED_DEST(critical = true);
 
     val wire: String get() = name
 

@@ -1,5 +1,12 @@
 import { changedFields, evaluateAlerts, evaluateInbound, snapshotState } from "./diff.ts";
-import { buildAlertMessage, buildLiveActivityMessage, buildSyncMessage, liveActivityDone, type Tz } from "./notify.ts";
+import {
+  buildAlertMessage,
+  buildLiveActivityMessage,
+  buildSyncMessage,
+  liveActivityDone,
+  type Tz,
+  withFlightContext,
+} from "./notify.ts";
 import type { Pusher } from "./fcm.ts";
 import type { FlightDataProvider } from "./providers/provider.ts";
 import { ProviderError } from "./providers/provider.ts";
@@ -7,7 +14,9 @@ import { shiftDate } from "./providers/mock.ts";
 import type { PushLogRow, Repo } from "./repo.ts";
 import { nextPollAt } from "./schedule.ts";
 import { decideCheckin } from "./checkin.ts";
+import { isQuietFor } from "./quiet-hours.ts";
 import { legHistoryRow, shouldFinalize } from "./history.ts";
+import { fogEvent } from "./health.ts";
 import type { FlightEvent, FlightRow, FlightSnapshot } from "./types.ts";
 
 const MIN = 60_000;
@@ -213,7 +222,10 @@ export async function fanOut(deps: Deps, row: FlightRow, events: (FlightEvent & 
     for (const r of recipients) {
       if (e.proOnly && !r.is_pro) continue;
       if (r.notify_prefs?.[e.type] === false) continue; // user muted this alert type
-      jobs.push({ kind: "alert", eventId: e.id, r, msg: buildAlertMessage(r.fcm_token, row.id, e.id, e, tz) });
+      // Each recipient gets their own language; info alerts go silent in their quiet hours (P2 sections 3, 4).
+      const opts = { lang: r.alert_language ?? "en", quiet: isQuietFor(r, deps.now()) };
+      const msg = buildAlertMessage(r.fcm_token, row.id, e.id, withFlightContext(e, row), tz, opts);
+      jobs.push({ kind: "alert", eventId: e.id, r, msg });
     }
   }
   if (sendSync) {
@@ -462,10 +474,41 @@ export async function runCheckinReminders(deps: Deps, limit = 100): Promise<numb
   return sent;
 }
 
+/**
+ * Fog alerts (FOG_ALERT). DB only: candidates come from airport_weather (kept fresh by
+ * refresh-airport-weather) joined with tracked flights, so this never calls the provider. The dedupe key
+ * {flight}:FOG:{iata}:{local date} makes it once per flight and airport; the sweeper covers a crash
+ * between the event insert and the push.
+ */
+export async function runFogAlerts(deps: Deps, limit = 100): Promise<number> {
+  let sent = 0;
+  for (const c of await deps.repo.getFogCandidates(limit)) {
+    try {
+      // Load the flight first so the stored payload carries flight/dep/arr like every other event
+      // (the in-app event list reads the stored payload, not the push).
+      const row = await deps.repo.getFlight(c.flight_id);
+      if (!row) continue;
+      const base = fogEvent(c);
+      const event = {
+        ...base,
+        payload: { flight: `${row.carrier_iata} ${row.flight_number}`, dep: row.dep_iata, arr: row.arr_iata, ...base.payload },
+      };
+      const id = await deps.repo.insertEventIfNew(c.flight_id, event);
+      if (!id) continue;
+      await fanOut(deps, row, [{ ...event, id }], false);
+      sent++;
+    } catch (e) {
+      deps.log?.("fog alert failed", { flight: c.flight_id, airport: c.airport, error: String(e) });
+    }
+  }
+  if (sent) deps.log?.("fog alerts", { sent });
+  return sent;
+}
+
 /** One cron tick: claim due flights in small batches until the time budget is used. */
 export async function runPollCycle(deps: Deps, timeBudgetMs = 25_000) {
   const started = Date.now();
-  const stats = { polled: 0, errors: 0, events: 0, batches: 0, swept: 0, checkins: 0 };
+  const stats = { polled: 0, errors: 0, events: 0, batches: 0, swept: 0, checkins: 0, fog: 0 };
   try {
     stats.swept = await sweepUnpushedEvents(deps);
   } catch (e) {
@@ -475,6 +518,11 @@ export async function runPollCycle(deps: Deps, timeBudgetMs = 25_000) {
     stats.checkins = await runCheckinReminders(deps);
   } catch (e) {
     deps.log?.("check-in step failed", { error: String(e) });
+  }
+  try {
+    stats.fog = await runFogAlerts(deps);
+  } catch (e) {
+    deps.log?.("fog step failed", { error: String(e) });
   }
   while (Date.now() - started < timeBudgetMs) {
     const batch = await deps.repo.claimDueFlights(deps.config.batchSize, deps.config.leaseSeconds);
