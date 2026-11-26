@@ -15,7 +15,7 @@ object FriendPushContract {
     const val KEY_FRIEND_NAME = "friend_name"
 
     /** The only event types that are critical for friends (`FRIEND_CRITICAL` in friend-alerts.ts). */
-    val CRITICAL_EVENT_TYPES = setOf("CANCELLED", "DIVERTED", "DIVERTED_DEST")
+    val CRITICAL_EVENT_TYPES = setOf("CANCELLED", "REINSTATED", "DIVERTED", "DIVERTED_DEST")
 }
 
 /** True when the FCM data map is a friend alert. */
