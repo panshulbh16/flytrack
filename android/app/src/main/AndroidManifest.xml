@@ -9,6 +9,8 @@
     <!-- Expedited sync work can be promoted to a short foreground service so the Room write finishes. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SHORT_SERVICE" />
+    <!-- Android 16+: lets the live flight notification (channel flight_live) be promoted to a Live Update. -->
+    <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
 
     <!-- Package visibility for the battery-saver screens on the phones that kill background apps. -->
     <queries>
@@ -78,6 +80,24 @@
         <receiver
             android:name=".feature.gmailimport.GmailSuggestionActionReceiver"
             android:exported="false" />
+
+        <!-- The user swiped the live flight notification away. Only the app's own PendingIntent reaches it. -->
+        <receiver
+            android:name=".feature.live.LiveDismissReceiver"
+            android:exported="false" />
+
+        <!-- Next flight home-screen widget (Glance). Exported so the launcher can bind and update it. -->
+        <receiver
+            android:name=".feature.widget.NextFlightWidgetReceiver"
+            android:exported="true"
+            android:label="@string/live_widget_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/next_flight_widget_info" />
+        </receiver>
 
         <service
             android:name=".push.FlyTrackMessagingService"

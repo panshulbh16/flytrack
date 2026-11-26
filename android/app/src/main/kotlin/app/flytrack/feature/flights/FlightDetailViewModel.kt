@@ -2,15 +2,27 @@ package app.flytrack.feature.flights
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.flytrack.core.model.Cabin
+import app.flytrack.core.model.Flight
 import app.flytrack.core.model.TrackExtras
 import app.flytrack.core.result.ActionResult
 import app.flytrack.core.result.TrackField
 import app.flytrack.core.result.TrackResult
 import app.flytrack.data.repo.FlightRepository
 import app.flytrack.data.repo.ProfileRepository
+import app.flytrack.feature.checkin.CheckinRule
+import app.flytrack.feature.checkin.CheckinRulesRepository
+import app.flytrack.feature.checkin.CheckinUiModel
+import app.flytrack.feature.checkin.checkinUiModel
+import app.flytrack.feature.share.ShareFlight
+import app.flytrack.feature.share.ShareRepository
+import app.flytrack.feature.share.ShareRequest
+import app.flytrack.feature.share.ShareResult
+import app.flytrack.feature.share.ShareTarget
 import app.flytrack.feature.flights.presentation.AlertGroup
 import app.flytrack.feature.flights.presentation.FlightChangeTracker
 import app.flytrack.feature.flights.presentation.FlightDetailUiModel
+import app.flytrack.feature.flights.presentation.TrackingState
 import app.flytrack.feature.flights.presentation.toDetailUiModel
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -20,7 +32,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -29,15 +44,17 @@ import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 
 /** One-off feedback of the detail screen, shown as a snackbar. */
-enum class FlightDetailMessage { OFFLINE, REFRESH_FAILED, ACTION_FAILED, TRACKING_LIMIT_REACHED }
+enum class FlightDetailMessage { OFFLINE, REFRESH_FAILED, ACTION_FAILED, TRACKING_LIMIT_REACHED, SHARE_FAILED, SHARE_NOT_TRACKED }
 
 /**
- * The "your booking" editor (PNR and seat).
+ * The "your booking" editor (PNR, seat and cabin).
+ * @property cabin null = not set
  * @property error the field the database rule rejects, null while the input is fine
  */
 data class BookingEditorState(
     val pnr: String,
     val seat: String,
+    val cabin: Cabin? = null,
     val error: TrackField? = null,
     val isSaving: Boolean = false,
 )
@@ -54,7 +71,16 @@ data class FlightDetailUiState(
     val message: FlightDetailMessage? = null,
     /** The flight is no longer tracked from here: leave the screen. */
     val isClosed: Boolean = false,
-)
+    /** Web check-in card; null hides it (no rule for the airline, flight gone, cancelled). */
+    val checkin: CheckinUiModel? = null,
+    /** `create_flight_share` is running. */
+    val isSharing: Boolean = false,
+    /** A link to hand to the share target; the screen calls [FlightDetailViewModel.shareHandled] after. */
+    val share: ShareRequest? = null,
+) {
+    /** The RPC only shares flights the user tracks (archived rows included). */
+    val canShare: Boolean get() = detail != null && detail.trackingState != TrackingState.NOT_TRACKED
+}
 
 @HiltViewModel(assistedFactory = FlightDetailViewModel.Factory::class)
 class FlightDetailViewModel @AssistedInject constructor(
@@ -63,6 +89,8 @@ class FlightDetailViewModel @AssistedInject constructor(
     profiles: ProfileRepository,
     private val clock: Clock,
     private val changes: FlightChangeTracker,
+    private val shares: ShareRepository,
+    private val checkinRules: CheckinRulesRepository,
 ) : ViewModel() {
 
     @AssistedFactory
@@ -80,6 +108,9 @@ class FlightDetailViewModel @AssistedInject constructor(
         val editor: BookingEditorState? = null,
         val message: FlightDetailMessage? = null,
         val isClosed: Boolean = false,
+        val checkinRule: CheckinRule? = null,
+        val isSharing: Boolean = false,
+        val share: ShareRequest? = null,
     )
 
     private val local = MutableStateFlow(Local())
@@ -94,7 +125,7 @@ class FlightDetailViewModel @AssistedInject constructor(
         val flight = tracked?.flight ?: cached
         val detail = flight?.toDetailUiModel(
             tracking = tracked?.tracking,
-            isPro = profile?.isPro(now) == true,
+            isPro = profile?.isProForFlight(now, flightId) == true, // the trial flight gets Pro data too
             now = now,
             newFields = changes.record(flight, now),
         )?.let { model ->
@@ -112,6 +143,9 @@ class FlightDetailViewModel @AssistedInject constructor(
             editor = local.editor,
             message = local.message,
             isClosed = local.isClosed,
+            checkin = flight?.let { checkinUiModel(local.checkinRule, it, now) },
+            isSharing = local.isSharing,
+            share = local.share,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), FlightDetailUiState())
 
@@ -121,7 +155,46 @@ class FlightDetailViewModel @AssistedInject constructor(
             flights.applyServerSync(flightId)
             local.update { it.copy(isFirstSyncRunning = false) }
         }
+        // The airline's check-in rule, once the carrier is known (a flight never changes carrier).
+        viewModelScope.launch {
+            val carrier = merge(flights.observeTrackedFlight(flightId).map { it?.flight }, flights.observeFlight(flightId))
+                .filterNotNull()
+                .first()
+                .carrierIata
+            val rule = checkinRules.ruleFor(carrier)
+            local.update { it.copy(checkinRule = rule) }
+        }
     }
+
+    /** "Share flight": asks the backend for the public link, then [FlightDetailUiState.share] carries it to the screen. */
+    fun share(target: ShareTarget) {
+        if (local.value.isSharing) return
+        local.update { it.copy(isSharing = true) }
+        viewModelScope.launch {
+            val flight = currentFlight()
+            val result = if (flight == null) ShareResult.NotTracked else shares.createShare(flightId)
+            local.update {
+                when (result) {
+                    is ShareResult.Shared -> it.copy(isSharing = false, share = ShareRequest(flight!!.toShareFlight(), result.url, target))
+                    ShareResult.NotTracked -> it.copy(isSharing = false, message = FlightDetailMessage.SHARE_NOT_TRACKED)
+                    ShareResult.Offline -> it.copy(isSharing = false, message = FlightDetailMessage.OFFLINE)
+                    // The app shell already shows a banner for a build without backend keys.
+                    ShareResult.NotConfigured -> it.copy(isSharing = false)
+                    is ShareResult.Failed -> it.copy(isSharing = false, message = FlightDetailMessage.SHARE_FAILED)
+                }
+            }
+        }
+    }
+
+    /** The screen handed [request] to the share target (or could not). */
+    fun shareHandled(request: ShareRequest) {
+        local.update { if (it.share == request) it.copy(share = null) else it }
+    }
+
+    private suspend fun currentFlight(): Flight? =
+        flights.observeTrackedFlight(flightId).first()?.flight ?: flights.observeFlight(flightId).first()
+
+    private fun Flight.toShareFlight() = ShareFlight(carrierIata, flightNumber, depIata, arrIata)
 
     /** Pull-to-refresh: reports problems. */
     fun refresh() {
@@ -188,7 +261,9 @@ class FlightDetailViewModel @AssistedInject constructor(
 
     fun openBookingEditor() {
         val booking = uiState.value.detail?.booking ?: return
-        local.update { it.copy(editor = BookingEditorState(pnr = booking.pnr.orEmpty(), seat = booking.seat.orEmpty())) }
+        local.update {
+            it.copy(editor = BookingEditorState(pnr = booking.pnr.orEmpty(), seat = booking.seat.orEmpty(), cabin = booking.cabin))
+        }
     }
 
     fun onPnrChange(value: String) = editEditor { it.copy(pnr = value.uppercase(), error = it.error.takeUnless { e -> e == TrackField.PNR }) }
@@ -196,6 +271,9 @@ class FlightDetailViewModel @AssistedInject constructor(
     fun onSeatChange(value: String) = editEditor {
         it.copy(seat = value.uppercase().take(TrackExtras.MAX_SEAT_LENGTH), error = it.error.takeUnless { e -> e == TrackField.SEAT })
     }
+
+    /** null = not set. */
+    fun onCabinChange(value: Cabin?) = editEditor { it.copy(cabin = value) }
 
     fun dismissBookingEditor() {
         local.update { if (it.editor?.isSaving == true) it else it.copy(editor = null) }
@@ -206,14 +284,14 @@ class FlightDetailViewModel @AssistedInject constructor(
         if (editor.isSaving) return
         editEditor { it.copy(isSaving = true, error = null) }
         viewModelScope.launch {
-            // updateTrackingDetails replaces all four values, so cabin and note are passed through.
+            // updateTrackingDetails replaces all four values, so the note is passed through.
             val current = flights.observeTrackedFlight(flightId).first()?.tracking
             val result = flights.updateTrackingDetails(
                 flightId,
                 TrackExtras(
                     pnr = editor.pnr.trim().ifEmpty { null },
                     seat = editor.seat.trim().ifEmpty { null },
-                    cabin = current?.cabin,
+                    cabin = editor.cabin,
                     note = current?.note,
                 ),
             )

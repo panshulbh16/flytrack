@@ -340,7 +340,7 @@ private func nextFlight(_ upcoming: [FlightCard]) -> NextFlight? {
 }
 
 public enum AlertGroup: String, CaseIterable, Sendable, Equatable {
-    case delays, gate, boarding, takeoffAndLanding, baggage, disruption, inboundAircraft
+    case delays, gate, boarding, takeoffAndLanding, baggage, disruption, inboundAircraft, checkin
 
     public var types: [AlertType] {
         switch self {
@@ -351,6 +351,7 @@ public enum AlertGroup: String, CaseIterable, Sendable, Equatable {
         case .baggage: return [.beltAssigned, .beltChange]
         case .disruption: return [.cancelled, .diverted, .reinstated]
         case .inboundAircraft: return [.inboundLate]
+        case .checkin: return [.checkinOpen, .checkinClosing]
         }
     }
 

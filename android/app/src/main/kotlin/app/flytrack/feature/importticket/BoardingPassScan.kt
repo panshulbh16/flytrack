@@ -36,8 +36,8 @@ fun ScanBoardingPassButton() {
 
     fun open(leg: BoardingPassLeg) {
         legs = emptyList()
-        // ponytail: there is no "scan" track source on the server (check constraint); a camera read is closest to a screenshot.
-        navigator.openAddFlightFromImport(leg.flight.display, leg.date?.toString(), leg.pnr, TrackSource.SCREENSHOT.wire, leg.seat)
+        // user_flights.source 'scan' (P1 contract, section 5): the flight came from a boarding-pass barcode.
+        navigator.openAddFlightFromImport(leg.flight.display, leg.date?.toString(), leg.pnr, TrackSource.SCAN.wire, leg.seat)
     }
 
     SecondaryButton(

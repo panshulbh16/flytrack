@@ -41,3 +41,7 @@ data object ImportTicket
 /** Import from Gmail: connect, scan, pick a suggestion. */
 @Serializable
 data object GmailImport
+
+/** FlyTrack Pro paywall (plans from Google Play via RevenueCat, restore). Opened through LocalPaywallLauncher. */
+@Serializable
+data object Paywall

@@ -134,6 +134,7 @@ enum LocalCache {
     static func save(profile: UserProfile, in context: ModelContext) {
         var object: [String: Any] = ["id": profile.id, "plan": profile.plan.wire]
         if let name = profile.displayName { object["display_name"] = name }
+        if let trial = profile.trialFlightId { object["trial_flight_id"] = trial }
         if let until = profile.proUntil {
             let formatter = ISO8601DateFormatter()
             formatter.formatOptions = [.withInternetDateTime]

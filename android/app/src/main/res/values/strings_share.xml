@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Share a flight (P1 contract, section 2). -->
+<resources>
+    <!-- The shared message. %1$s carrier "6E", %2$s number "2341", %3$s departure "DEL", %4$s arrival "BOM", %5$s the link.
+         Both lines are sent together: Hinglish first, then English with the link. -->
+    <string name="share_text_hinglish">Meri flight live track karo: %1$s %2$s %3$s→%4$s</string>
+    <string name="share_text_english">Track my flight %1$s %2$s %3$s→%4$s live: %5$s</string>
+    <!-- Subject line for e-mail apps in the share sheet. %1$s is a flight such as "6E 2341". -->
+    <string name="share_subject">Flight %1$s, live</string>
+
+    <string name="share_action">Share flight</string>
+    <string name="share_action_whatsapp">Share on WhatsApp</string>
+    <string name="share_action_more">Share via…</string>
+    <string name="share_chooser_title">Share your flight</string>
+    <string name="share_hint">Family can follow this flight live in the browser, no app needed. Your PNR and seat are never shared.</string>
+
+    <string name="share_message_failed">Couldn\'t create the link. Please try again.</string>
+    <string name="share_message_not_tracked">Track this flight first to share it.</string>
+    <string name="share_message_no_app">No app on this phone can share text.</string>
+</resources>

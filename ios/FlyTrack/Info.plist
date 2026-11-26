@@ -51,10 +51,18 @@
 	<string>$(GOOGLE_WEB_CLIENT_ID)</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>whatsapp</string>
+	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>HeyGate reads the barcode on your boarding pass to add the flight.</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
+	<key>RevenueCatAPIKey</key>
+	<string>$(REVENUECAT_IOS_KEY)</string>
+	<key>ShareBaseURL</key>
+	<string>$(SHARE_BASE_URL)</string>
 	<key>SupabaseAnonKey</key>
 	<string>$(SUPABASE_ANON_KEY)</string>
 	<key>SupabaseURL</key>

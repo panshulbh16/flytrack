@@ -142,7 +142,10 @@ final class LivePush: PushControlling {
         content.sound = .default
         content.threadIdentifier = alert.tag
         content.categoryIdentifier = PushContract.actionOpenFlight
-        content.userInfo = [PushContract.keyFlightId: alert.flightId, PushContract.keyKind: PushContract.kindAlert]
+        var userInfo: [String: String] = [PushContract.keyFlightId: alert.flightId, PushContract.keyKind: PushContract.kindAlert]
+        if let type = alert.eventType { userInfo[PushContract.keyEventType] = type.wire }
+        if let url = alert.checkinUrl { userInfo[PushContract.keyCheckinUrl] = url }
+        content.userInfo = userInfo
         content.interruptionLevel = alert.interruptionLevel == "time-sensitive" ? .timeSensitive : .active
         let request = UNNotificationRequest(identifier: alert.tag, content: content, trigger: nil)
         try? await UNUserNotificationCenter.current().add(request)
@@ -156,6 +159,8 @@ final class PushBridge: NSObject, UNUserNotificationCenterDelegate {
     static let shared = PushBridge()
     var onData: (([String: String]) -> Void)?
     var onFlight: ((String) -> Void)?
+    /// A check-in reminder tap: the airline's page, and the flight when known (P1 contract section 3).
+    var onCheckin: ((URL, String?) -> Void)?
     var onToken: ((String) -> Void)?
     /// Suggestion id, and true for Not now (dismiss) or false for Track and a tap on the body.
     var onGmailSuggestion: ((String, Bool) -> Void)?
@@ -174,8 +179,18 @@ final class PushBridge: NSObject, UNUserNotificationCenterDelegate {
             await MainActor.run { PushBridge.shared.onGmailSuggestion?(id, dismiss) }
             return
         }
-        guard let id = content.userInfo[PushContract.keyFlightId] as? String, isFlightUUID(id) else { return }
-        await MainActor.run { PushBridge.shared.onFlight?(id) }
+        var strings: [String: String] = [:]
+        for (key, value) in content.userInfo {
+            if let key = key as? String, let value = value as? String { strings[key] = value }
+        }
+        switch notificationTap(userInfo: strings) {
+        case .checkin(let url, let flightId):
+            await MainActor.run { PushBridge.shared.onCheckin?(url, flightId) }
+        case .openFlight(let id):
+            await MainActor.run { PushBridge.shared.onFlight?(id) }
+        case .ignore:
+            break
+        }
     }
 }
 

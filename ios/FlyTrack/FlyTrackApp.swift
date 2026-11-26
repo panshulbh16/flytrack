@@ -100,6 +100,10 @@ final class AppShell: ObservableObject {
     let gmailAuth: GmailAuth
     let shared = SharedContentHolder()
     let clock: FlyClock = SystemClock()
+    let billing: BillingGateway
+    let pro: ProCenter
+    let sharing: LiveFlightSharing
+    let checkinRules: LiveCheckinRules
 
     @Published var session: SessionState = .loading
     @Published var path = NavigationPath()
@@ -119,6 +123,13 @@ final class AppShell: ObservableObject {
         extractor = OnDeviceExtractor()
         gmailStore = SwiftDataGmailStore(context: context)
         gmailAuth = GmailAuth(settings: settings, api: gmailAPI)
+        let billing = makeBillingGateway()
+        self.billing = billing
+        pro = ProCenter(service: ProService(
+            billing: billing, profiles: profiles, auth: auth, sync: LiveEntitlementSync(stack: stack), clock: clock
+        ))
+        sharing = LiveFlightSharing(stack: stack, auth: auth)
+        checkinRules = LiveCheckinRules(stack: stack)
         PushBridge.shared.onToken = { token in
             Task { @MainActor in await DeviceRegistrar.register(token: token, client: stack.client) }
         }
@@ -126,6 +137,7 @@ final class AppShell: ObservableObject {
             // Signing out or into another account changes the user. Register this phone for the new one,
             // as Android does when its session's user id changes. bootstrap() handles the launch.
             let push = push
+            let pro = pro
             Task {
                 var lastUser = client.auth.currentSession?.user.id
                 for await (_, session) in client.auth.authStateChanges {
@@ -135,6 +147,8 @@ final class AppShell: ObservableObject {
                     if let token = await push.currentToken() {
                         await DeviceRegistrar.register(token: token, client: client)
                     }
+                    // RevenueCat follows the Supabase user (contract: logIn(userId) after every sign-in).
+                    await pro.identifyAndReload()
                 }
             }
         }
@@ -142,6 +156,16 @@ final class AppShell: ObservableObject {
             Task { @MainActor in await self.handlePush(data) }
         }
         PushBridge.shared.onFlight = { [weak self] id in self?.openFlight(id) }
+        PushBridge.shared.onCheckin = { [weak self] url, flightId in
+            if let flightId { self?.openFlight(flightId) }
+            UIApplication.shared.open(url)
+        }
+        #if canImport(RevenueCat)
+        if let revenueCat = billing as? RevenueCatBilling {
+            let pro = pro
+            revenueCat.onChange = { Task { await pro.reload() } }
+        }
+        #endif
         PushBridge.shared.onGmailSuggestion = { [weak self] id, dismiss in self?.openGmailSuggestion(id, dismiss: dismiss) }
         auth.onUserDataWiped = { [weak self] in await self?.clearGmail() }
     }
@@ -196,6 +220,7 @@ final class AppShell: ObservableObject {
             _ = await flights.refresh()
             _ = await profiles.refresh()
         }
+        await pro.identifyAndReload()
         await FlightLiveActivities.resume(client: stack.client, push: push, flights: flights)
         if let shared = ShareInbox.consume() {
             self.shared.offer(shared)
@@ -242,6 +267,11 @@ final class AppShell: ObservableObject {
         await FlightLiveActivities.endFinished(flights: flights)
         session = await auth.session()
     }
+
+    /// After a purchase or restore the profile changed; screens read the new state from `pro`.
+    func proChanged() async {
+        await pro.reload()
+    }
 }
 
 enum Route: Hashable {
@@ -251,6 +281,7 @@ enum Route: Hashable {
     case importTicket
     case scanBoardingPass
     case gmailImport
+    case paywall
 }
 
 struct RootView: View {
@@ -274,6 +305,8 @@ struct RootView: View {
                         ScanScreen(shell: shell)
                     case .gmailImport:
                         GmailImportScreen(shell: shell)
+                    case .paywall:
+                        PaywallScreen(shell: shell)
                     }
                 }
         }

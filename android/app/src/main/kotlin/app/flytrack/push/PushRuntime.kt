@@ -16,6 +16,8 @@ import androidx.core.content.ContextCompat
 import app.flytrack.BuildConfig
 import app.flytrack.R
 import app.flytrack.core.push.PushContract
+import app.flytrack.feature.checkin.CHECKIN_EVENT_OPEN
+import app.flytrack.feature.checkin.KEY_CHECKIN_URL
 import app.flytrack.feature.gmailimport.AndroidGmailNotifier
 import app.flytrack.ui.nav.openFlightIntent
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -73,7 +75,13 @@ class SystemFlightNotifier @Inject constructor(
         val pending = PendingIntent.getActivity(
             context,
             alert.notificationId,
-            openFlightIntent(context, alert.flightId),
+            openFlightIntent(context, alert.flightId).apply {
+                // Same extras as a tap on the notification Play services shows: MainActivity opens the airline page.
+                alert.checkinUrl?.let { url ->
+                    putExtra(PushContract.KEY_EVENT_TYPE, CHECKIN_EVENT_OPEN) // only marks it as a check-in alert
+                    putExtra(KEY_CHECKIN_URL, url)
+                }
+            },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         val notification = Notification.Builder(context, alert.channelId)

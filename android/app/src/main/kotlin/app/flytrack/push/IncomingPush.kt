@@ -2,6 +2,9 @@ package app.flytrack.push
 
 import app.flytrack.core.model.AlertType
 import app.flytrack.core.push.PushContract
+import app.flytrack.feature.checkin.CHECKIN_EVENT_OPEN
+import app.flytrack.feature.checkin.KEY_CHECKIN_URL
+import app.flytrack.feature.checkin.checkinUrlFromPush
 
 /**
  * One FCM data payload, parsed without any Android type so it can be unit-tested against the
@@ -24,6 +27,8 @@ sealed interface IncomingPush {
         val channelId: String,
         val tag: String,
         val notificationId: Int,
+        /** CHECKIN_OPEN / CHECKIN_CLOSING only: the airline's https check-in page a tap opens. */
+        val checkinUrl: String? = null,
     ) : IncomingPush
 
     /** Not a message this app understands (missing kind, missing flight, empty alert). */
@@ -66,6 +71,14 @@ fun alertChannelId(type: AlertType?): String =
     if (type == null || type.critical) PushContract.CHANNEL_CRITICAL else PushContract.CHANNEL_UPDATES
 
 /**
+ * [alertChannelId] for a wire value [AlertType] may not know yet. CHECKIN_OPEN is an `info` event
+ * (P1 contract, section 3), so the server puts it on the updates channel; the app must not post the
+ * same alert loudly. CHECKIN_CLOSING is critical, which the unknown-type default already gives.
+ */
+fun alertChannelId(type: AlertType?, wire: String): String =
+    if (type == null && wire == CHECKIN_EVENT_OPEN) PushContract.CHANNEL_UPDATES else alertChannelId(type)
+
+/**
  * Stable notification id for a tag. Android replaces a notification only when both the tag and
  * the id match, so the id is a pure function of the tag.
  */
@@ -93,8 +106,9 @@ private fun alertOrIgnored(data: Map<String, String>, flightId: String): Incomin
         eventType = type,
         title = title,
         body = body,
-        channelId = alertChannelId(type),
+        channelId = alertChannelId(type, wire),
         tag = tag,
         notificationId = notificationIdFor(tag),
+        checkinUrl = checkinUrlFromPush(wire, data[KEY_CHECKIN_URL]),
     )
 }

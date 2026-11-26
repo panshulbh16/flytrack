@@ -240,13 +240,31 @@ struct DetailScreen: View {
     let flightId: String
     @State private var store: DetailStore?
     @State private var live: Bool? // nil = Live Activity not offered for this flight
+    @State private var shareText: String?
+    @State private var shareChoice = false
+    @State private var activity: ActivityText?
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
         PaperScreen {
-            if let detail = store?.state.detail {
+            if let store, let detail = store.state.detail {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 18) {
+                        if let message = store.state.message {
+                            HStack(alignment: .top) {
+                                Text(detailMessage(message)).font(FlyFont.sans(14, relativeTo: .footnote))
+                                Spacer()
+                                Button(String(localized: "Dismiss"), systemImage: "xmark") { store.clearMessage() }
+                                    .labelStyle(.iconOnly)
+                                    .hitTarget()
+                            }
+                            .padding(12)
+                            .background(FlyColor.paperRaised, in: .rect(cornerRadius: 12))
+                        }
+                        if store.state.proAccess == .trial {
+                            TrialBadge()
+                        }
                         Text(statusWord(detail.card.statusWord))
                             .font(FlyFont.serifItalic(32, relativeTo: .largeTitle))
                             .foregroundStyle(FlyColor.tone(detail.card.tone))
@@ -258,9 +276,14 @@ struct DetailScreen: View {
                         if let reason = detail.delayReason {
                             Text(reason).font(FlyFont.sans(14, relativeTo: .footnote))
                         }
+                        if let card = store.state.checkin {
+                            CheckinCardView(card: card) { url in openURL(url) }
+                        }
                         if case .teaser = detail.proInsight {
                             Text(String(localized: "Pro can see whether the inbound aircraft is running late."))
                                 .font(FlyFont.serifItalic(18, relativeTo: .headline))
+                            Button(String(localized: "See Pro plans")) { shell.path.append(Route.paywall) }
+                                .hitTarget()
                         }
                         if case .details(let flight, let from, _, let landed, let late, let predicted, let reason) = detail.proInsight {
                             Text(late >= 10 ? String(localized: "Your plane looks about \(late) min late.") : String(localized: "Your inbound plane is on time."))
@@ -270,29 +293,54 @@ struct DetailScreen: View {
                             if landed { Text(String(localized: "The inbound aircraft has landed.")) }
                             if let reason { Text(reason) }
                         }
-                        if let booking = detail.booking, !booking.isEmpty {
-                            Text([booking.pnr, booking.seat].compactMap { $0 }.joined(separator: " · "))
-                                .font(FlyFont.sans(14, relativeTo: .footnote))
+                        if detail.trackingState == .tracked {
+                            booking(detail.booking, store: store)
+                            Button {
+                                Task { await store.share() }
+                            } label: {
+                                HStack {
+                                    if store.state.isSharing { ProgressView() }
+                                    Label(String(localized: "Share flight"), systemImage: "square.and.arrow.up")
+                                }
+                            }
+                            .disabled(store.state.isSharing)
+                            .hitTarget()
+                            Text(String(localized: "Family can follow this flight live in the browser, no app needed. Your PNR and seat are never shared."))
+                                .font(FlyFont.sans(13, relativeTo: .footnote))
+                                .foregroundStyle(FlyColor.muted)
+                        } else if let booking = detail.booking, !booking.isEmpty {
+                            Text(bookingSummary(booking)).font(FlyFont.sans(14, relativeTo: .footnote))
                         }
                         ForEach(detail.alerts, id: \.group) { toggle in
                             Toggle(alertTitle(toggle.group), isOn: Binding(
                                 get: { toggle.enabled },
-                                set: { value in Task { await store?.setAlert(toggle.group, value) } }
+                                set: { value in Task { await store.setAlert(toggle.group, value) } }
                             ))
                             .disabled(toggle.locked)
                             .hitTarget()
                         }
+                        if detail.alerts.contains(where: \.locked) {
+                            Button(String(localized: "See Pro plans")) { shell.path.append(Route.paywall) }
+                                .hitTarget()
+                        }
+                        // The Live Activity is Pro (or the trial flight), as the paywall says. A running one can
+                        // always be removed.
                         if detail.trackingState == .tracked, let live {
-                            Button(live ? String(localized: "Remove from Lock Screen") : String(localized: "Show on Lock Screen")) {
-                                Task { await toggleLive(live) }
+                            if live || store.state.proAccess.unlocked {
+                                Button(live ? String(localized: "Remove from Lock Screen") : String(localized: "Show on Lock Screen")) {
+                                    Task { await toggleLive(live) }
+                                }
+                                .hitTarget()
+                            } else {
+                                Button(String(localized: "Show on Lock Screen with Pro")) { shell.path.append(Route.paywall) }
+                                    .hitTarget()
                             }
-                            .hitTarget()
                         }
                         if detail.trackingState == .tracked {
                             Button(String(localized: "Stop tracking"), role: .destructive) {
                                 Task {
                                     await FlightLiveActivities.stop(flightId)
-                                    await store?.untrack()
+                                    await store.untrack()
                                 }
                             }
                             // PaperScreen's ink foreground would otherwise hide the destructive red.
@@ -310,12 +358,75 @@ struct DetailScreen: View {
             }
         }
         .navigationTitle(store?.state.detail?.card.designator ?? String(localized: "Flight"))
+        .sheet(isPresented: Binding(
+            get: { store?.state.editor != nil },
+            set: { presented in if !presented { store?.cancelEditing() } }
+        )) {
+            if let store { BookingEditorSheet(store: store) }
+        }
+        .sheet(item: $activity) { item in
+            ActivitySheet(text: item.text).ignoresSafeArea()
+        }
+        .confirmationDialog(String(localized: "Share your flight"), isPresented: $shareChoice, titleVisibility: .visible) {
+            Button(String(localized: "Share on WhatsApp")) {
+                if let text = shareText, let url = whatsAppSendURL(text: text) { openURL(url) }
+                shareText = nil
+            }
+            Button(String(localized: "Share via…")) {
+                if let text = shareText { activity = ActivityText(text: text) }
+                shareText = nil
+            }
+            Button(String(localized: "Cancel"), role: .cancel) { shareText = nil }
+        }
+        .onChange(of: store?.state.shareReady) { _, ready in
+            guard let ready else { return }
+            store?.shareHandled()
+            let text = composeShareText(ready)
+            if WhatsApp.isInstalled {
+                shareText = text
+                shareChoice = true
+            } else {
+                activity = ActivityText(text: text)
+            }
+        }
+        .onChange(of: shell.pro.state) { Task { await store?.reload() } }
         .task {
-            if store == nil { store = DetailStore(model: FlightDetailScreenModel(flightId: flightId, flights: shell.flights, profiles: shell.profiles, clock: shell.clock)) }
+            if store == nil {
+                store = DetailStore(model: FlightDetailScreenModel(
+                    flightId: flightId, flights: shell.flights, profiles: shell.profiles, clock: shell.clock,
+                    pro: shell.pro.service, checkinRules: shell.checkinRules, sharing: shell.sharing,
+                    shareBaseURL: AppConfig.shareBaseURL
+                ))
+            }
             await store?.load()
             live = await FlightLiveActivities.offer(flightId, flights: shell.flights)
+            // Keeps the check-in countdown and the trip-pass expiry current while the screen is open.
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(60))
+                if Task.isCancelled { break }
+                await store?.reload()
+            }
         }
         .onChange(of: store?.state.isClosed) { _, closed in if closed == true { dismiss() } }
+    }
+
+    @ViewBuilder
+    private func booking(_ booking: BookingModel?, store: DetailStore) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(String(localized: "Booking"))
+                .font(FlyFont.sans(12, weight: .medium, relativeTo: .caption))
+                .textCase(.uppercase)
+                .tracking(1.2)
+            if let booking, !booking.isEmpty {
+                Text(bookingSummary(booking)).font(FlyFont.sans(15, relativeTo: .body))
+            }
+            Button(booking.map { $0.pnr == nil && $0.seat == nil && $0.cabin == nil } ?? true
+                   ? String(localized: "Add PNR, seat and cabin")
+                   : String(localized: "Edit booking details")) {
+                Task { await store.beginEditing() }
+            }
+            .hitTarget()
+        }
     }
 
     private func toggleLive(_ running: Bool) async {
@@ -343,6 +454,225 @@ struct DetailScreen: View {
                     .accessibilityLabel("\(fieldName(row.field)) \(row.value ?? String(localized: "not announced"))")
             }
         }
+    }
+}
+
+/// "Pro free for this flight" / "Is flight pe Pro free" (P1 contract section 1).
+private struct TrialBadge: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(String(localized: "Pro free for this flight"))
+                .font(FlyFont.sans(13, weight: .medium, relativeTo: .footnote))
+                .foregroundStyle(FlyColor.accent)
+            Text(String(localized: "Is flight pe Pro free"))
+                .font(FlyFont.sans(12, relativeTo: .caption))
+                .foregroundStyle(FlyColor.muted)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .overlay(Capsule().stroke(FlyColor.accentLine, lineWidth: 1))
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// "Web check-in opens in 6 hr" or "Check in now →" (P1 contract section 3).
+private struct CheckinCardView: View {
+    var card: CheckinCard
+    var open: (URL) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(String(localized: "Web check-in"))
+                .font(FlyFont.sans(12, weight: .medium, relativeTo: .caption))
+                .textCase(.uppercase)
+                .tracking(1.2)
+            switch card.window {
+            case .notOpenYet:
+                Text(String(localized: "Web check-in opens \(card.countdown.map(relative) ?? "")"))
+                    .font(FlyFont.serifItalic(20, relativeTo: .title3))
+                Text(String(localized: "Opens \(card.opensDay), \(card.opensTime) (airport time)"))
+                    .font(FlyFont.sans(14, relativeTo: .subheadline))
+            case .open(_, _, let closingSoon):
+                Text(String(localized: "Web check-in is open"))
+                    .font(FlyFont.serifItalic(20, relativeTo: .title3))
+                    .foregroundStyle(FlyColor.onTime)
+                if closingSoon {
+                    Text(String(localized: "Closing soon"))
+                        .font(FlyFont.sans(13, weight: .medium, relativeTo: .footnote))
+                        .foregroundStyle(FlyColor.delayed)
+                }
+                Text(String(localized: "Closes at \(card.closesTime) (airport time)"))
+                    .font(FlyFont.sans(14, relativeTo: .subheadline))
+            case .closed:
+                Text(String(localized: "Web check-in has closed. Check in at the airline counter."))
+                    .font(FlyFont.sans(15, relativeTo: .body))
+            }
+            if let url = card.url {
+                if card.canCheckInNow {
+                    Button(String(localized: "Check in now →")) { open(url) }
+                        .buttonStyle(.borderedProminent)
+                        .foregroundStyle(FlyColor.paper)
+                        .hitTarget()
+                } else if case .notOpenYet = card.window {
+                    Button(String(localized: "Airline check-in page")) { open(url) }
+                        .hitTarget()
+                }
+            }
+            if !card.verified {
+                Text(String(localized: "Usual times for this airline. Confirm on the airline's site."))
+                    .font(FlyFont.sans(12, relativeTo: .caption))
+                    .foregroundStyle(FlyColor.muted)
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(FlyColor.paperRaised, in: .rect(cornerRadius: 12))
+    }
+}
+
+/// PNR, seat and cabin for this flight. Saves to `user_flights` through the detail model.
+private struct BookingEditorSheet: View {
+    var store: DetailStore
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                if let editor = store.state.editor {
+                    Section {
+                        TextField(String(localized: "Booking reference (PNR)"), text: Binding(
+                            get: { editor.pnr },
+                            set: { store.setPnr($0) }
+                        ))
+                        .textInputAutocapitalization(.characters)
+                        .autocorrectionDisabled()
+                        if editor.error == .pnr {
+                            Text(String(localized: "A PNR is 5 to 8 letters and numbers."))
+                                .foregroundStyle(FlyColor.cancelled)
+                        }
+                        TextField(String(localized: "Seat, for example 14C"), text: Binding(
+                            get: { editor.seat },
+                            set: { store.setSeat($0) }
+                        ))
+                        .textInputAutocapitalization(.characters)
+                        .autocorrectionDisabled()
+                        if editor.error == .seat {
+                            Text(String(localized: "A seat is at most \(TrackExtras.maxSeatLength) characters."))
+                                .foregroundStyle(FlyColor.cancelled)
+                        }
+                        Picker(String(localized: "Cabin"), selection: Binding(
+                            get: { editor.cabin },
+                            set: { store.setCabin($0) }
+                        )) {
+                            Text(String(localized: "Not set")).tag(Cabin?.none)
+                            ForEach(Cabin.allCases, id: \.self) { cabin in
+                                Text(cabinName(cabin)).tag(Cabin?.some(cabin))
+                            }
+                        }
+                    } footer: {
+                        Text(String(localized: "Only you see these. They are never shared."))
+                    }
+                    .listRowBackground(FlyColor.paperRaised)
+                }
+            }
+            .scrollContentBackground(.hidden)
+            .background(FlyColor.paper)
+            .navigationTitle(String(localized: "Booking details"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(String(localized: "Cancel")) { store.cancelEditing() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(String(localized: "Save")) { Task { await store.saveEditor() } }
+                        .disabled(store.state.editor?.isSaving == true)
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+    }
+}
+
+/// The system share sheet for one message.
+private struct ActivityText: Identifiable {
+    let text: String
+    var id: String { text }
+}
+
+private struct ActivitySheet: UIViewControllerRepresentable {
+    let text: String
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: [text], applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ controller: UIActivityViewController, context: Context) {}
+}
+
+private enum WhatsApp {
+    /// Needs `whatsapp` in LSApplicationQueriesSchemes (project.yml).
+    @MainActor
+    static var isInstalled: Bool {
+        guard let url = URL(string: "\(ShareContract.whatsAppScheme)://send") else { return false }
+        return UIApplication.shared.canOpenURL(url)
+    }
+}
+
+/// Hinglish line first, then the English line with the link (P1 contract section 2).
+private func composeShareText(_ ready: FlightShareReady) -> String {
+    let f = ready.flight
+    return shareMessage(lines: [
+        String(localized: "Meri flight live track karo: \(f.carrierIata) \(f.flightNumber) \(f.depIata)→\(f.arrIata)"),
+        String(localized: "Track my flight \(f.carrierIata) \(f.flightNumber) \(f.depIata)→\(f.arrIata) live: \(ready.url)"),
+    ])
+}
+
+private func bookingSummary(_ booking: BookingModel) -> String {
+    var parts: [String] = []
+    if let pnr = booking.pnr { parts.append(String(localized: "PNR \(pnr)")) }
+    if let seat = booking.seat { parts.append(String(localized: "Seat \(seat)")) }
+    if let cabin = booking.cabin { parts.append(cabinName(cabin)) }
+    return parts.joined(separator: " · ")
+}
+
+private func cabinName(_ cabin: Cabin) -> String {
+    switch cabin {
+    case .economy: String(localized: "Economy")
+    case .premiumEconomy: String(localized: "Premium economy")
+    case .business: String(localized: "Business")
+    case .first: String(localized: "First")
+    }
+}
+
+private func detailMessage(_ message: FlightDetailMessage) -> String {
+    switch message {
+    case .offline: String(localized: "You're offline.")
+    case .refreshFailed: String(localized: "Couldn't refresh this flight.")
+    case .actionFailed: String(localized: "That didn't work. Try again.")
+    case .trackingLimitReached: String(localized: "You've reached the number of flights your plan can track.")
+    case .shareFailed: String(localized: "Couldn't create the link. Please try again.")
+    case .shareNotTracked: String(localized: "Track this flight first to share it.")
+    }
+}
+
+/// HeyGate Pro in Settings: the current plan, or a way to Pro.
+private struct ProSettingsSection: View {
+    @ObservedObject var shell: AppShell
+
+    var body: some View {
+        Section(String(localized: "HeyGate Pro")) {
+            let state = shell.pro.state
+            if state.isPro {
+                ProStatusView(state: state)
+            } else {
+                Text(String(localized: "Free plan: up to \(UserProfile.freeTrackingLimit) flights at once. Pro adds inbound-aircraft predictions, late-aircraft alerts and the Live Activity."))
+                    .font(FlyFont.sans(14, relativeTo: .subheadline))
+            }
+            Button(state.isPro ? String(localized: "See Pro plans") : String(localized: "Go Pro")) {
+                shell.path.append(Route.paywall)
+            }
+            .hitTarget()
+        }
+        .task { await shell.pro.reload() }
     }
 }
 
@@ -385,6 +715,8 @@ struct SettingsScreen: View {
                         .hitTarget()
                     }
                     .listRowBackground(FlyColor.paperRaised)
+                    ProSettingsSection(shell: shell)
+                        .listRowBackground(FlyColor.paperRaised)
                     Section(String(localized: "Appearance")) {
                         Picker(String(localized: "Appearance"), selection: $appearance) {
                             Text(String(localized: "System")).tag(Appearance.system)
@@ -652,8 +984,18 @@ final class DetailStore {
         model.onChange = { [weak self] in self?.state = $0 }
     }
     func load() async { await model.load(); state = model.state }
+    func reload() async { await model.reload(); state = model.state }
     func untrack() async { await model.untrack(); state = model.state }
     func setAlert(_ group: AlertGroup, _ enabled: Bool) async { await model.setAlert(group, enabled: enabled); state = model.state }
+    func beginEditing() async { await model.beginEditing(); state = model.state }
+    func setPnr(_ text: String) { model.setEditorPnr(text); state = model.state }
+    func setSeat(_ text: String) { model.setEditorSeat(text); state = model.state }
+    func setCabin(_ cabin: Cabin?) { model.setEditorCabin(cabin); state = model.state }
+    func cancelEditing() { model.cancelEditing(); state = model.state }
+    func saveEditor() async { await model.saveEditor(); state = model.state }
+    func share() async { await model.share(); state = model.state }
+    func shareHandled() { model.shareHandled(); state = model.state }
+    func clearMessage() { model.clearMessage(); state = model.state }
 }
 
 @MainActor
@@ -781,6 +1123,7 @@ private func alertTitle(_ group: AlertGroup) -> String {
     case .baggage: String(localized: "Baggage belt")
     case .disruption: String(localized: "Cancellation and diversion")
     case .inboundAircraft: String(localized: "Inbound aircraft (Pro)")
+    case .checkin: String(localized: "Web check-in reminders")
     }
 }
 

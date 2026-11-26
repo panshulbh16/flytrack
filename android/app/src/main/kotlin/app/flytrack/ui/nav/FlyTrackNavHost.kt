@@ -11,6 +11,9 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import app.flytrack.core.model.TrackSource
 import app.flytrack.feature.addflight.AddFlightRoute
+import app.flytrack.feature.billing.ui.LocalProFlightId
+import app.flytrack.feature.billing.ui.PaywallRoute
+import app.flytrack.feature.billing.ui.ProStateProvider
 import app.flytrack.feature.flights.FlightDetailRoute
 import app.flytrack.feature.flights.FlightsRoute
 import app.flytrack.feature.gmailimport.GmailImportRoute
@@ -87,49 +90,57 @@ fun FlyTrackNavHost(
     navigator: NavControllerNavigator = remember(navController) { NavControllerNavigator(navController) },
 ) {
     CompositionLocalProvider(LocalAppNavigator provides navigator) {
-        NavHost(navController = navController, startDestination = Flights, modifier = modifier) {
-            composable<Flights> {
-                FlightsRoute(
-                    onAddFlight = { navigator.openAddFlight() },
-                    onOpenFlight = { flightId -> navigator.openFlight(flightId) },
-                    onOpenSettings = { navigator.openSettings() },
-                )
-            }
-            composable<AddFlight> { entry ->
-                val route = entry.toRoute<AddFlight>()
-                AddFlightRoute(
-                    prefillFlight = route.prefillFlight,
-                    prefillDate = route.prefillDate,
-                    prefillPnr = route.prefillPnr,
-                    prefillSource = route.prefillSource,
-                    prefillSeat = route.prefillSeat,
-                    prefillGmailSuggestionId = route.prefillGmailSuggestionId,
-                    onDone = { flightId -> if (flightId != null) navigator.openFlightFromAdd(flightId) else navigator.back() },
-                    onBack = { navigator.back() },
-                )
-            }
-            composable<FlightDetail> { entry ->
-                FlightDetailRoute(
-                    flightId = entry.toRoute<FlightDetail>().flightId,
-                    onBack = { navigator.back() },
-                )
-            }
-            composable<Settings> {
-                SettingsRoute(onBack = { navigator.back() })
-            }
-            composable<ImportTicket> {
-                ImportTicketRoute(
-                    onParsed = { flight, date, pnr, source -> navigator.openAddFlightFromImport(flight, date, pnr, source) },
-                    onBack = { navigator.back() },
-                )
-            }
-            composable<GmailImport> {
-                GmailImportRoute(
-                    onOpenSuggestion = navigator::openAddFlightFromGmail,
-                    onImportManually = navigator::openImportTicket,
-                    onTypeInstead = { navigator.openAddFlight() },
-                    onBack = { navigator.back() },
-                )
+        ProStateProvider(onOpenPaywall = { navController.navigate(Paywall) { launchSingleTop = true } }) {
+            NavHost(navController = navController, startDestination = Flights, modifier = modifier) {
+                composable<Flights> {
+                    FlightsRoute(
+                        onAddFlight = { navigator.openAddFlight() },
+                        onOpenFlight = { flightId -> navigator.openFlight(flightId) },
+                        onOpenSettings = { navigator.openSettings() },
+                    )
+                }
+                composable<AddFlight> { entry ->
+                    val route = entry.toRoute<AddFlight>()
+                    AddFlightRoute(
+                        prefillFlight = route.prefillFlight,
+                        prefillDate = route.prefillDate,
+                        prefillPnr = route.prefillPnr,
+                        prefillSource = route.prefillSource,
+                        prefillSeat = route.prefillSeat,
+                        prefillGmailSuggestionId = route.prefillGmailSuggestionId,
+                        onDone = { flightId -> if (flightId != null) navigator.openFlightFromAdd(flightId) else navigator.back() },
+                        onBack = { navigator.back() },
+                    )
+                }
+                composable<FlightDetail> { entry ->
+                    val flightId = entry.toRoute<FlightDetail>().flightId
+                    CompositionLocalProvider(LocalProFlightId provides flightId) {
+                        FlightDetailRoute(
+                            flightId = flightId,
+                            onBack = { navigator.back() },
+                        )
+                    }
+                }
+                composable<Settings> {
+                    SettingsRoute(onBack = { navigator.back() })
+                }
+                composable<ImportTicket> {
+                    ImportTicketRoute(
+                        onParsed = { flight, date, pnr, source -> navigator.openAddFlightFromImport(flight, date, pnr, source) },
+                        onBack = { navigator.back() },
+                    )
+                }
+                composable<Paywall> {
+                    PaywallRoute(onBack = { navigator.back() })
+                }
+                composable<GmailImport> {
+                    GmailImportRoute(
+                        onOpenSuggestion = navigator::openAddFlightFromGmail,
+                        onImportManually = navigator::openImportTicket,
+                        onTypeInstead = { navigator.openAddFlight() },
+                        onBack = { navigator.back() },
+                    )
+                }
             }
         }
     }

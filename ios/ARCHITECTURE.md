@@ -39,6 +39,29 @@ Packages pinned in `project.yml`:
 | supabase-swift | 2.55.7 |
 | firebase-ios-sdk | 13.2.0 (FirebaseCore, FirebaseMessaging) |
 | GoogleSignIn-iOS | 10.1.0 |
+| purchases-ios-spm (RevenueCat) | 5.102.3 |
+
+## P1 (docs/P1_CONTRACTS.md)
+
+| Feature | Core (tested on Linux) | App |
+|---|---|---|
+| Billing | `Billing.swift`: contract names, `EntitlementRules` (server profile + CustomerInfo, trip pass = latest `heygate_trip_pass` + 7 days), `ProService`, `PaywallModel`, `PlanPricing` | `Billing.swift`: `RevenueCatBilling` (purchases-ios 5.x), `ProCenter`; `PaywallScreen.swift` |
+| Trial flight | `UserProfile.trialFlightId`, `ProState.access(for:)`; the detail model refreshes the profile once while no trial is recorded (the server trigger grants it on the first add) | "Pro free for this flight / Is flight pe Pro free" badge on the detail screen; "Show on Lock Screen" (Live Activity) needs Pro or the trial flight |
+| Share | `Share.swift`: `shareURL`, `shareMessage`, `whatsAppSendURL` | `LiveFlightSharing` (`create_flight_share`), WhatsApp when installed, else `UIActivityViewController` |
+| Check-in | `Checkin.swift`: `checkinWindow`, `checkinCard`, `safeCheckinURL`, `notificationTap` | `LiveCheckinRules` (table cached 12 h in UserDefaults), card on the detail screen, `checkin_url` tap opens the airline page |
+| Scan source | `TrackSource.scan` | `ScanScreen` adds with `source = scan` |
+| Booking editor | `FlightDetailScreenModel` editor with cabin | sheet on the detail screen; PATCH writes `pnr`, `seat`, `cabin` (null clears) |
+
+Billing setup:
+
+* RevenueCat app user id = Supabase user id. `ProCenter.identifyAndReload()` runs at launch and on every auth user change: the first call configures the SDK with that id, later calls `logIn`.
+* Purchase and restore end with `POST sync-entitlement` and a profile refresh. Pro shows immediately from CustomerInfo (optimistic) and is marked "Confirming…" until the profile agrees.
+* `REVENUECAT_IOS_KEY` in `Secrets.xcconfig` (the public `appl_…` key) reaches Info.plist as `RevenueCatAPIKey`. Blank or a placeholder: `UnavailableBilling`, the paywall says "Pro coming soon", nothing crashes.
+* App Store Connect: auto-renewing `heygate_pro_yearly` (₹4,999) and `heygate_pro_monthly` (₹499) in one subscription group, consumable `heygate_trip_pass` (₹99). Prices live only in App Store Connect; the app shows the offering's `localizedPriceString`.
+* RevenueCat: offering `default` with packages `$rc_annual`, `$rc_monthly` and custom `trip_pass`. Attach only the two subscriptions to entitlement `pro`.
+* Add the In-App Purchase capability on the HeyGate target before archiving.
+
+`SHARE_BASE_URL` (Info.plist `ShareBaseURL`) defaults to `https://heygate.app/f/`. In an xcconfig `//` starts a comment, so URLs are written `https:/$()/host/path`; a value cut short falls back to the default. `LSApplicationQueriesSchemes` lists `whatsapp` so `canOpenURL` can see WhatsApp.
 
 ## Push
 

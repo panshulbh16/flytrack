@@ -7,6 +7,10 @@ SUPABASE_ANON_KEY =
 GOOGLE_IOS_CLIENT_ID =
 GOOGLE_WEB_CLIENT_ID =
 REVERSED_GOOGLE_CLIENT_ID = com.googleusercontent.apps.PLACEHOLDER
+// RevenueCat public iOS SDK key (appl_...). Blank: billing is off and the paywall says "Pro coming soon".
+REVENUECAT_IOS_KEY =
+// Public share page. "//" starts an xcconfig comment, hence $() between the slashes. Blank uses the same default.
+SHARE_BASE_URL = https:/$()/heygate.app/f/
 // Gmail import: on in Debug, off in Release until Google's restricted-scope verification passes.
 GMAIL_IMPORT_ENABLED = NO
 GMAIL_IMPORT_ENABLED[config=Debug] = YES

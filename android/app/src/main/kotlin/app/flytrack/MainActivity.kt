@@ -32,6 +32,8 @@ import app.flytrack.core.push.PushContract
 import app.flytrack.data.repo.Appearance
 import app.flytrack.data.repo.SessionState
 import app.flytrack.data.repo.SettingsStore
+import app.flytrack.feature.checkin.KEY_CHECKIN_URL
+import app.flytrack.feature.checkin.openCheckinPageFromPush
 import app.flytrack.feature.gmailimport.GmailAppOpenCheck
 import app.flytrack.ui.components.BackendNotConfiguredBanner
 import app.flytrack.ui.nav.EXTRA_GMAIL_SUGGESTION_ID
@@ -57,7 +59,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         // Only a fresh start handles the launch intent; after rotation it was already handled.
-        if (savedInstanceState == null) viewModel.onIntent(intent.toIncomingIntent())
+        if (savedInstanceState == null) {
+            viewModel.onIntent(intent.toIncomingIntent())
+            openCheckinPageIfAsked(intent)
+        }
         setContent {
             val appearance by settings.appearance.collectAsStateWithLifecycle(initialValue = Appearance.SYSTEM)
             val darkTheme = when (appearance) {
@@ -89,6 +94,15 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         viewModel.onIntent(intent.toIncomingIntent())
+        openCheckinPageIfAsked(intent)
+    }
+
+    /** A tapped CHECKIN_OPEN / CHECKIN_CLOSING alert also opens the airline's page (the flight stays underneath). */
+    private fun openCheckinPageIfAsked(intent: Intent) {
+        if (intent.action != PushContract.ACTION_OPEN_FLIGHT) return
+        // Reopened from Recents with the old notification intent: the page was already opened once.
+        if (intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY != 0) return
+        openCheckinPageFromPush(this, intent.getStringExtra(PushContract.KEY_EVENT_TYPE), intent.getStringExtra(KEY_CHECKIN_URL))
     }
 
     // Launch and every return to the foreground; GmailAppOpenCheck throttles itself to once an hour.

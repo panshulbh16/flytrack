@@ -48,12 +48,15 @@ public enum AlertType: String, CaseIterable, Sendable, Equatable, Hashable {
     case diverted = "DIVERTED"
     case reinstated = "REINSTATED"
     case inboundLate = "INBOUND_LATE"
+    /// Web check-in reminders (P1 contract section 3). Free, never Pro-only.
+    case checkinOpen = "CHECKIN_OPEN"
+    case checkinClosing = "CHECKIN_CLOSING"
 
     public var wire: String { rawValue }
 
     public var critical: Bool {
         switch self {
-        case .delayReduced, .gateAssigned, .departed, .landed:
+        case .delayReduced, .gateAssigned, .departed, .landed, .checkinOpen:
             return false
         default:
             return true
@@ -83,7 +86,8 @@ public enum Cabin: String, CaseIterable, Sendable, Equatable {
 }
 
 public enum TrackSource: String, CaseIterable, Sendable, Equatable {
-    case manual, pdf, share, screenshot, gmail
+    /// `scan` is a boarding-pass barcode read with the camera or from a photo (P1 contract section 5).
+    case manual, pdf, share, screenshot, gmail, scan
 
     public var wire: String { rawValue }
 
@@ -380,17 +384,25 @@ public struct UserProfile: Hashable, Sendable {
     public var displayName: String?
     public var plan: Plan
     public var proUntil: Date?
+    /// `profiles.trial_flight_id`: the first flight a free user added gets Pro for free.
+    public var trialFlightId: String?
 
-    public init(id: String, displayName: String?, plan: Plan, proUntil: Date?) {
+    public init(id: String, displayName: String?, plan: Plan, proUntil: Date?, trialFlightId: String? = nil) {
         self.id = id
         self.displayName = displayName
         self.plan = plan
         self.proUntil = proUntil
+        self.trialFlightId = trialFlightId
     }
 
     /// Same rule as SQL `is_pro()`.
     public func isPro(now: Date) -> Bool {
         plan == .pro && (proUntil == nil || (proUntil ?? now) > now)
+    }
+
+    /// Same rule as SQL `is_pro_for_flight()`: Pro, or the free trial flight.
+    public func isProForFlight(_ flightId: String, now: Date) -> Bool {
+        isPro(now: now) || (trialFlightId != nil && trialFlightId == flightId)
     }
 
     public func trackingLimit(now: Date) -> Int {

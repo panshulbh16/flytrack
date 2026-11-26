@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Live flight notification and the Next flight widget (feature.live, feature.widget). -->
+<resources>
+    <!-- Notification channel flight_live -->
+    <string name="live_channel_name">Live flight</string>
+    <string name="live_channel_description">One quiet, ongoing notification for your flight from 3 hours before departure until 45 minutes after landing.</string>
+
+    <!-- Status words -->
+    <string name="live_status_on_time">On time</string>
+    <string name="live_status_delayed">Delayed</string>
+    <!-- %d is the delay in minutes -->
+    <string name="live_status_delayed_by">Delayed %d min</string>
+    <string name="live_status_check_in">Check-in open</string>
+    <string name="live_status_boarding">Boarding</string>
+    <string name="live_status_gate_closed">Gate closed</string>
+    <string name="live_status_departed">Departed</string>
+    <string name="live_status_in_air">In the air</string>
+    <string name="live_status_landed">Landed</string>
+    <string name="live_status_cancelled">Cancelled</string>
+    <string name="live_status_diverted">Diverted</string>
+    <!-- Label of the offline estimate (progress interpolated from the flight times) -->
+    <string name="live_estimated">Estimated</string>
+
+    <!-- %1$s departure airport code, %2$s arrival airport code -->
+    <string name="live_route">%1$s → %2$s</string>
+    <!-- %1$s flight number such as "6E 2341", %2$s route such as "DEL → BOM" -->
+    <string name="live_title">%1$s · %2$s</string>
+    <!-- %s is an airport-local time such as 18:25 -->
+    <string name="live_departs">Departs %s</string>
+    <string name="live_arrives">Arrives %s</string>
+    <string name="live_landed_at">Landed %s</string>
+    <!-- %s is a gate such as 42B -->
+    <string name="live_gate">Gate %s</string>
+    <!-- %s is a terminal such as 1 -->
+    <string name="live_terminal">T%s</string>
+    <!-- %s is a baggage belt such as 5 -->
+    <string name="live_belt">Belt %s</string>
+    <string name="live_separator" translatable="false">" · "</string>
+
+    <!-- Countdowns -->
+    <plurals name="live_countdown_days">
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
+    <!-- %1$d hours, %2$02d minutes -->
+    <string name="live_countdown_hours_minutes">%1$dh %2$02dm</string>
+    <!-- %d minutes -->
+    <string name="live_countdown_minutes">%d min</string>
+    <!-- %s is a countdown such as "2h 05m" -->
+    <string name="live_departs_in">Departs in %s</string>
+    <string name="live_lands_in">Lands in %s</string>
+
+    <!-- Next flight widget -->
+    <string name="live_widget_name">Next flight</string>
+    <string name="live_widget_description">Your next or current flight: status, time, gate, belt and a countdown.</string>
+    <string name="live_widget_empty_title">No upcoming flights</string>
+    <string name="live_widget_empty_message">Tap to add a flight</string>
+    <string name="live_widget_caption">Next flight</string>
+</resources>

@@ -87,8 +87,8 @@ struct ScanScreen: View {
     private func open(_ leg: BoardingPassLeg) {
         guard !done else { return }
         done = true
-        // ponytail: there is no "scan" track source on the server (check constraint); a camera read is closest to a screenshot.
-        let prefill = AddFlightPrefill(flight: leg.flight.display, date: leg.date?.iso, pnr: leg.pnr, source: .screenshot, seat: leg.seat)
+        // `scan` is the boarding-pass barcode source (P1 contract section 5, migration 20261126000010).
+        let prefill = AddFlightPrefill(flight: leg.flight.display, date: leg.date?.iso, pnr: leg.pnr, source: .scan, seat: leg.seat)
         if !shell.path.isEmpty { shell.path.removeLast() }
         shell.path.append(Route.add(prefill))
     }

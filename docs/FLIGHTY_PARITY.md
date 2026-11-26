@@ -279,10 +279,16 @@
 
 | Plan | Price |
 |---|---|
-| **Annual** | **₹1,299/yr** |
-| **Monthly** | **₹179/mo** |
-| **Trip Pass** (one trip, 7 days) | **₹79** |
-| **Lifetime** (optional, launch later) | **₹3,999** |
+> **Founder decision (26 Nov 2026), which replaces the recommendation below:** ₹4,999/yr · ₹499/mo · ₹99 Trip Pass (7 days). See `docs/P1_CONTRACTS.md`.
+
+Original recommendation:
+
+| Plan | Price |
+|---|---|
+| Annual | ₹1,299/yr |
+| Monthly | ₹179/mo |
+| Trip Pass (one trip, 7 days) | ₹79 |
+| Lifetime (optional, launch later) | ₹3,999 |
 
 **Why this price, against the founder's ₹3,999/yr ceiling:**
 - ₹3,999/yr is the top of the Indian market: App in the Air and Flighty (UNVERIFIED). Mileways is ₹3,499.
@@ -299,7 +305,7 @@
 
 | # | Decision | Recommended option |
 |---|---|---|
-| 1 | Annual price point | **₹1,299/yr + ₹179/mo + ₹79 Trip Pass.** Hold Lifetime ₹3,999 until P2 features ship. |
+| 1 | Annual price point | **Decided: ₹4,999/yr + ₹499/mo + ₹99 Trip Pass.** (Recommended at the time: ₹1,299 / ₹179 / ₹79.) |
 | 2 | Free tracking limit (currently 10) | **Unlimited upcoming flights free.** Gate depth (speed, inbound plane, Live Activity), not count. Keep a server cap for abuse. |
 | 3 | Billing stack | **RevenueCat** for Play and App Store entitlements. Skip User Choice Billing with Razorpay for now; revisit when the 4% fee cut is worth the integration work. |
 | 4 | Second data provider budget | **Wait for the 2-week ADB probe.** Add FlightAware AeroAPI only for the gaps the probe finds. |

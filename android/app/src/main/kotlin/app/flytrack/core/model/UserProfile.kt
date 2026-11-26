@@ -19,9 +19,17 @@ data class UserProfile(
     val plan: Plan,
     /** null with [Plan.PRO] means a lifetime or manual grant. */
     val proUntil: Instant?,
+    /**
+     * `profiles.trial_flight_id`: the one flight a free user gets Pro on for free (their first
+     * tracked flight). null until that flight is tracked, and for users who were Pro first.
+     */
+    val trialFlightId: String? = null,
 ) {
     /** Same rule as the server's `is_pro()`. */
     fun isPro(now: Instant): Boolean = plan == Plan.PRO && (proUntil == null || proUntil > now)
+
+    /** Same rule as the server's `is_pro_for_flight()`: Pro, or this is the free trial flight. */
+    fun isProForFlight(now: Instant, flightId: String): Boolean = isPro(now) || trialFlightId == flightId
 
     /** Active tracked flights allowed by `enforce_tracking_limit()`. */
     fun trackingLimit(now: Instant): Int = if (isPro(now)) PRO_TRACKING_LIMIT else FREE_TRACKING_LIMIT

@@ -9,6 +9,7 @@ import app.flytrack.di.ApplicationScope
 import app.flytrack.feature.gmailimport.GMAIL_LOG_TAG
 import app.flytrack.feature.gmailimport.GmailConnection
 import app.flytrack.feature.gmailimport.gmailLeftoversNeedWipe
+import app.flytrack.feature.live.LiveCoordinator
 import app.flytrack.push.PushInitializer
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CancellationException
@@ -30,6 +31,8 @@ class FlyTrackApp : Application(), Configuration.Provider {
 
     @Inject @ApplicationScope lateinit var appScope: CoroutineScope
 
+    @Inject lateinit var liveCoordinator: dagger.Lazy<LiveCoordinator>
+
     // WorkManager's default initializer is removed in the manifest so @HiltWorker classes get injected.
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder().setWorkerFactory(workerFactory).build()
@@ -37,6 +40,8 @@ class FlyTrackApp : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
         pushInitializer.onAppStart()
+        // Live flight notification + Next flight widget: follow Room from now on (returns immediately).
+        liveCoordinator.get().start()
         forgetGmailWhenSwitchedOff()
     }
 

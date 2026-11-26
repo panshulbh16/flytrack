@@ -12,6 +12,8 @@ public enum PushContract {
     public static let keyTitle = "title"
     public static let keyBody = "body"
     public static let keyFlight = "flight"
+    /// The airline's web check-in page on CHECKIN_OPEN / CHECKIN_CLOSING alerts (P1 contract section 3).
+    public static let keyCheckinUrl = "checkin_url"
     public static let kindAlert = "alert"
     public static let kindSync = "sync"
 
@@ -37,6 +39,8 @@ public struct PushAlert: Equatable, Sendable {
     public var notificationId: Int
     /// "time-sensitive" for flight_critical, "active" for flight_updates.
     public var interruptionLevel: String
+    /// Safe https link to the airline's check-in page, on check-in reminders only.
+    public var checkinUrl: String?
 
     public init(
         flightId: String,
@@ -47,7 +51,8 @@ public struct PushAlert: Equatable, Sendable {
         channelId: String,
         tag: String,
         notificationId: Int,
-        interruptionLevel: String
+        interruptionLevel: String,
+        checkinUrl: String? = nil
     ) {
         self.flightId = flightId
         self.eventId = eventId
@@ -58,6 +63,7 @@ public struct PushAlert: Equatable, Sendable {
         self.tag = tag
         self.notificationId = notificationId
         self.interruptionLevel = interruptionLevel
+        self.checkinUrl = checkinUrl
     }
 }
 
@@ -164,7 +170,8 @@ private func alertOrIgnored(_ data: [String: String], flightId: String, apns: Ap
         channelId: channel,
         tag: tag,
         notificationId: notificationId(for: tag),
-        interruptionLevel: interruptionLevel(for: channel)
+        interruptionLevel: interruptionLevel(for: channel),
+        checkinUrl: safeCheckinURL(data[PushContract.keyCheckinUrl])?.absoluteString
     ))
 }
 

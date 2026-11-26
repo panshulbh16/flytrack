@@ -39,6 +39,10 @@ android {
         buildConfigField("String", "SUPABASE_URL", quoted(secret("SUPABASE_URL")))
         buildConfigField("String", "SUPABASE_ANON_KEY", quoted(secret("SUPABASE_ANON_KEY")))
         buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", quoted(secret("GOOGLE_WEB_CLIENT_ID")))
+        // Public page of shared flights; the token is appended as "#<token>". Not a secret.
+        buildConfigField("String", "SHARE_BASE_URL", quoted(secret("SHARE_BASE_URL").ifEmpty { "https://heygate.app/f/" }))
+        // RevenueCat public Android SDK key ("goog_..."). Blank disables billing: the paywall says "Pro coming soon".
+        buildConfigField("String", "REVENUECAT_ANDROID_KEY", quoted(secret("REVENUECAT_ANDROID_KEY")))
     }
 
     buildTypes {

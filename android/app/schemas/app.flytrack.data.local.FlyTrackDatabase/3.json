@@ -1,0 +1,479 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 3,
+    "identityHash": "cbeffe9f4f8352b6609653f5e70481f9",
+    "entities": [
+      {
+        "tableName": "flights",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `carrier_iata` TEXT NOT NULL, `flight_number` TEXT NOT NULL, `flight_date` TEXT NOT NULL, `dep_iata` TEXT NOT NULL, `arr_iata` TEXT NOT NULL, `airline_name` TEXT, `status` TEXT NOT NULL, `sched_dep` INTEGER, `est_dep` INTEGER, `act_dep` INTEGER, `dep_terminal` TEXT, `dep_gate` TEXT, `dep_checkin` TEXT, `sched_arr` INTEGER, `est_arr` INTEGER, `act_arr` INTEGER, `arr_terminal` TEXT, `arr_gate` TEXT, `baggage_belt` TEXT, `aircraft_model` TEXT, `aircraft_reg` TEXT, `delay_reason` TEXT, `live_lat` REAL, `live_lon` REAL, `live_alt_ft` INTEGER, `live_heading` REAL, `live_speed_kts` REAL, `live_updated_at` INTEGER, `last_polled_at` INTEGER, `updated_at` INTEGER, `inbound_flight_id` TEXT, `prediction` TEXT, `has_pro_insight` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "carrierIata",
+            "columnName": "carrier_iata",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "flightNumber",
+            "columnName": "flight_number",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "flightDate",
+            "columnName": "flight_date",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "depIata",
+            "columnName": "dep_iata",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "arrIata",
+            "columnName": "arr_iata",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "airlineName",
+            "columnName": "airline_name",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "schedDep",
+            "columnName": "sched_dep",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "estDep",
+            "columnName": "est_dep",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "actDep",
+            "columnName": "act_dep",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "depTerminal",
+            "columnName": "dep_terminal",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "depGate",
+            "columnName": "dep_gate",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "depCheckin",
+            "columnName": "dep_checkin",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "schedArr",
+            "columnName": "sched_arr",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "estArr",
+            "columnName": "est_arr",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "actArr",
+            "columnName": "act_arr",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "arrTerminal",
+            "columnName": "arr_terminal",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "arrGate",
+            "columnName": "arr_gate",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "baggageBelt",
+            "columnName": "baggage_belt",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "aircraftModel",
+            "columnName": "aircraft_model",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "aircraftReg",
+            "columnName": "aircraft_reg",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "delayReason",
+            "columnName": "delay_reason",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "liveLat",
+            "columnName": "live_lat",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "liveLon",
+            "columnName": "live_lon",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "liveAltFt",
+            "columnName": "live_alt_ft",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "liveHeading",
+            "columnName": "live_heading",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "liveSpeedKts",
+            "columnName": "live_speed_kts",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "liveUpdatedAt",
+            "columnName": "live_updated_at",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "lastPolledAt",
+            "columnName": "last_polled_at",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updated_at",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "inboundFlightId",
+            "columnName": "inbound_flight_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "prediction",
+            "columnName": "prediction",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "hasProInsight",
+            "columnName": "has_pro_insight",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_flights_dep_iata",
+            "unique": false,
+            "columnNames": [
+              "dep_iata"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_flights_dep_iata` ON `${TABLE_NAME}` (`dep_iata`)"
+          },
+          {
+            "name": "index_flights_arr_iata",
+            "unique": false,
+            "columnNames": [
+              "arr_iata"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_flights_arr_iata` ON `${TABLE_NAME}` (`arr_iata`)"
+          }
+        ]
+      },
+      {
+        "tableName": "user_flights",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `user_id` TEXT NOT NULL, `flight_id` TEXT NOT NULL, `pnr` TEXT, `seat` TEXT, `cabin` TEXT, `source` TEXT NOT NULL, `notify_prefs` TEXT NOT NULL, `note` TEXT, `archived_at` INTEGER, `created_at` INTEGER, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userId",
+            "columnName": "user_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "flightId",
+            "columnName": "flight_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pnr",
+            "columnName": "pnr",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "seat",
+            "columnName": "seat",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "cabin",
+            "columnName": "cabin",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "source",
+            "columnName": "source",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "notifyPrefs",
+            "columnName": "notify_prefs",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "note",
+            "columnName": "note",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "archivedAt",
+            "columnName": "archived_at",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_user_flights_flight_id",
+            "unique": false,
+            "columnNames": [
+              "flight_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_user_flights_flight_id` ON `${TABLE_NAME}` (`flight_id`)"
+          }
+        ]
+      },
+      {
+        "tableName": "airports",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`iata` TEXT NOT NULL, `name` TEXT NOT NULL, `city` TEXT, `tz` TEXT NOT NULL, `lat` REAL NOT NULL, `lon` REAL NOT NULL, PRIMARY KEY(`iata`))",
+        "fields": [
+          {
+            "fieldPath": "iata",
+            "columnName": "iata",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "city",
+            "columnName": "city",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "tz",
+            "columnName": "tz",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lat",
+            "columnName": "lat",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lon",
+            "columnName": "lon",
+            "affinity": "REAL",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "iata"
+          ]
+        }
+      },
+      {
+        "tableName": "profiles",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `display_name` TEXT, `plan` TEXT NOT NULL, `pro_until` INTEGER, `trial_flight_id` TEXT, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "displayName",
+            "columnName": "display_name",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "plan",
+            "columnName": "plan",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "proUntil",
+            "columnName": "pro_until",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "trialFlightId",
+            "columnName": "trial_flight_id",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "gmail_suggestions",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `message_id` TEXT NOT NULL, `flight` TEXT NOT NULL, `date` TEXT NOT NULL, `from_iata` TEXT, `to_iata` TEXT, `pnr` TEXT, `subject` TEXT NOT NULL, `status` TEXT NOT NULL, `found_at` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "messageId",
+            "columnName": "message_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "flight",
+            "columnName": "flight",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "date",
+            "columnName": "date",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fromIata",
+            "columnName": "from_iata",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "toIata",
+            "columnName": "to_iata",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "pnr",
+            "columnName": "pnr",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "subject",
+            "columnName": "subject",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "foundAt",
+            "columnName": "found_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "gmail_seen_messages",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`message_id` TEXT NOT NULL, PRIMARY KEY(`message_id`))",
+        "fields": [
+          {
+            "fieldPath": "messageId",
+            "columnName": "message_id",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "message_id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'cbeffe9f4f8352b6609653f5e70481f9')"
+    ]
+  }
+}

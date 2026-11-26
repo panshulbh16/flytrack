@@ -408,6 +408,133 @@ final class LiveCloudParser: CloudTicketParsing {
     }
 }
 
+/// `create_flight_share(p_flight_id)` (P1 contract section 2).
+@MainActor
+final class LiveFlightSharing: FlightSharing {
+    private let stack: SupabaseStack
+    private let auth: AuthRepository
+    init(stack: SupabaseStack, auth: AuthRepository) {
+        self.stack = stack
+        self.auth = auth
+    }
+
+    func createShare(flightId: String) async -> ShareTokenResult {
+        switch await auth.ensureSignedIn() {
+        case .success: break
+        case .offline: return .offline
+        case .notConfigured: return .notConfigured
+        case .googleAccountInUse, .failed: return .failed("sign-in")
+        }
+        guard let client = stack.client else { return .notConfigured }
+        do {
+            let token: String = try await client.rpc(ShareContract.rpcCreate, params: CreateShareParams(p_flight_id: flightId))
+                .execute()
+                .value
+            let trimmed = token.trimmingCharacters(in: .whitespacesAndNewlines)
+            return trimmed.isEmpty ? .failed("empty share token") : .token(trimmed)
+        } catch let error as PostgrestError {
+            // The RPC refuses a flight the caller does not track (insufficient_privilege / no row).
+            if error.code == "42501" || error.code == "P0002" || error.message.localizedCaseInsensitiveContains("track") {
+                return .notTracked
+            }
+            return .failed(error.message)
+        } catch is URLError {
+            return .offline
+        } catch {
+            return .failed(error.localizedDescription)
+        }
+    }
+}
+
+private struct CreateShareParams: Encodable { var p_flight_id: String }
+
+/// `checkin_rules`, a handful of rows. Fetched at most every 12 hours and kept in UserDefaults for offline use.
+@MainActor
+final class LiveCheckinRules: CheckinRuleSource {
+    private static let storageKey = "checkin_rules_json"
+    private static let fetchedKey = "checkin_rules_fetched_at"
+    private static let maxAge: TimeInterval = 12 * 3600
+
+    private let stack: SupabaseStack
+    private let defaults: UserDefaults
+    private var rules: [String: CheckinRule]?
+    private var loading: Task<Void, Never>?
+    private var lastAttempt: Date?
+
+    init(stack: SupabaseStack, defaults: UserDefaults = .standard) {
+        self.stack = stack
+        self.defaults = defaults
+    }
+
+    func rule(carrier: String) async -> CheckinRule? {
+        if rules == nil, let data = defaults.data(forKey: Self.storageKey) { store(checkinRules(fromJSON: data)) }
+        let fetchedAt = defaults.object(forKey: Self.fetchedKey) as? Date
+        let stale = fetchedAt.map { Date().timeIntervalSince($0) > Self.maxAge } ?? true
+        // A failed fetch (offline, table not migrated yet) is retried at most once a minute.
+        let recentlyTried = lastAttempt.map { Date().timeIntervalSince($0) < 60 } ?? false
+        if (stale || rules == nil) && !recentlyTried {
+            await fetch()
+        }
+        return rules?[carrier.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()]
+    }
+
+    private func fetch() async {
+        if let loading { return await loading.value }
+        guard let client = stack.client, client.auth.currentSession != nil else { return }
+        lastAttempt = Date()
+        let task = Task { @MainActor in
+            do {
+                let data = try await client.from("checkin_rules").select().execute().data
+                let parsed = checkinRules(fromJSON: data)
+                self.store(parsed)
+                self.defaults.set(data, forKey: Self.storageKey)
+                self.defaults.set(Date(), forKey: Self.fetchedKey)
+            } catch {
+                // Offline or the table is not there yet: keep what is cached, try again next time.
+            }
+        }
+        loading = task
+        await task.value
+        loading = nil
+    }
+
+    private func store(_ list: [CheckinRule]) {
+        rules = Dictionary(list.map { ($0.carrierIata, $0) }, uniquingKeysWith: { first, _ in first })
+    }
+}
+
+/// `POST sync-entitlement` with the user's JWT (P1 contract section 1).
+@MainActor
+final class LiveEntitlementSync: EntitlementSyncing {
+    private let stack: SupabaseStack
+    init(stack: SupabaseStack) { self.stack = stack }
+
+    func syncEntitlement() async -> ActionResult {
+        guard let client = stack.client else { return .notConfigured }
+        do {
+            let _: SyncEntitlementResponse = try await client.functions.invoke(
+                BillingContract.functionSyncEntitlement,
+                options: FunctionInvokeOptions(body: EmptyBody())
+            )
+            return .success
+        } catch is URLError {
+            return .offline
+        } catch let error as FunctionsError {
+            if case .httpError(let status, _) = error { return .failed("sync-entitlement HTTP \(status)") }
+            return .failed("sync-entitlement")
+        } catch {
+            return .failed(error.localizedDescription)
+        }
+    }
+}
+
+private struct EmptyBody: Encodable {}
+private struct SyncEntitlementResponse: Decodable {
+    var plan: String?
+    var pro_until: String?
+    var trial_flight_id: String?
+}
+
 private enum Checked {
     case valid(String?, String?, String?)
     case invalid(TrackField)
@@ -452,15 +579,36 @@ private struct UserFlightWrite: Encodable {
 
 private struct ArchivePatch: Encodable { var archived_at: String? }
 private struct PrefsPatch: Encodable { var notify_prefs: [String: Bool] }
-private struct DetailsPatch: Encodable { var pnr: String?; var seat: String?; var cabin: String?; var note: String? }
+/// PNR, seat and cabin are always written, nil as JSON null, so clearing a field in the editor clears the column.
+/// The note is only written when given.
+private struct DetailsPatch: Encodable {
+    var pnr: String?
+    var seat: String?
+    var cabin: String?
+    var note: String?
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(pnr, forKey: .pnr)
+        try container.encode(seat, forKey: .seat)
+        try container.encode(cabin, forKey: .cabin)
+        try container.encodeIfPresent(note, forKey: .note)
+    }
+
+    private enum CodingKeys: String, CodingKey { case pnr, seat, cabin, note }
+}
 
 private struct WireProfile: Decodable {
     var id: String
     var display_name: String?
     var plan: String?
     var pro_until: String?
+    var trial_flight_id: String?
     func profile() -> UserProfile {
-        UserProfile(id: id, displayName: display_name, plan: Plan.fromWire(plan), proUntil: parseInstant(pro_until))
+        UserProfile(
+            id: id, displayName: display_name, plan: Plan.fromWire(plan), proUntil: parseInstant(pro_until),
+            trialFlightId: trial_flight_id
+        )
     }
 }
 

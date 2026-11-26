@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Paywall. Prices are never written here: they come from Google Play through RevenueCat. -->
+    <string name="billing_paywall_title">FlyTrack Pro</string>
+    <string name="billing_paywall_subtitle">Know before the airline tells you.</string>
+    <string name="billing_paywall_close">Close</string>
+
+    <string name="billing_benefit_inbound_title">Where\'s my plane</string>
+    <string name="billing_benefit_inbound_body">See the aircraft\'s previous leg and when it really reaches your gate.</string>
+    <string name="billing_benefit_late_title">Late-aircraft alerts</string>
+    <string name="billing_benefit_late_body">A push when the incoming plane will make your flight late, often before the airline says so.</string>
+    <string name="billing_benefit_live_title">Live notification</string>
+    <string name="billing_benefit_live_body">Your flight on the lock screen, from check-in to the baggage belt.</string>
+    <string name="billing_benefit_limit_title">More flights at once</string>
+    <string name="billing_benefit_limit_body">Track up to %1$d flights at the same time (free: %2$d).</string>
+
+    <string name="billing_section_plans">Choose a plan</string>
+    <string name="billing_plan_annual">Yearly</string>
+    <string name="billing_plan_annual_price">%1$s a year</string>
+    <string name="billing_plan_annual_price_monthly">%1$s a year · about %2$s a month</string>
+    <string name="billing_plan_save">Save %1$d%%</string>
+    <string name="billing_plan_monthly">Monthly</string>
+    <string name="billing_plan_monthly_price">%1$s a month</string>
+    <string name="billing_plan_trip">Trip pass</string>
+    <plurals name="billing_plan_trip_price">
+        <item quantity="one">%1$s once · Pro for %2$d day, does not renew</item>
+        <item quantity="other">%1$s once · Pro for %2$d days, does not renew</item>
+    </plurals>
+    <string name="billing_plan_selected">Selected</string>
+
+    <string name="billing_action_continue">Continue</string>
+    <string name="billing_action_restore">Restore purchases</string>
+    <string name="billing_action_manage">Manage subscription</string>
+    <string name="billing_action_see_plans">See Pro plans</string>
+    <string name="billing_terms">Terms of use</string>
+    <string name="billing_privacy">Privacy policy</string>
+    <string name="billing_legal">Subscriptions renew automatically until you cancel them in Google Play. The trip pass is a one-time purchase.</string>
+
+    <!-- Placeholder pages until the legal pages are published. -->
+    <string name="billing_terms_url" translatable="false">https://heygate.app/terms</string>
+    <string name="billing_privacy_url" translatable="false">https://heygate.app/privacy</string>
+    <string name="billing_manage_url" translatable="false">https://play.google.com/store/account/subscriptions</string>
+
+    <string name="billing_coming_soon_title">Pro coming soon</string>
+    <string name="billing_coming_soon_message">You can\'t buy Pro in this version yet. Everything else in FlyTrack keeps working.</string>
+    <string name="billing_load_failed_title">Couldn\'t load the plans</string>
+    <string name="billing_load_failed_message">Google Play didn\'t answer. Please try again in a moment.</string>
+
+    <string name="billing_pro_title">You\'re on Pro</string>
+    <string name="billing_pro_until">Pro until %1$s</string>
+    <string name="billing_trip_until">Trip pass until %1$s</string>
+    <string name="billing_pro_no_end">Pro, with no end date</string>
+    <string name="billing_pro_confirming">Confirming your purchase with FlyTrack…</string>
+
+    <string name="billing_msg_purchased">Welcome to Pro!</string>
+    <string name="billing_msg_pending">Payment pending. Pro starts as soon as Google Play confirms it.</string>
+    <string name="billing_msg_already_owned">This Google Play account already has Pro. Tap Restore purchases.</string>
+    <string name="billing_msg_failed">The purchase didn\'t go through. Please try again.</string>
+    <string name="billing_msg_offline">You\'re offline. Connect and try again.</string>
+    <string name="billing_msg_not_available">Purchases aren\'t available right now.</string>
+    <string name="billing_msg_restored">Purchases restored. You\'re on Pro.</string>
+    <string name="billing_msg_nothing_restored">No Pro purchases found on this Google Play account.</string>
+    <string name="billing_msg_restore_failed">Couldn\'t restore purchases. Please try again.</string>
+
+    <!-- Badges and teaser on flight screens -->
+    <string name="billing_badge_pro">Pro</string>
+    <string name="billing_badge_trial">Pro free for this flight</string>
+    <string name="billing_teaser_title">Where\'s my plane?</string>
+    <string name="billing_teaser_body">FlyTrack Pro is following the aircraft that will fly this route and has an early warning for this flight. Go Pro to see where that plane is and when this flight can really leave.</string>
+
+    <!-- Settings -->
+    <string name="billing_settings_section">FlyTrack Pro</string>
+    <string name="billing_settings_free">Free plan: up to %1$d flights at once. Pro adds inbound-aircraft predictions, late-aircraft alerts and the live notification.</string>
+    <string name="billing_settings_go_pro">Go Pro</string>
+</resources>

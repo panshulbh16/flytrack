@@ -42,6 +42,7 @@ import app.flytrack.BuildConfig
 import app.flytrack.R
 import app.flytrack.core.push.PushContract
 import app.flytrack.data.repo.Appearance
+import app.flytrack.feature.billing.ui.ProSettingsSection
 import app.flytrack.feature.flights.presentation.AlertGroup
 import app.flytrack.feature.flights.presentation.AlertToggleUiModel
 import app.flytrack.push.ChannelHealth
@@ -97,6 +98,7 @@ fun SettingsRoute(onBack: () -> Unit, viewModel: SettingsViewModel = hiltViewMod
         onGmailAutoCheck = viewModel::setGmailAutoCheck,
         onReconnectGmail = navigator::openGmailImport,
         onDisconnectGmail = viewModel::disconnectGmail,
+        proSection = { ProSettingsSection() },
     )
 }
 
@@ -125,6 +127,8 @@ fun SettingsScreen(
     onGmailAutoCheck: (Boolean) -> Unit,
     onReconnectGmail: () -> Unit,
     onDisconnectGmail: () -> Unit,
+    /** FlyTrack Pro block (plan, Go Pro, restore); stateful, so previews leave it empty. */
+    proSection: @Composable () -> Unit = {},
 ) {
     val snackbars = remember { SnackbarHostState() }
     val message = state.message?.let { settingsMessage(it) }
@@ -150,6 +154,10 @@ fun SettingsScreen(
             Spacer(Modifier.height(8.dp))
             AccountSection(state, onLinkGoogle, onSignInWithGoogle, onSignOut)
             Spacer(Modifier.height(20.dp))
+            HairlineDivider()
+            Spacer(Modifier.height(16.dp))
+            proSection()
+            Spacer(Modifier.height(12.dp))
             HairlineDivider()
             Spacer(Modifier.height(16.dp))
             SectionCaption(stringResource(R.string.settings_section_appearance))
