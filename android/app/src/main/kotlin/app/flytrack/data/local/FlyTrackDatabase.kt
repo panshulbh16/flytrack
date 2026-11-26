@@ -20,10 +20,11 @@ import javax.inject.Inject
         FlightEntity::class, TrackedFlightEntity::class, AirportEntity::class, ProfileEntity::class,
         GmailSuggestionEntity::class, GmailSeenMessageEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
     // ponytail: 1 -> 2 only adds tables, so Room derives the SQL from schemas/1.json and 2.json; hand-write a Migration when a change needs data rewriting.
-    autoMigrations = [AutoMigration(from = 1, to = 2)],
+    // 2 -> 3 adds the nullable profiles.trial_flight_id column (P1 billing).
+    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3)],
 )
 @TypeConverters(Converters::class)
 abstract class FlyTrackDatabase : RoomDatabase() {

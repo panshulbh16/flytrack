@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Next flight widget (feature.widget). Redrawn by the app on every Room change and by the live tick; this period is the fallback. -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/live_widget_description"
+    android:initialLayout="@layout/glance_default_loading_layout"
+    android:minWidth="160dp"
+    android:minHeight="60dp"
+    android:minResizeWidth="160dp"
+    android:minResizeHeight="60dp"
+    android:targetCellWidth="3"
+    android:targetCellHeight="2"
+    android:resizeMode="horizontal|vertical"
+    android:updatePeriodMillis="1800000"
+    android:widgetCategory="home_screen" />

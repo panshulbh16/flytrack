@@ -1,6 +1,9 @@
 import type { FlightEvent, FlightRow, Recipient, TrackedField } from "./types.ts";
 import type { FcmMessage } from "./notify.ts";
 import type { PushResult } from "./fcm.ts";
+import { type CheckinRule, checkinWindow, isCheckinDue } from "./checkin.ts";
+import type { LegHistoryRow } from "./history.ts";
+import { type FogCandidate, fogCandidates, type FogWeather } from "./health.ts";
 
 export interface ProviderCallLog {
   provider: string;
@@ -53,6 +56,16 @@ export interface Repo {
   airportTz(iata: string): Promise<string | null>;
   logProviderCall(c: ProviderCallLog): Promise<void>;
   countUserProviderCalls(userId: string, sinceIso: string): Promise<number>;
+  /** public.due_checkin_flights(): tracked flights with a check-in reminder due now (DB only). */
+  getDueCheckins(limit: number): Promise<FlightRow[]>;
+  /** The carrier's row of checkin_rules, or null. */
+  getCheckinRule(carrier: string): Promise<CheckinRule | null>;
+  /** Insert or replace the finished leg (flight_leg_history, keyed by flight_id). */
+  upsertLegHistory(row: LegHistoryRow): Promise<void>;
+  /** public.get_shared_flight(token): public fields, or null for an unknown / revoked / expired token. */
+  getSharedFlight(token: string): Promise<Record<string, unknown> | null>;
+  /** public.fog_alert_candidates(): tracked flights near a foggy airport without a FOG_ALERT yet (DB only). */
+  getFogCandidates(limit: number): Promise<FogCandidate[]>;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -69,13 +82,38 @@ const DEFAULT_ROW: Omit<FlightRow, "id" | "carrier_iata" | "flight_number" | "fl
   provider: null, provider_ref: null, provider_updated_at: null, alert_state: {},
   tracker_count: 0, pro_tracker_count: 0, last_polled_at: null, next_poll_at: null, lease_until: null,
   poll_error_count: 0, last_error: null, webhook_subscription_id: null, webhook_expires_at: null,
+  checkin_opens_at: null, checkin_closes_at: null, checkin_open_notified: false, checkin_closing_notified: false,
+  live_seen: false,
 };
+
+/** A share link as MemoryRepo keeps it (table flight_shares). */
+export interface MemShare {
+  token: string;
+  userId: string;
+  flightId: string;
+  revokedAt: string | null;
+  expiresAt: string;
+}
 
 export interface MemTracker {
   userId: string;
   isPro: boolean;
   prefs: Record<string, boolean>;
   devices: { id: string; token: string }[];
+  /** profiles fields returned by get_flight_recipients (P2): language and quiet hours. */
+  profile?: Pick<Recipient, "alert_language" | "quiet_hours_enabled" | "quiet_start" | "quiet_end" | "quiet_tz">;
+}
+
+/**
+ * A friend of one of the flight's trackers, as get_flight_recipients returns them (role "friend"): alerts on,
+ * the tracker shares the flight. Users who track the flight themselves are dropped, as in SQL.
+ */
+export interface MemFriend {
+  userId: string;
+  /** The tracker's display name (friend_name), null when unset. */
+  friendName: string | null;
+  devices: { id: string; token: string }[];
+  profile?: MemTracker["profile"];
 }
 
 export class MemoryRepo implements Repo {
@@ -86,7 +124,16 @@ export class MemoryRepo implements Repo {
   liveActivities: (LiveActivityTarget & { flightId: string })[] = [];
   providerCalls: (ProviderCallLog & { at: string })[] = [];
   trackers = new Map<string, MemTracker[]>(); // flightId -> trackers
+  friends = new Map<string, MemFriend[]>(); // flightId -> friends of its trackers (friend alerts)
   tz: Record<string, string> = {};
+  /** Airport countries for the domestic/international check-in close (unknown → "IN", DXB → "AE"). */
+  country: Record<string, string> = {};
+  /** checkin_rules. Empty by default so flows that don't test check-in see no reminders. */
+  checkinRules = new Map<string, CheckinRule>();
+  legHistory = new Map<string, LegHistoryRow>();
+  shares: MemShare[] = [];
+  /** airport_weather rows by IATA (fog alerts). */
+  weather = new Map<string, FogWeather>();
   private seq = 0;
 
   constructor(private readonly now: () => Date) {}
@@ -101,6 +148,11 @@ export class MemoryRepo implements Repo {
     f.pro_tracker_count = list.filter((x) => x.isPro).length;
     const nowIso = this.now().toISOString();
     if (!f.next_poll_at || Date.parse(f.next_poll_at) > Date.parse(nowIso)) f.next_poll_at = nowIso;
+  }
+
+  /** Test helper: a friend of a tracker of this flight, with friend alerts on (get_flight_recipients). */
+  addFriend(flightId: string, f: MemFriend) {
+    this.friends.set(flightId, [...(this.friends.get(flightId) ?? []), f]);
   }
 
   claimDueFlights(limit: number, leaseSeconds: number): Promise<FlightRow[]> {
@@ -146,6 +198,7 @@ export class MemoryRepo implements Repo {
     if (existing) return Promise.resolve(structuredClone(existing));
     const id = `f${++this.seq}`;
     const full = { ...DEFAULT_ROW, ...row, id, updated_at: this.now().toISOString() } as FlightRow;
+    this.applyCheckinWindow(full);
     this.flights.set(id, full);
     return Promise.resolve(structuredClone(full));
   }
@@ -154,7 +207,16 @@ export class MemoryRepo implements Repo {
     const f = this.flights.get(id);
     if (!f) throw new Error(`no flight ${id}`);
     Object.assign(f, structuredClone(patch), { updated_at: this.now().toISOString() });
+    this.applyCheckinWindow(f);
     return Promise.resolve(structuredClone(f));
+  }
+
+  /** What the flights_checkin_window trigger does in SQL. */
+  private applyCheckinWindow(f: FlightRow) {
+    const countryOf = (iata: string) => this.country[iata] ?? (iata === "DXB" ? "AE" : "IN");
+    const w = checkinWindow(this.checkinRules.get(f.carrier_iata), f, countryOf(f.dep_iata) !== countryOf(f.arr_iata));
+    f.checkin_opens_at = w?.opensAt ?? null;
+    f.checkin_closes_at = w?.closesAt ?? null;
   }
 
   insertHistory(flightId: string, source: string, changed: TrackedField[]) {
@@ -186,7 +248,23 @@ export class MemoryRepo implements Repo {
     const out: Recipient[] = [];
     for (const t of this.trackers.get(flightId) ?? []) {
       for (const d of t.devices) {
-        out.push({ user_id: t.userId, is_pro: t.isPro, notify_prefs: t.prefs, device_id: d.id, fcm_token: d.token });
+        out.push({
+          user_id: t.userId, is_pro: t.isPro, notify_prefs: t.prefs, device_id: d.id, fcm_token: d.token, ...t.profile,
+          role: "tracker", friend_name: null,
+        });
+      }
+    }
+    const trackerIds = new Set((this.trackers.get(flightId) ?? []).map((t) => t.userId));
+    const seen = new Set<string>();
+    for (const f of this.friends.get(flightId) ?? []) {
+      if (trackerIds.has(f.userId)) continue; // tracking it themselves: the tracker alert only
+      for (const d of f.devices) {
+        if (seen.has(d.id)) continue; // two friends track it: one row per device (the first one's name)
+        seen.add(d.id);
+        out.push({
+          user_id: f.userId, is_pro: false, notify_prefs: {}, device_id: d.id, fcm_token: d.token, ...f.profile,
+          role: "friend", friend_name: f.friendName,
+        });
       }
     }
     return Promise.resolve(out);
@@ -206,6 +284,9 @@ export class MemoryRepo implements Repo {
   deleteDeviceByToken(token: string) {
     for (const list of this.trackers.values()) {
       for (const t of list) t.devices = t.devices.filter((d) => d.token !== token);
+    }
+    for (const list of this.friends.values()) {
+      for (const f of list) f.devices = f.devices.filter((d) => d.token !== token);
     }
     return Promise.resolve();
   }
@@ -230,6 +311,60 @@ export class MemoryRepo implements Repo {
 
   countUserProviderCalls(userId: string, sinceIso: string) {
     return Promise.resolve(this.providerCalls.filter((c) => c.userId === userId && Date.parse(c.at) >= Date.parse(sinceIso)).length);
+  }
+
+  getDueCheckins(limit: number): Promise<FlightRow[]> {
+    const now = this.now();
+    return Promise.resolve(
+      [...this.flights.values()].filter((f) => isCheckinDue(f, now))
+        .sort((a, b) => Date.parse(a.checkin_closes_at!) - Date.parse(b.checkin_closes_at!))
+        .slice(0, limit).map((f) => structuredClone(f)),
+    );
+  }
+
+  getCheckinRule(carrier: string) {
+    const r = this.checkinRules.get(carrier);
+    return Promise.resolve(r ? structuredClone(r) : null);
+  }
+
+  upsertLegHistory(row: LegHistoryRow) {
+    this.legHistory.set(row.flight_id, structuredClone(row));
+    return Promise.resolve();
+  }
+
+  /** Test helper = create_flight_share() without the auth checks. */
+  share(token: string, userId: string, flightId: string, expiresAt: string) {
+    this.shares.push({ token, userId, flightId, revokedAt: null, expiresAt });
+  }
+
+  getSharedFlight(token: string): Promise<Record<string, unknown> | null> {
+    const now = this.now().getTime();
+    const s = this.shares.find((x) => x.token === token && x.revokedAt == null);
+    const f = s && this.flights.get(s.flightId);
+    if (!s || !f) return Promise.resolve(null);
+    const arr = Date.parse(f.act_arr ?? f.est_arr ?? f.sched_arr ?? "");
+    const until = Math.max(Date.parse(s.expiresAt), Number.isNaN(arr) ? -Infinity : arr + 2 * 86400_000);
+    if (until <= now) return Promise.resolve(null);
+    const ap = (iata: string) => ({ iata, name: null, city: null, lat: null, lon: null, tz: this.tz[iata] ?? null });
+    return Promise.resolve({
+      carrier: f.carrier_iata, number: f.flight_number, date: f.flight_date, airline: f.airline_name, status: f.status,
+      sched_dep: f.sched_dep, est_dep: f.est_dep, act_dep: f.act_dep, sched_arr: f.sched_arr, est_arr: f.est_arr, act_arr: f.act_arr,
+      dep: { ...ap(f.dep_iata), terminal: f.dep_terminal, gate: f.dep_gate },
+      arr: { ...ap(f.arr_iata), terminal: f.arr_terminal, gate: f.arr_gate, belt: f.baggage_belt },
+      aircraft: { model: f.aircraft_model },
+      live: f.live_lat != null && f.live_lon != null
+        ? { lat: f.live_lat, lon: f.live_lon, alt_ft: f.live_alt_ft, speed_kts: f.live_speed_kts, heading: f.live_heading, at: f.live_updated_at }
+        : null,
+      updated_at: f.updated_at ?? null,
+    });
+  }
+
+  getFogCandidates(limit: number): Promise<FogCandidate[]> {
+    const sent = new Set(this.events.map((e) => e.dedupeKey));
+    const tz = (iata: string) => this.tz[iata] ?? (iata === "DXB" ? "Asia/Dubai" : "Asia/Kolkata");
+    return Promise.resolve(
+      fogCandidates([...this.flights.values()], (iata) => this.weather.get(iata), tz, sent, this.now(), limit),
+    );
   }
 }
 

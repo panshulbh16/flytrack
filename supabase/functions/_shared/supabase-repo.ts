@@ -1,12 +1,16 @@
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 import type { FlightEvent, FlightRow, Recipient, TrackedField } from "./types.ts";
 import type { LiveActivityTarget, ProviderCallLog, PushLogRow, Repo } from "./repo.ts";
+import { secretKey } from "./supabase-keys.ts";
+import type { CheckinRule } from "./checkin.ts";
+import type { LegHistoryRow } from "./history.ts";
+import type { FogCandidate } from "./health.ts";
 
 /** Service-role client (bypasses RLS). Only ever used inside Edge Functions. */
 export function serviceClient(): SupabaseClient {
   const url = Deno.env.get("SUPABASE_URL");
-  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!url || !key) throw new Error("SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not set");
+  const key = secretKey();
+  if (!url || !key) throw new Error("SUPABASE_URL / Supabase secret key not set");
   return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 }
 
@@ -17,6 +21,7 @@ function must<T>(res: { data: T | null; error: { message: string } | null }, wha
 
 export class SupabaseRepo implements Repo {
   private tzCache = new Map<string, string | null>();
+  private ruleCache = new Map<string, { rule: CheckinRule | null; at: number }>();
   constructor(private readonly db: SupabaseClient) {}
 
   async claimDueFlights(limit: number, leaseSeconds: number): Promise<FlightRow[]> {
@@ -155,5 +160,35 @@ export class SupabaseRepo implements Repo {
       .eq("user_id", userId).gte("created_at", sinceIso);
     if (res.error) throw new Error(`countCalls: ${res.error.message}`);
     return res.count ?? 0;
+  }
+
+  async getDueCheckins(limit: number): Promise<FlightRow[]> {
+    return must(await this.db.rpc("due_checkin_flights", { p_limit: limit }), "dueCheckins") ?? [];
+  }
+
+  /** Rules change rarely; a warm isolate re-reads them every 10 minutes. */
+  async getCheckinRule(carrier: string): Promise<CheckinRule | null> {
+    const hit = this.ruleCache.get(carrier);
+    if (hit && Date.now() - hit.at < 10 * 60_000) return hit.rule;
+    const rule = must(
+      await this.db.from("checkin_rules")
+        .select("carrier_iata, opens_hours_before, closes_minutes_before, closes_minutes_before_intl, checkin_url, verified, notes")
+        .eq("carrier_iata", carrier).maybeSingle(),
+      "checkinRule",
+    ) as CheckinRule | null;
+    this.ruleCache.set(carrier, { rule, at: Date.now() });
+    return rule;
+  }
+
+  async upsertLegHistory(row: LegHistoryRow) {
+    must(await this.db.from("flight_leg_history").upsert(row, { onConflict: "flight_id" }), "upsertLegHistory");
+  }
+
+  async getSharedFlight(token: string): Promise<Record<string, unknown> | null> {
+    return must(await this.db.rpc("get_shared_flight", { p_token: token }), "sharedFlight") as Record<string, unknown> | null;
+  }
+
+  async getFogCandidates(limit: number): Promise<FogCandidate[]> {
+    return must(await this.db.rpc("fog_alert_candidates", { p_limit: limit }), "fogCandidates") ?? [];
   }
 }

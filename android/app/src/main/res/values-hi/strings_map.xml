@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hindi translation of values/strings_map.xml. -->
+<resources>
+    <string name="map_action_show">मैप पर देखें</string>
+    <string name="map_entry_note">ऑफ़लाइन भी चलता है, एयरप्लेन मोड में भी</string>
+    <string name="map_title_route">%1$s → %2$s</string>
+    <string name="map_cd_map">%1$s से %2$s तक के रूट का मैप</string>
+
+    <string name="map_source_live">लाइव</string>
+    <string name="map_source_estimated">अनुमानित</string>
+    <string name="map_cd_source_live">विमान से मिली लाइव पोज़िशन</string>
+    <string name="map_cd_source_estimated">समय के हिसाब से निकाली गई अनुमानित पोज़िशन</string>
+
+    <string name="map_state_not_departed">अभी रवाना नहीं हुई</string>
+    <string name="map_state_arrived">पहुँच गई</string>
+    <string name="map_state_cancelled">यह फ़्लाइट रद्द है</string>
+    <string name="map_state_position_unknown">अभी पोज़िशन पता नहीं</string>
+
+    <string name="map_progress">लगभग %1$d%% रास्ता तय</string>
+    <string name="map_remaining">%1$s बाकी</string>
+    <string name="map_live_seen">%1$s की पोज़िशन</string>
+    <string name="map_estimated_note">जब तक लाइव पोज़िशन नहीं मिलती, समय के हिसाब से अनुमान।</string>
+
+    <string name="map_unavailable_title">मैप उपलब्ध नहीं</string>
+    <string name="map_unavailable_message">इनमें से एक एयरपोर्ट की लोकेशन अभी हमारे पास नहीं है।</string>
+</resources>

@@ -20,7 +20,13 @@ enum class TrackSource(val wire: String) {
     PDF("pdf"),
     SHARE("share"),
     SCREENSHOT("screenshot"),
-    GMAIL("gmail");
+    GMAIL("gmail"),
+
+    /** A boarding-pass barcode read by the camera (P1 contract, section 5). */
+    SCAN("scan"),
+
+    /** Added by forwarding a booking email to the user's HeyGate address (P2 wave 2, section 2). */
+    EMAIL("email");
 
     companion object {
         fun fromWire(value: String?): TrackSource = entries.firstOrNull { it.wire == value } ?: MANUAL

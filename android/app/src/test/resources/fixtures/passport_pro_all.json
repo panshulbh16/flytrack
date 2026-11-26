@@ -1,0 +1,13 @@
+{ "scope": "all", "year": 2026, "pro_limited": false,
+  "flights": 14, "distance_km": 18234, "airborne_minutes": 1810,
+  "airports": [{"iata":"DEL","count":9},{"iata":"BOM","count":6},{"iata":"JFK","count":1},{"iata":null,"count":1}],
+  "countries": ["AE","IN","US"],
+  "airlines": [{"carrier":"6E","name":"IndiGo","count":8},{"carrier":"AI","name":null,"count":4},{"carrier":"SG","name":"SpiceJet","count":2}],
+  "aircraft": [{"model":"A320neo","count":7},{"model":"B787-8","count":1}],
+  "longest": {"flight_id":"c0ffee00-0000-4000-8000-000000000001","carrier":"AI","number":"101","dep":"DEL","arr":"JFK","distance_km":11752},
+  "top_route": {"dep":"DEL","arr":"BOM","count":5},
+  "delay": {"total_min": 412, "on_time_pct": 64, "worst": {"carrier":"SG","number":"8","dep_delay_min":185}},
+  "co2_kg": 1730, "co2_method": "estimate-v1",
+  "by_month": [{"month":"2025-12","flights":1},{"month":"2026-01","flights":2},{"month":"2026-03","flights":4},{"month":"2026-11","flights":7}],
+  "first_flight_date": "2025-12-03",
+  "some_future_field": {"x": 1} }

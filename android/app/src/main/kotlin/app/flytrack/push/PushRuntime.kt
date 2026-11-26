@@ -16,6 +16,8 @@ import androidx.core.content.ContextCompat
 import app.flytrack.BuildConfig
 import app.flytrack.R
 import app.flytrack.core.push.PushContract
+import app.flytrack.feature.checkin.CHECKIN_EVENT_OPEN
+import app.flytrack.feature.checkin.KEY_CHECKIN_URL
 import app.flytrack.feature.gmailimport.AndroidGmailNotifier
 import app.flytrack.ui.nav.openFlightIntent
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -25,7 +27,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Creates the two channels the backend addresses by id, plus the local Gmail suggestions channel when
+ * Creates the three channels the backend addresses by id (critical, updates, quiet), plus the local Gmail suggestions channel when
  * that feature is built in. Safe to call on every process start.
  */
 internal object NotificationChannels {
@@ -48,8 +50,19 @@ internal object NotificationChannels {
         ).apply {
             description = context.getString(R.string.push_channel_updates_description)
         }
+        // Info alerts during the user's quiet hours (P2 section 3): low importance, so no sound and no heads-up.
+        val quiet = NotificationChannel(
+            PushContract.CHANNEL_QUIET,
+            context.getString(R.string.push_channel_quiet_name),
+            NotificationManager.IMPORTANCE_LOW,
+        ).apply {
+            description = context.getString(R.string.push_channel_quiet_description)
+            setSound(null, null)
+            enableVibration(false)
+        }
         manager.createNotificationChannel(critical)
         manager.createNotificationChannel(updates)
+        manager.createNotificationChannel(quiet)
         // Not created while the release switch is off, so system settings do not list an unreleased feature.
         if (BuildConfig.GMAIL_IMPORT_ENABLED) {
             val suggestions = NotificationChannel(
@@ -73,7 +86,13 @@ class SystemFlightNotifier @Inject constructor(
         val pending = PendingIntent.getActivity(
             context,
             alert.notificationId,
-            openFlightIntent(context, alert.flightId),
+            openFlightIntent(context, alert.flightId).apply {
+                // Same extras as a tap on the notification Play services shows: MainActivity opens the airline page.
+                alert.checkinUrl?.let { url ->
+                    putExtra(PushContract.KEY_EVENT_TYPE, CHECKIN_EVENT_OPEN) // only marks it as a check-in alert
+                    putExtra(KEY_CHECKIN_URL, url)
+                }
+            },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         val notification = Notification.Builder(context, alert.channelId)

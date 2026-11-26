@@ -24,6 +24,18 @@ interface AppNavigator {
     /** A Gmail suggestion was picked (Gmail screen, Found in Gmail card, notification): add-flight filled in from it. */
     fun openAddFlightFromGmail(s: GmailSuggestion)
     fun openSettings()
+
+    /** Passport and Year in Review (P2). */
+    fun openPassport() = Unit
+
+    /** Friends (P2 wave 2). */
+    fun openFriends() = Unit
+
+    /** "Enter a friend code" (P2 wave 2). */
+    fun openAcceptFriendInvite(prefillCode: String? = null) = Unit
+
+    /** Email forwarding address (P2 wave 2). */
+    fun openEmailForwarding() = Unit
     fun back()
 }
 

@@ -7,7 +7,7 @@ create table public.live_activities (
   user_id        uuid not null references auth.users (id) on delete cascade,
   device_id      uuid not null references public.devices (id) on delete cascade,
   flight_id      uuid not null references public.flights (id) on delete cascade,
-  activity_token text not null check (activity_token ~ '^[0-9a-f]{16,512}$'), -- hex, as ActivityKit hands it out
+  activity_token text not null check (activity_token ~ '^[0-9a-f]{16,}$' and char_length(activity_token) <= 512), -- hex, as ActivityKit hands it out
   updated_at     timestamptz not null default now(),
   constraint live_activities_unique unique (device_id, flight_id)
 );
@@ -29,7 +29,7 @@ language plpgsql security definer set search_path = '' as $$
 declare v_device uuid;
 begin
   if auth.uid() is null then raise exception 'not_authenticated' using errcode = '28000'; end if;
-  if p_activity_token is null or p_activity_token !~ '^[0-9a-f]{16,512}$' then
+  if p_activity_token is null or p_activity_token !~ '^[0-9a-f]{16,}$' or char_length(p_activity_token) > 512 then
     raise exception 'invalid_token' using errcode = '22023';
   end if;
   select id into v_device from public.devices where fcm_token = p_fcm_token and user_id = auth.uid();

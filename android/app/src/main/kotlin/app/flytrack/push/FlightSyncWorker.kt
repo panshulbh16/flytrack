@@ -5,6 +5,7 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import app.flytrack.data.repo.FlightRepository
+import app.flytrack.feature.live.LiveUpdates
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 
@@ -17,15 +18,16 @@ class FlightSyncWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters,
     private val flights: FlightRepository,
+    private val live: LiveUpdates,
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
         val flightId = inputData.getString(KEY_FLIGHT_ID) ?: return Result.failure()
         val json = inputData.getString(KEY_FLIGHT)
-        val outcome = syncWorkOutcome(
-            result = flights.applyServerSync(flightId, json),
-            attempt = runAttemptCount + 1,
-        )
+        val result = flights.applyServerSync(flightId, json)
+        // Forward to the live notification and the widget while this worker keeps the process alive.
+        live.refreshNow()
+        val outcome = syncWorkOutcome(result = result, attempt = runAttemptCount + 1)
         return when (outcome) {
             SyncWorkOutcome.SUCCESS -> Result.success()
             SyncWorkOutcome.RETRY -> Result.retry()

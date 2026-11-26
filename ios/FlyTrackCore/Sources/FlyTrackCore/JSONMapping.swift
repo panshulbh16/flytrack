@@ -144,7 +144,8 @@ public func profile(from row: [String: Any]) -> UserProfile? {
         id: id,
         displayName: JSON.string(row["display_name"]),
         plan: Plan.fromWire(JSON.string(row["plan"])),
-        proUntil: parseInstant(JSON.string(row["pro_until"]))
+        proUntil: parseInstant(JSON.string(row["pro_until"])),
+        trialFlightId: JSON.string(row["trial_flight_id"])
     )
 }
 

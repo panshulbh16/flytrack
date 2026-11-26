@@ -1,0 +1,5 @@
+{
+  "history": { "samples": 23, "window_days": 60, "on_time_pct": 61, "avg_dep_delay_min": 14, "median_arr_delay_min": 6, "cancelled": 1 },
+  "forecast": { "arr_p50": "2026-11-25T15:16:00Z", "arr_p80": "2026-11-25T15:41:00Z", "method": "history", "confidence": "high" },
+  "detail_locked": false
+}

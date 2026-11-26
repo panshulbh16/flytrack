@@ -88,6 +88,7 @@ data class ProfileEntity(
     @ColumnInfo(name = "display_name") val displayName: String?,
     val plan: String,
     @ColumnInfo(name = "pro_until") val proUntil: Instant?,
+    @ColumnInfo(name = "trial_flight_id") val trialFlightId: String? = null,
 )
 
 /** A flight with both airports (null until the airport is cached). */

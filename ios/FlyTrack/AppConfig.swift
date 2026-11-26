@@ -1,3 +1,4 @@
+import FlyTrackCore
 import Foundation
 
 enum AppConfig {
@@ -13,6 +14,17 @@ enum AppConfig {
     static var anonKey: String? { string("SupabaseAnonKey") }
     static var googleIOSClientID: String? { string("GoogleIOSClientID") }
     static var googleWebClientID: String? { string("GoogleWebClientID") }
+
+    /// RevenueCat public iOS SDK key (REVENUECAT_IOS_KEY). Nil: billing is off and the paywall says "Pro coming soon".
+    static var revenueCatKey: String? { string("RevenueCatAPIKey") }
+
+    /// SHARE_BASE_URL, or the contract default when blank or not an https/http URL. Shares are `<base>#<token>`.
+    static var shareBaseURL: String {
+        guard let raw = string("ShareBaseURL"), let url = URL(string: raw), url.scheme == "https" || url.scheme == "http", url.host != nil else {
+            return ShareContract.defaultBaseURL
+        }
+        return raw
+    }
 
     static var isBackendConfigured: Bool { supabaseURL != nil && anonKey != nil }
     static var isGoogleConfigured: Bool { googleIOSClientID != nil && googleWebClientID != nil }

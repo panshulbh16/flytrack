@@ -1,5 +1,6 @@
 package app.flytrack.feature.flights.presentation
 
+import app.flytrack.core.estimate.progressFix
 import app.flytrack.core.model.BestTime
 import app.flytrack.core.model.DELAY_THRESHOLD_MINUTES
 import app.flytrack.core.model.Flight
@@ -15,7 +16,6 @@ import app.flytrack.core.model.duration
 import app.flytrack.core.model.hasDeparted
 import app.flytrack.core.model.hasLanded
 import app.flytrack.core.model.phase
-import app.flytrack.core.model.progress
 import app.flytrack.core.model.statusTone
 import app.flytrack.core.time.FlightTimeFormat
 import app.flytrack.core.time.relativeDay
@@ -34,6 +34,7 @@ fun Flight.toCardUiModel(now: Instant, newFields: Set<FlightField> = emptySet())
     val bestDep = bestDepartureTime
     val bestArr = bestArrivalTime
     val departureDate = bestDep?.let { FlightTimeFormat.localDate(it.instant, depTz) } ?: flightDate
+    val progressFix = progressFix(now)
 
     return FlightCardUiModel(
         flightId = id,
@@ -57,7 +58,11 @@ fun Flight.toCardUiModel(now: Instant, newFields: Set<FlightField> = emptySet())
         duration = duration,
         info = cardInfo(newFields),
         countdown = countdown(now),
-        progress = progress(now).takeIf { phase == FlightPhase.IN_AIR },
+        // core/estimate: a fresh live fix ("Live"), else the shared time estimate ("Estimated"),
+        // which also covers a flight whose stale data still says "not departed" (airplane mode).
+        progress = progressFix?.progress,
+        progressSource = progressFix?.source,
+        progressArrival = progressFix?.arrival,
         updatedAt = listOfNotNull(lastPolledAt, updatedAt).maxOrNull(),
         asOf = now,
     )

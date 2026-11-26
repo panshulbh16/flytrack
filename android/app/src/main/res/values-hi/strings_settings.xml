@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hindi translation of values/strings_settings.xml. -->
+<resources>
+    <string name="settings_title">सेटिंग्स</string>
+
+    <string name="settings_section_account">खाता</string>
+    <string name="settings_account_loading">आपका खाता जाँच रहे हैं…</string>
+    <string name="settings_account_anonymous">आप बिना खाते के FlyTrack इस्तेमाल कर रहे हैं। फ़ोन बदलने पर भी अपनी फ़्लाइट्स रखने के लिए Google जोड़ें।</string>
+    <string name="settings_account_google">Google से साइन इन है</string>
+    <string name="settings_account_google_email">%1$s के रूप में साइन इन है</string>
+    <string name="settings_account_signed_out">साइन आउट है</string>
+    <string name="settings_account_not_configured">इस बिल्ड में कोई सर्वर नहीं है, इसलिए जोड़ने के लिए कोई खाता नहीं है।</string>
+    <string name="settings_action_link_google">Google खाता जोड़ें</string>
+    <string name="settings_action_sign_in_google">इस Google खाते से साइन इन करें</string>
+    <string name="settings_action_sign_out">साइन आउट करें</string>
+    <string name="settings_google_not_configured">इस बिल्ड में Google साइन-इन सेट नहीं है।</string>
+    <string name="settings_google_no_credential">इस फ़ोन पर कोई Google खाता नहीं मिला।</string>
+    <string name="settings_google_in_use">उस Google खाते से पहले से एक FlyTrack यूज़र जुड़ा है। साइन इन करने पर आप उस पर चले जाएँगे और यह बिना नाम वाला खाता पीछे छूट जाएगा।</string>
+    <string name="settings_google_linked">Google खाता जुड़ गया। आपकी फ़्लाइट्स आपके साथ रहेंगी।</string>
+    <string name="settings_signed_out">साइन आउट हो गया। एक नया बिना नाम वाला सेशन तैयार है।</string>
+    <string name="settings_offline">आप ऑफ़लाइन हैं। इंटरनेट मिलने पर फिर से कोशिश करें।</string>
+    <string name="settings_failed">यह नहीं हो पाया। कृपया फिर से कोशिश करें।</string>
+
+    <string name="settings_section_alerts">डिफ़ॉल्ट अलर्ट</string>
+    <string name="settings_alerts_message">नई फ़्लाइट्स पर यही लागू होंगे। किसी एक फ़्लाइट के अलर्ट आप उसके पेज पर अब भी बदल सकते हैं।</string>
+    <string name="settings_alert_delays">देरी और नया समय</string>
+    <string name="settings_alert_gate">गेट और टर्मिनल</string>
+    <string name="settings_alert_boarding">बोर्डिंग</string>
+    <string name="settings_alert_movement">टेक-ऑफ़ और लैंडिंग</string>
+    <string name="settings_alert_baggage">बैगेज बेल्ट</string>
+    <string name="settings_alert_disruption">रद्द होना और डायवर्ट होना</string>
+    <string name="settings_alert_inbound">मेरा प्लेन कहाँ है</string>
+    <string name="settings_alert_checkin">वेब चेक-इन रिमाइंडर</string>
+    <string name="settings_alert_inbound_locked">Pro</string>
+    <string name="settings_alert_switch">%1$s अलर्ट</string>
+
+    <string name="settings_section_tickets">टिकट</string>
+    <string name="settings_cloud_title">टिकट क्लाउड में पढ़ें</string>
+    <string name="settings_cloud_message">जब फ़ोन कोई टिकट नहीं पढ़ पाता, तो फ़्लाइट नंबर पढ़ने के लिए सिर्फ़ निकाला गया टेक्स्ट भेजें — फ़ाइल कभी नहीं। जब तक आप चालू न करें, यह बंद रहता है।</string>
+
+    <string name="settings_section_notifications">नोटिफ़िकेशन</string>
+    <string name="settings_push_not_configured">इस बिल्ड में पुश सेट नहीं है, इसलिए अभी अलर्ट नहीं भेजे जा सकते।</string>
+    <string name="settings_health_permission">अनुमति</string>
+    <string name="settings_health_channel_critical">गेट, देरी और रद्द होना</string>
+    <string name="settings_health_channel_updates">फ़्लाइट अपडेट</string>
+    <string name="settings_health_battery">बैटरी ऑप्टिमाइज़ेशन</string>
+    <string name="settings_health_on">चालू</string>
+    <string name="settings_health_off">बंद</string>
+    <string name="settings_health_missing">अभी बना नहीं</string>
+    <string name="settings_health_battery_ok">कोई रोक नहीं</string>
+    <string name="settings_health_battery_restricted">रोक लगी है — अलर्ट देर से आ सकते हैं</string>
+    <string name="settings_health_open">सेटिंग्स खोलें</string>
+
+    <string name="settings_version">वर्ज़न %1$s</string>
+
+    <string name="settings_section_appearance">दिखावट</string>
+    <string name="settings_appearance_system">सिस्टम</string>
+    <string name="settings_appearance_light">लाइट</string>
+    <string name="settings_appearance_dark">डार्क</string>
+
+    <string name="settings_section_gmail">Gmail</string>
+    <string name="settings_gmail_connected">%1$s के रूप में कनेक्टेड</string>
+    <string name="settings_gmail_auto_check">नई बुकिंग अपने-आप जाँचें</string>
+    <string name="settings_gmail_auto_check_message">हर कुछ घंटों में, सिर्फ़ इसी फ़ोन पर, नए बुकिंग ईमेल ढूँढता है और कुछ भी ट्रैक करने से पहले पूछता है।</string>
+    <string name="settings_gmail_needs_reconnect">Gmail का एक्सेस हट गया है। बुकिंग ढूँढते रहने के लिए फिर से कनेक्ट करें।</string>
+    <string name="settings_gmail_reconnect">Gmail फिर से कनेक्ट करें</string>
+    <string name="settings_gmail_disconnect">Gmail डिस्कनेक्ट करें</string>
+</resources>

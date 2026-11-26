@@ -34,6 +34,9 @@ packages:
   GoogleSignIn:
     url: https://github.com/google/GoogleSignIn-iOS
     exactVersion: 10.1.0
+  RevenueCat:
+    url: https://github.com/RevenueCat/purchases-ios-spm.git
+    exactVersion: 5.102.3
 targets:
   FlyTrack:
     type: application
@@ -56,6 +59,8 @@ targets:
         product: FirebaseMessaging
       - package: GoogleSignIn
         product: GoogleSignIn
+      - package: RevenueCat
+        product: RevenueCat
       - target: ShareExtension
         embed: true
       - target: FlightActivity
@@ -76,6 +81,10 @@ targets:
       path: FlyTrack/Info.plist
       properties:
         CFBundleDisplayName: HeyGate
+        # English and Hindi. Strings: Localizable.xcstrings; Info.plist text: FlyTrack/{en,hi}.lproj/InfoPlist.strings.
+        CFBundleLocalizations:
+          - en
+          - hi
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         ITSAppUsesNonExemptEncryption: false
@@ -103,6 +112,10 @@ targets:
         GoogleIOSClientID: $(GOOGLE_IOS_CLIENT_ID)
         GoogleWebClientID: $(GOOGLE_WEB_CLIENT_ID)
         GmailImportEnabled: $(GMAIL_IMPORT_ENABLED)
+        RevenueCatAPIKey: $(REVENUECAT_IOS_KEY)
+        ShareBaseURL: $(SHARE_BASE_URL)
+        LSApplicationQueriesSchemes:
+          - whatsapp
         UILaunchScreen:
           UIColorName: LaunchBackground
     entitlements:

@@ -10,7 +10,14 @@ import app.flytrack.core.result.TrackField
 import app.flytrack.core.result.TrackResult
 import app.flytrack.core.time.RelativeTime
 import app.flytrack.core.time.RelativeUnit
+import app.flytrack.feature.checkin.CheckinWindow
+import app.flytrack.feature.checkin.FakeCheckinRulesRepository
 import app.flytrack.feature.flights.presentation.AlertGroup
+import app.flytrack.feature.share.FakeShareRepository
+import app.flytrack.feature.share.ShareFlight
+import app.flytrack.feature.share.ShareRequest
+import app.flytrack.feature.share.ShareResult
+import app.flytrack.feature.share.ShareTarget
 import app.flytrack.feature.flights.presentation.Countdown
 import app.flytrack.feature.flights.presentation.FlightChangeTracker
 import app.flytrack.feature.flights.presentation.FlightField
@@ -38,6 +45,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
@@ -54,7 +62,11 @@ class FlightDetailViewModelTest {
     private val schedDep = Instant.parse("2026-11-25T12:55:00Z")
     private val prediction = InboundPrediction(computedAt = clock.now(), predictedDep = schedDep + 20.minutes, lateMin = 20, reason = null, inbound = null)
 
-    private fun viewModel(flightId: String = TestData.FLIGHT_ID) = FlightDetailViewModel(flightId, flights, profiles, clock, changes)
+    private val shares = FakeShareRepository()
+    private val checkinRules = FakeCheckinRulesRepository()
+
+    private fun viewModel(flightId: String = TestData.FLIGHT_ID) =
+        FlightDetailViewModel(flightId, flights, profiles, clock, changes, shares, checkinRules)
 
     /** Keeps [FlightDetailViewModel.uiState] subscribed and returns a reader of its current value. */
     private fun TestScope.observe(vm: FlightDetailViewModel): () -> FlightDetailUiState {
@@ -402,7 +414,7 @@ class FlightDetailViewModelTest {
         vm.openBookingEditor()
         vm.onPnrChange("qx7rtl")
         vm.onSeatChange("14c")
-        assertEquals(BookingEditorState(pnr = "QX7RTL", seat = "14C"), state().editor)
+        assertEquals(BookingEditorState(pnr = "QX7RTL", seat = "14C", cabin = Cabin.BUSINESS), state().editor)
         vm.saveBooking()
 
         val saved = flights.tracked.value.single().tracking
@@ -488,5 +500,106 @@ class FlightDetailViewModelTest {
 
         assertNull(state().editor)
         assertNull(flights.tracked.value.single().tracking.pnr)
+    }
+
+    // ---- cabin --------------------------------------------------------------------------------
+
+    @Test
+    fun `the cabin picker saves the chosen cabin and can clear it`() = runTest {
+        flights.setTracked(TestData.tracked(tracking = TestData.tracking(cabin = Cabin.ECONOMY, note = "Window")))
+        val vm = viewModel()
+        val state = observe(vm)
+
+        vm.openBookingEditor()
+        assertEquals(Cabin.ECONOMY, state().editor?.cabin)
+        vm.onCabinChange(Cabin.PREMIUM_ECONOMY)
+        vm.saveBooking()
+        assertEquals(Cabin.PREMIUM_ECONOMY, flights.tracked.value.single().tracking.cabin)
+        assertEquals("Window", flights.tracked.value.single().tracking.note)
+
+        vm.openBookingEditor()
+        vm.onCabinChange(null)
+        vm.saveBooking()
+        assertNull(flights.tracked.value.single().tracking.cabin)
+    }
+
+    // ---- share --------------------------------------------------------------------------------
+
+    @Test
+    fun `sharing a tracked flight hands its link to the screen once`() = runTest {
+        flights.setTracked(TestData.tracked())
+        val vm = viewModel()
+        val state = observe(vm)
+        assertTrue(state().canShare)
+
+        vm.share(ShareTarget.WHATSAPP_FIRST)
+
+        val expected = ShareRequest(ShareFlight("6E", "2341", "DEL", "BOM"), "https://heygate.app/f/#tok", ShareTarget.WHATSAPP_FIRST)
+        assertEquals(expected, state().share)
+        assertFalse(state().isSharing)
+        assertEquals(listOf(TestData.FLIGHT_ID), shares.calls)
+        vm.shareHandled(expected)
+        assertNull(state().share)
+    }
+
+    @Test
+    fun `a flight that is not tracked cannot be shared`() = runTest {
+        val flight = TestData.flight()
+        flights.cachedFlights.update { it + (flight.id to flight) }
+        val vm = viewModel()
+        val state = observe(vm)
+        assertFalse(state().canShare)
+    }
+
+    @Test
+    fun `share failures are reported`() = runTest {
+        flights.setTracked(TestData.tracked())
+        val vm = viewModel()
+        val state = observe(vm)
+
+        shares.result = ShareResult.Offline
+        vm.share(ShareTarget.SHARE_SHEET)
+        assertEquals(FlightDetailMessage.OFFLINE, state().message)
+        vm.messageShown(FlightDetailMessage.OFFLINE)
+
+        shares.result = ShareResult.NotTracked
+        vm.share(ShareTarget.SHARE_SHEET)
+        assertEquals(FlightDetailMessage.SHARE_NOT_TRACKED, state().message)
+        vm.messageShown(FlightDetailMessage.SHARE_NOT_TRACKED)
+
+        shares.result = ShareResult.Failed("boom")
+        vm.share(ShareTarget.SHARE_SHEET)
+        assertEquals(FlightDetailMessage.SHARE_FAILED, state().message)
+        assertNull(state().share)
+    }
+
+    // ---- check-in -----------------------------------------------------------------------------
+
+    @Test
+    fun `the check-in card follows the airline rule and the clock`() = runTest {
+        // TestData's flight departs 2026-11-25T12:55Z; the clock starts 2026-11-22T10:00Z.
+        flights.setTracked(TestData.tracked())
+        val vm = viewModel()
+        val state = observe(vm)
+
+        val before = state().checkin?.window
+        assertTrue(before is CheckinWindow.NotOpenYet)
+        assertEquals(Instant.parse("2026-11-23T12:55:00Z"), before?.opensAt)
+        assertEquals(listOf("6E"), checkinRules.asked)
+
+        clock.advance(2.days + 3.hours) // 2026-11-24T13:00Z: open
+        advanceTimeBy(31.seconds)
+        assertTrue(state().checkin?.window is CheckinWindow.Open)
+        assertTrue(state().checkin!!.canCheckInNow)
+    }
+
+    @Test
+    fun `no rule for the airline hides the card`() = runTest {
+        checkinRules.rules = emptyMap()
+        flights.setTracked(TestData.tracked())
+        val vm = viewModel()
+        val state = observe(vm)
+        assertNotNull(state().detail)
+        assertNull(state().checkin)
     }
 }

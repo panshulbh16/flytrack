@@ -1,0 +1,4 @@
+/* Localized Info.plist values (hi). Keep in step with project.yml (targets.FlyTrack.info). */
+
+"CFBundleDisplayName" = "HeyGate";
+"NSCameraUsageDescription" = "फ़्लाइट जोड़ने के लिए HeyGate आपके बोर्डिंग पास का बारकोड पढ़ता है।";

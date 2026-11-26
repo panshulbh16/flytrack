@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hindi (हिंदी) translation of values/strings.xml. Keep names and placeholders in sync with the English file. -->
+<resources>
+    <string name="app_name">FlyTrack</string>
+
+    <!-- Common actions -->
+    <string name="action_back">वापस</string>
+    <string name="action_close">बंद करें</string>
+    <string name="action_retry">फिर से कोशिश करें</string>
+    <string name="action_cancel">रद्द करें</string>
+    <string name="action_ok">ठीक है</string>
+    <string name="action_save">सेव करें</string>
+    <string name="action_done">हो गया</string>
+    <string name="action_add_flight">फ़्लाइट जोड़ें</string>
+    <string name="action_settings">सेटिंग्स</string>
+
+    <!-- Shared state blocks -->
+    <string name="state_loading">लोड हो रहा है…</string>
+    <string name="state_offline_title">आप ऑफ़लाइन हैं</string>
+    <string name="state_offline_message">अपना इंटरनेट कनेक्शन जाँचें और फिर से कोशिश करें।</string>
+    <string name="state_error_title">कुछ गड़बड़ हो गई</string>
+    <string name="state_error_message">कृपया थोड़ी देर में फिर से कोशिश करें।</string>
+    <string name="state_not_configured_title">बैकएंड सेट नहीं है</string>
+    <string name="state_not_configured_message">इस बिल्ड में सर्वर का पता नहीं है। android/local.properties में SUPABASE_URL और SUPABASE_ANON_KEY जोड़ें और फिर से बिल्ड करें।</string>
+    <string name="state_not_configured_banner">बैकएंड सेट नहीं है। इस बिल्ड में फ़्लाइट की जानकारी लोड नहीं हो सकती।</string>
+
+    <!-- Relative days (calendar based) -->
+    <string name="relative_today">आज</string>
+    <string name="relative_tomorrow">कल</string>
+    <string name="relative_yesterday">कल</string>
+    <plurals name="relative_in_days">
+        <item quantity="one">%d दिन में</item>
+        <item quantity="other">%d दिन में</item>
+    </plurals>
+    <plurals name="relative_days_ago">
+        <item quantity="one">%d दिन पहले</item>
+        <item quantity="other">%d दिन पहले</item>
+    </plurals>
+
+    <!-- Relative times (elapsed) -->
+    <string name="relative_now">अभी</string>
+    <plurals name="relative_in_minutes">
+        <item quantity="one">%d मिनट में</item>
+        <item quantity="other">%d मिनट में</item>
+    </plurals>
+    <plurals name="relative_minutes_ago">
+        <item quantity="one">%d मिनट पहले</item>
+        <item quantity="other">%d मिनट पहले</item>
+    </plurals>
+    <plurals name="relative_in_hours">
+        <item quantity="one">%d घंटे में</item>
+        <item quantity="other">%d घंटे में</item>
+    </plurals>
+    <plurals name="relative_hours_ago">
+        <item quantity="one">%d घंटा पहले</item>
+        <item quantity="other">%d घंटे पहले</item>
+    </plurals>
+    <!-- %s is a relative time such as "4 मिनट पहले" -->
+    <string name="updated_ago">%s अपडेट हुआ</string>
+    <string name="updated_just_now">अभी-अभी अपडेट हुआ</string>
+</resources>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hindi translation of values/strings_alertextras.xml. -->
+<resources>
+    <!-- Weather alert group (FOG_ALERT) -->
+    <string name="flights_alert_weather">कोहरा और कम विज़िबिलिटी</string>
+    <string name="flights_alert_weather_description">जब आपके रवानगी या आगमन वाले एयरपोर्ट पर कोहरा बताया जाए</string>
+    <string name="settings_alert_weather">एयरपोर्ट पर कोहरा</string>
+
+    <!-- Channel flight_quiet -->
+    <string name="push_channel_quiet_name">शांत समय के दौरान अपडेट</string>
+    <string name="push_channel_quiet_description">रवानगी, लैंडिंग और दूसरे अपडेट जो आपके शांत समय में आते हैं। बिना आवाज़ के दिखाए जाते हैं।</string>
+
+    <!-- Settings: quiet hours -->
+    <string name="settings_section_quiet_hours">शांत समय</string>
+    <string name="settings_quiet_title">शांत समय</string>
+    <string name="settings_quiet_message">टेक-ऑफ़ और लैंडिंग जैसे अपडेट बिना आवाज़ के आते हैं। गेट बदलने, देरी, रद्द होने और कोहरे के अलर्ट पर हमेशा आवाज़ आती है।</string>
+    <string name="settings_quiet_start">कब से</string>
+    <string name="settings_quiet_end">कब तक</string>
+    <string name="settings_quiet_time_open">समय बदलें</string>
+    <string name="settings_quiet_zone">समय %1$s के अनुसार है</string>
+    <string name="settings_quiet_pick_start">शांत समय शुरू</string>
+    <string name="settings_quiet_pick_end">शांत समय खत्म</string>
+
+    <!-- Settings: alert language -->
+    <string name="settings_section_alert_language">अलर्ट की भाषा</string>
+    <string name="settings_alert_language_message">इस खाते पर आने वाली नोटिफ़िकेशन की भाषा। ऐप खुद आपके फ़ोन की भाषा में चलता है।</string>
+    <!-- Language names are shown in their own language, like हिंदी and Hinglish. -->
+    <string name="settings_alert_language_en">English</string>
+    <string name="settings_alert_prefs_offline">आप ऑफ़लाइन हैं। ऑनलाइन होते ही अलर्ट सेटिंग्स लोड हो जाएँगी।</string>
+    <string name="settings_alert_prefs_failed">अलर्ट सेटिंग्स सेव नहीं हो पाईं। फिर से कोशिश करें।</string>
+    <string name="settings_alert_prefs_unavailable">अलर्ट सेटिंग्स के लिए FlyTrack सर्वर चाहिए, जिससे यह बिल्ड जुड़ा नहीं है।</string>
+
+    <!-- Settings: passport entry -->
+    <string name="settings_section_travel">आपकी यात्राएँ</string>
+    <string name="settings_open_passport">पासपोर्ट और साल की झलक</string>
+    <string name="settings_open_passport_message">आपकी फ़्लाइट्स, किलोमीटर और एयरपोर्ट, शेयर करने के लिए तैयार</string>
+</resources>

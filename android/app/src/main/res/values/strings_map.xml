@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- feature/map: the offline flight map and the Live / Estimated label (docs/P2_CONTRACTS.md section 5). -->
+    <string name="map_action_show">Show on map</string>
+    <string name="map_entry_note">Works offline, even in airplane mode</string>
+    <string name="map_title_route">%1$s → %2$s</string>
+    <string name="map_cd_map">Map of the route from %1$s to %2$s</string>
+
+    <string name="map_source_live">Live</string>
+    <string name="map_source_estimated">Estimated</string>
+    <string name="map_cd_source_live">Live position from the aircraft</string>
+    <string name="map_cd_source_estimated">Estimated position, worked out from the timings</string>
+
+    <string name="map_state_not_departed">Not departed yet</string>
+    <string name="map_state_arrived">Arrived</string>
+    <string name="map_state_cancelled">This flight is cancelled</string>
+    <string name="map_state_position_unknown">Position not known right now</string>
+
+    <string name="map_progress">About %1$d%% of the way there</string>
+    <string name="map_remaining">%1$s to go</string>
+    <string name="map_live_seen">Position from %1$s</string>
+    <string name="map_estimated_note">Estimated from the timings while there is no live position.</string>
+
+    <string name="map_unavailable_title">Map not available</string>
+    <string name="map_unavailable_message">We don\'t have the location of one of these airports yet.</string>
+</resources>

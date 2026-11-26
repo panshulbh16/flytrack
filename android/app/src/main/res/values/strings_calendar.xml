@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Calendar: one event on the phone, and the subscribed feed (P2 wave 2 contract, section 3). Free. -->
+<resources>
+    <string name="calendar_action_add">Add to calendar</string>
+    <!-- Event location: %1$s airport name, %2$s terminal, e.g. "Indira Gandhi International Airport, Terminal 1". -->
+    <string name="calendar_location_terminal">%1$s, Terminal %2$s</string>
+    <string name="calendar_event_description">Tracked with HeyGate. Open the app for live gate, delay and baggage belt updates.</string>
+    <string name="calendar_no_app">No calendar app or browser on this phone.</string>
+
+    <string name="calendar_section">Calendar</string>
+    <string name="calendar_feed_message">See all your flights in your calendar. They update by themselves when times or gates change.</string>
+    <string name="calendar_action_subscribe_google">Subscribe in Google Calendar</string>
+    <string name="calendar_action_copy">Copy link</string>
+    <string name="calendar_action_share">Share link</string>
+    <string name="calendar_apple_hint">For Apple Calendar or Outlook, copy the link and add it as a subscribed calendar. Keep it private: anyone with it can see your flights.</string>
+    <string name="calendar_feed_label">HeyGate calendar link</string>
+    <string name="calendar_share_title">Calendar link</string>
+    <string name="calendar_copied">Link copied</string>
+    <string name="calendar_action_rotate">Reset link</string>
+    <string name="calendar_rotate_title">Reset the calendar link?</string>
+    <string name="calendar_rotate_message">The old link stops working at once. Calendars that use it will need the new one.</string>
+    <string name="calendar_message_offline">You\'re offline. Try again when you\'re connected.</string>
+    <string name="calendar_message_failed">Couldn\'t get your calendar link. Please try again.</string>
+    <string name="calendar_message_not_configured">The calendar feed isn\'t available yet.</string>
+    <string name="calendar_message_rotated">New link ready. Copy it again into your calendars.</string>
+</resources>

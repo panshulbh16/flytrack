@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hindi translation of values/strings_flights.xml. -->
+<resources>
+    <!-- List -->
+    <string name="flights_title">मेरी फ़्लाइट्स</string>
+    <string name="flights_section_upcoming">आने वाली</string>
+    <string name="flights_section_past">पिछली</string>
+    <string name="flights_empty_title">अभी कोई फ़्लाइट नहीं</string>
+    <string name="flights_empty_message">अपना फ़्लाइट नंबर जोड़ें, FlyTrack आपके लिए गेट, देरी और बैगेज बेल्ट पर नज़र रखेगा।</string>
+    <string name="flights_action_import_ticket">टिकट इंपोर्ट करें</string>
+    <string name="flights_action_open_details">फ़्लाइट की जानकारी खोलें</string>
+    <!-- %s is a flight such as "6E 2341" -->
+    <string name="flights_action_more">%s के और विकल्प</string>
+    <string name="flights_action_archive">आर्काइव करें</string>
+    <string name="flights_action_untrack">ट्रैक करना बंद करें</string>
+    <string name="flights_action_restore">फ़्लाइट वापस लाएँ</string>
+    <string name="flights_action_track">यह फ़्लाइट ट्रैक करें</string>
+    <string name="flights_action_undo">वापस लें</string>
+
+    <!-- Snackbars -->
+    <string name="flights_message_archived">फ़्लाइट आर्काइव हो गई</string>
+    <string name="flights_message_untracked">इस फ़्लाइट को ट्रैक करना बंद कर दिया</string>
+    <string name="flights_message_offline">आप ऑफ़लाइन हैं। आखिरी बार सेव की गई जानकारी दिखाई जा रही है।</string>
+    <string name="flights_message_refresh_failed">रिफ़्रेश नहीं हो पाया। कृपया थोड़ी देर में फिर से कोशिश करें।</string>
+    <string name="flights_message_action_failed">यह नहीं हो पाया। कृपया फिर से कोशिश करें।</string>
+    <string name="flights_message_tracking_limit">आपके प्लान में जितनी फ़्लाइट्स ट्रैक हो सकती हैं, वह सीमा पूरी हो गई है। पहले कोई एक आर्काइव करें।</string>
+
+    <!-- Next-flight card -->
+    <string name="flights_next_takeoff">अगला टेक-ऑफ़</string>
+    <string name="flights_next_in_the_air">हवा में</string>
+    <!-- %s is a relative time such as "35 मिनट में" or "अभी" -->
+    <string name="flights_countdown_takes_off">%s उड़ान भरेगी</string>
+    <string name="flights_countdown_lands">%s लैंड होगी</string>
+
+    <!-- Building blocks -->
+    <string name="flights_route_cities">%1$s से %2$s</string>
+    <string name="flights_departure">रवानगी</string>
+    <string name="flights_arrival">आगमन</string>
+    <plurals name="flights_amount_minutes">
+        <item quantity="one">%d मिनट</item>
+        <item quantity="other">%d मिनट</item>
+    </plurals>
+    <plurals name="flights_amount_hours">
+        <item quantity="one">%d घंटा</item>
+        <item quantity="other">%d घंटे</item>
+    </plurals>
+    <string name="flights_amount_hours_minutes">%1$s %2$s</string>
+
+    <!-- The status word, shown in italic serif -->
+    <string name="flights_word_schedule_only">सिर्फ़ टाइमटेबल</string>
+    <string name="flights_word_scheduled">निर्धारित</string>
+    <string name="flights_word_on_time">समय पर</string>
+    <string name="flights_word_delayed">देरी से</string>
+    <string name="flights_word_early">जल्दी</string>
+    <string name="flights_word_check_in_open">चेक-इन खुला</string>
+    <string name="flights_word_boarding">बोर्डिंग</string>
+    <string name="flights_word_gate_closed">गेट बंद</string>
+    <string name="flights_word_departed">रवाना</string>
+    <string name="flights_word_in_the_air">हवा में</string>
+    <string name="flights_word_landing_soon">लैंडिंग जल्द</string>
+    <string name="flights_word_landed">लैंड हुई</string>
+    <string name="flights_word_arrived">पहुँच गई</string>
+    <string name="flights_word_cancelled">रद्द</string>
+    <string name="flights_word_diverted">डायवर्ट</string>
+
+    <!-- The plain-language sentence under the status word. %s is an amount such as "25 मिनट" or "1 घंटा 5 मिनट". -->
+    <string name="flights_line_schedule_only">अभी लाइव अपडेट नहीं। ये टाइमटेबल के समय हैं।</string>
+    <string name="flights_line_no_changes">किसी बदलाव की घोषणा नहीं</string>
+    <string name="flights_line_departure_on_time">समय पर रवाना हो रही है</string>
+    <string name="flights_line_departure_late">%s की देरी से चल रही है</string>
+    <string name="flights_line_departure_early">%s पहले रवाना हो रही है</string>
+    <string name="flights_line_check_in_open">चेक-इन खुला है</string>
+    <string name="flights_line_boarding">बोर्डिंग चल रही है</string>
+    <!-- %s is a gate such as "42B" -->
+    <string name="flights_line_boarding_at_gate">गेट %s पर बोर्डिंग चल रही है</string>
+    <string name="flights_line_gate_closed">गेट बंद हो गया है। फ़्लाइट निकलने वाली है।</string>
+    <!-- Appended to the three sentences above: "चेक-इन खुला है · 25 मिनट की देरी" -->
+    <string name="flights_clause_late">%s की देरी</string>
+    <string name="flights_clause_early">%s पहले रवानगी</string>
+    <string name="flights_line_arriving_on_time">समय पर पहुँच रही है</string>
+    <string name="flights_line_arriving_late">%s की देरी से पहुँच रही है</string>
+    <string name="flights_line_arriving_early">%s पहले पहुँच रही है</string>
+    <string name="flights_line_took_off_late">%s की देरी से उड़ान भरी</string>
+    <!-- %s is a city such as "मुंबई" -->
+    <string name="flights_line_on_the_way">%s की ओर जा रही है</string>
+    <string name="flights_line_landed">लैंड हो गई</string>
+    <string name="flights_line_landed_on_time">समय पर लैंड हुई</string>
+    <string name="flights_line_landed_late">%s की देरी से लैंड हुई</string>
+    <string name="flights_line_landed_early">%s पहले लैंड हुई</string>
+    <string name="flights_line_arrived">गेट पर पहुँच गई</string>
+    <string name="flights_line_arrived_on_time">समय पर पहुँची</string>
+    <string name="flights_line_arrived_late">%s की देरी से पहुँची</string>
+    <string name="flights_line_arrived_early">%s पहले पहुँची</string>
+    <string name="flights_line_cancelled">एयरलाइन ने रद्द कर दी है। दूसरी फ़्लाइट या रिफ़ंड के लिए उनसे बात करें।</string>
+    <string name="flights_line_diverted">डायवर्ट हुई। यह तय एयरपोर्ट पर लैंड नहीं करेगी।</string>
+    <string name="flights_line_diverted_landed">डायवर्ट हुई। यह किसी दूसरे एयरपोर्ट पर लैंड हुई।</string>
+
+    <!-- Times -->
+    <string name="flights_time_scheduled">निर्धारित</string>
+    <string name="flights_time_estimated">अनुमानित</string>
+    <string name="flights_time_actual">वास्तविक</string>
+    <string name="flights_time_departed">रवाना</string>
+    <string name="flights_time_landed">लैंड हुई</string>
+    <!-- Spoken: "रवानगी DEL" -->
+    <string name="flights_time_heading">%1$s %2$s</string>
+    <!-- Spoken: "रवानगी DEL: 18:50, अनुमानित" -->
+    <string name="flights_cd_time">%1$s: %2$s, %3$s</string>
+    <string name="flights_cd_time_unknown">%s: समय अभी पता नहीं</string>
+    <string name="flights_cd_time_replaced">टाइमटेबल में %s था</string>
+    <plurals name="flights_cd_days_later">
+        <item quantity="one">रवानगी के %d दिन बाद</item>
+        <item quantity="other">रवानगी के %d दिन बाद</item>
+    </plurals>
+    <plurals name="flights_cd_days_earlier">
+        <item quantity="one">रवानगी से %d दिन पहले</item>
+        <item quantity="other">रवानगी से %d दिन पहले</item>
+    </plurals>
+    <string name="flights_cd_joined">%1$s। %2$s</string>
+    <!-- Spoken: "उड़ान का समय 2h 15m" -->
+    <string name="flights_cd_duration">उड़ान का समय %s</string>
+    <!-- Spoken: "गेट: 42B" -->
+    <string name="flights_cd_labelled">%1$s: %2$s</string>
+    <string name="flights_cd_progress">%2$s से %3$s तक का लगभग %1$d%% रास्ता तय</string>
+
+    <!-- Chips on the card -->
+    <string name="flights_chip_terminal">टर्मिनल %s</string>
+    <string name="flights_chip_gate">गेट %s</string>
+    <string name="flights_chip_check_in">चेक-इन %s</string>
+    <string name="flights_chip_arrival_terminal">आगमन टर्मिनल %s</string>
+    <string name="flights_chip_arrival_gate">आगमन गेट %s</string>
+    <string name="flights_chip_belt">बेल्ट %s</string>
+    <!-- Marks a value that was announced or changed a moment ago -->
+    <string name="flights_chip_new">नया</string>
+    <string name="flights_cd_chip_new">%s, अभी घोषित</string>
+
+    <!-- Detail screen -->
+    <string name="flights_detail_title">फ़्लाइट</string>
+    <string name="flights_detail_not_found_title">फ़्लाइट उपलब्ध नहीं</string>
+    <string name="flights_detail_not_found_message">हम यह फ़्लाइट लोड नहीं कर पाए। अपना कनेक्शन जाँचें और फिर से कोशिश करें।</string>
+    <string name="flights_detail_times_local">हर समय उसी एयरपोर्ट का स्थानीय समय है।</string>
+    <!-- %s is the airline's or provider's own wording -->
+    <string name="flights_detail_delay_reason">बताई गई वजह: %s</string>
+    <string name="flights_detail_progress">लगभग %d%% रास्ता तय</string>
+    <string name="flights_detail_flight_time">उड़ान का समय</string>
+    <string name="flights_detail_distance">दूरी</string>
+    <string name="flights_detail_distance_km">%s कि.मी.</string>
+    <string name="flights_label_terminal">टर्मिनल</string>
+    <string name="flights_label_gate">गेट</string>
+    <string name="flights_label_check_in">चेक-इन काउंटर</string>
+    <string name="flights_label_belt">बैगेज बेल्ट</string>
+    <string name="flights_detail_not_announced">घोषित नहीं</string>
+    <string name="flights_detail_aircraft">विमान</string>
+    <string name="flights_detail_aircraft_type">टाइप</string>
+    <string name="flights_detail_aircraft_reg">टेल नंबर</string>
+    <string name="flights_detail_aircraft_unknown">अभी पता नहीं</string>
+    <string name="flights_detail_archived">यह फ़्लाइट आर्काइव है। यह आपकी सूची में नहीं दिखती और इसके अलर्ट बंद हैं।</string>
+    <string name="flights_detail_not_tracked">आप यह फ़्लाइट ट्रैक नहीं कर रहे, इसलिए आपको इसके अलर्ट नहीं मिलेंगे।</string>
+    <string name="flights_untrack_confirm_title">इस फ़्लाइट को ट्रैक करना बंद करें?</string>
+    <string name="flights_untrack_confirm_message">आपको इसके अलर्ट अब नहीं मिलेंगे, और इसके लिए सेव किया गया PNR और सीट हटा दिए जाएँगे।</string>
+
+    <!-- "Where's my plane" (Pro) -->
+    <string name="flights_pro_badge">Pro</string>
+    <string name="flights_pro_title">मेरा प्लेन कहाँ है?</string>
+    <string name="flights_pro_teaser">FlyTrack Pro उस विमान को फ़ॉलो कर रहा है जो इस रूट पर उड़ेगा, और इस फ़्लाइट के लिए पहले से चेतावनी तैयार है। Pro मेंबर देख सकते हैं कि वह प्लेन कहाँ है और यह फ़्लाइट असल में कब निकल सकती है।</string>
+    <!-- %1$s flight such as "6E 2032", %2$s airport code such as "BLR" -->
+    <string name="flights_pro_inbound">आपका प्लेन %2$s से %1$s के रूप में आ रहा है।</string>
+    <string name="flights_pro_inbound_unknown">हम उस विमान को फ़ॉलो कर रहे हैं जो इस रूट पर उड़ेगा।</string>
+    <!-- %s is a clock time at the departure airport -->
+    <string name="flights_pro_inbound_lands">यह यहाँ लगभग %s बजे लैंड होना चाहिए।</string>
+    <string name="flights_pro_inbound_landed">यह यहाँ %s बजे लैंड हुआ।</string>
+    <string name="flights_pro_on_time">यह समय पर है, इसलिए यह फ़्लाइट समय पर निकल सकनी चाहिए।</string>
+    <!-- %1$s amount such as "25 मिनट", %2$s clock time -->
+    <string name="flights_pro_late_around">यह फ़्लाइट शायद लगभग %1$s की देरी से, करीब %2$s बजे निकलेगी। एयरलाइन ने अभी इसकी घोषणा नहीं की है।</string>
+    <string name="flights_pro_late">यह फ़्लाइट शायद लगभग %s की देरी से निकलेगी। एयरलाइन ने अभी इसकी घोषणा नहीं की है।</string>
+
+    <!-- Your booking -->
+    <string name="flights_booking_title">आपकी बुकिंग</string>
+    <string name="flights_booking_edit">PNR और सीट बदलें</string>
+    <string name="flights_booking_pnr">PNR</string>
+    <string name="flights_booking_pnr_label">बुकिंग रेफ़रेंस (PNR)</string>
+    <string name="flights_booking_pnr_hint">वैकल्पिक। आपके टिकट या बुकिंग ई-मेल पर।</string>
+    <string name="flights_booking_pnr_error">PNR में 5 से 8 अक्षर और अंक होते हैं।</string>
+    <string name="flights_booking_seat">सीट</string>
+    <string name="flights_booking_seat_hint">वैकल्पिक। जैसे 14C।</string>
+    <plurals name="flights_booking_seat_error">
+        <item quantity="one">सीट में ज़्यादा से ज़्यादा %d अक्षर होता है, जैसे 14C।</item>
+        <item quantity="other">सीट में ज़्यादा से ज़्यादा %d अक्षर होते हैं, जैसे 14C।</item>
+    </plurals>
+    <string name="flights_booking_cabin">केबिन</string>
+    <string name="flights_booking_not_added">नहीं जोड़ा गया</string>
+    <string name="flights_cabin_economy">इकॉनमी</string>
+    <string name="flights_cabin_premium_economy">प्रीमियम इकॉनमी</string>
+    <string name="flights_cabin_business">बिज़नेस</string>
+    <string name="flights_cabin_first">फ़र्स्ट</string>
+
+    <!-- Alerts for this flight -->
+    <string name="flights_alerts_title">इस फ़्लाइट के अलर्ट</string>
+    <string name="flights_alerts_state_on">चालू</string>
+    <string name="flights_alerts_state_off">बंद</string>
+    <string name="flights_alerts_state_pro">FlyTrack Pro का हिस्सा</string>
+    <string name="flights_alert_delays">देरी और नया समय</string>
+    <string name="flights_alert_delays_description">जब रवानगी का समय बदले, या देरी कम हो</string>
+    <string name="flights_alert_gate">गेट और टर्मिनल</string>
+    <string name="flights_alert_gate_description">जब गेट घोषित हो, या गेट या टर्मिनल बदले</string>
+    <string name="flights_alert_boarding">बोर्डिंग</string>
+    <string name="flights_alert_boarding_description">जब बोर्डिंग शुरू हो</string>
+    <string name="flights_alert_takeoff_landing">टेक-ऑफ़ और लैंडिंग</string>
+    <string name="flights_alert_takeoff_landing_description">जब फ़्लाइट रवाना हो और जब लैंड करे</string>
+    <string name="flights_alert_baggage">बैगेज बेल्ट</string>
+    <string name="flights_alert_baggage_description">जब बेल्ट घोषित हो या बदले</string>
+    <string name="flights_alert_disruption">रद्द होना या डायवर्ट होना</string>
+    <string name="flights_alert_disruption_description">जब फ़्लाइट रद्द हो, फिर से चालू हो, या किसी दूसरे एयरपोर्ट पर भेजी जाए</string>
+    <string name="flights_alert_inbound">आने वाला प्लेन लेट है</string>
+    <string name="flights_alert_checkin">वेब चेक-इन</string>
+    <string name="flights_alert_inbound_description">एयरलाइन के देरी बताने से पहले ही चेतावनी</string>
+    <string name="flights_alert_checkin_description">जब वेब चेक-इन खुले, और बंद होने से 30 मिनट पहले</string>
+
+    <!-- Found in Gmail card -->
+    <string name="flights_gmail_title">Gmail में मिली</string>
+    <string name="flights_gmail_row">%2$s को %1$s</string>
+    <string name="flights_gmail_row_route">%2$s को %1$s, %3$s→%4$s</string>
+    <string name="flights_gmail_add">जोड़ें</string>
+    <string name="flights_gmail_dismiss">हटाएँ</string>
+    <string name="flights_gmail_add_description">%2$s की %1$s जोड़ें</string>
+    <string name="flights_gmail_dismiss_description">%2$s की %1$s हटाएँ</string>
+</resources>

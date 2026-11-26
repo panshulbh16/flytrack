@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Web check-in card on the flight detail screen and check-in alerts (P1 contract, section 3). -->
+<resources>
+    <string name="checkin_title">Web check-in</string>
+    <!-- %s is a relative time from relativeTimeText, e.g. "in 6 h", "in 35 min", "in 2 days" -->
+    <string name="checkin_opens_in">Web check-in opens %s</string>
+    <!-- %1$s weekday and date "Tue, 24 Nov", %2$s time "12:55", both at the departure airport -->
+    <string name="checkin_opens_at">Opens %1$s, %2$s (airport time)</string>
+    <string name="checkin_open">Web check-in is open</string>
+    <!-- %s is a relative time, e.g. "in 20 min" -->
+    <string name="checkin_closes_in">Closes %s</string>
+    <!-- %s is a time "11:55" at the departure airport -->
+    <string name="checkin_closes_at">Closes at %s (airport time)</string>
+    <string name="checkin_closing_soon">Closing soon</string>
+    <string name="checkin_closed">Web check-in has closed. Check in at the airline counter.</string>
+    <string name="checkin_now">Check in now →</string>
+    <string name="checkin_open_airline_page">Airline check-in page</string>
+    <string name="checkin_unverified">Usual times for this airline. Confirm on the airline\'s site.</string>
+    <string name="checkin_no_browser">No browser on this phone can open the airline\'s page.</string>
+</resources>

@@ -4,6 +4,8 @@ import Foundation
 public enum PushContract {
     public static let channelCritical = "flight_critical"
     public static let channelUpdates = "flight_updates"
+    /// Info alerts during the user's quiet hours (P2 contract section 3). iOS: `interruption-level: passive`, no sound.
+    public static let channelQuiet = "flight_quiet"
     public static let actionOpenFlight = "OPEN_FLIGHT"
     public static let keyKind = "kind"
     public static let keyFlightId = "flight_id"
@@ -12,8 +14,17 @@ public enum PushContract {
     public static let keyTitle = "title"
     public static let keyBody = "body"
     public static let keyFlight = "flight"
+    /// The airline's web check-in page on CHECKIN_OPEN / CHECKIN_CLOSING alerts (P1 contract section 3).
+    public static let keyCheckinUrl = "checkin_url"
+    /// Alerts only: "1" when the server sent this info alert silently (quiet hours); absent otherwise.
+    public static let keyQuiet = "quiet"
+    public static let quietTrue = "1"
     public static let kindAlert = "alert"
     public static let kindSync = "sync"
+    /// Flights added from a forwarded email (P2 wave 2 section 2): "Added 2 flights from your email". `flight_id`
+    /// (the first added flight) is optional.
+    public static let kindImport = "import"
+    public static let keyCount = "count"
 
     public static func notificationTag(flightId: String, group: String) -> String {
         "\(flightId):\(group)"
@@ -23,6 +34,9 @@ public enum PushContract {
 public enum IncomingPush: Equatable, Sendable {
     case sync(flightId: String, flightJSON: String?)
     case alert(PushAlert)
+    /// `kind = "import"`: flights were added from a forwarded email. The visible alert comes from APNs; the app
+    /// refreshes its list. `count` is 0 when the server did not say.
+    case imported(count: Int, flightId: String?)
     case ignored
 }
 
@@ -35,8 +49,16 @@ public struct PushAlert: Equatable, Sendable {
     public var channelId: String
     public var tag: String
     public var notificationId: Int
-    /// "time-sensitive" for flight_critical, "active" for flight_updates.
+    /// "time-sensitive" for flight_critical, "active" for flight_updates, "passive" for flight_quiet.
     public var interruptionLevel: String
+    /// Safe https link to the airline's check-in page, on check-in reminders only.
+    public var checkinUrl: String?
+    /// The server sent this info alert silently (quiet hours): show it passive and without sound.
+    public var quiet: Bool
+    /// An alert about a friend's flight (`role = "friend"`, P2 wave 2 section 1); its text already names the friend.
+    public var isFriend: Bool
+    /// Friend alerts only: the friend's name (`friend_name`).
+    public var friendName: String?
 
     public init(
         flightId: String,
@@ -47,8 +69,15 @@ public struct PushAlert: Equatable, Sendable {
         channelId: String,
         tag: String,
         notificationId: Int,
-        interruptionLevel: String
+        interruptionLevel: String,
+        checkinUrl: String? = nil,
+        quiet: Bool = false,
+        isFriend: Bool = false,
+        friendName: String? = nil
     ) {
+        self.quiet = quiet
+        self.isFriend = isFriend
+        self.friendName = friendName
         self.flightId = flightId
         self.eventId = eventId
         self.eventType = eventType
@@ -58,6 +87,7 @@ public struct PushAlert: Equatable, Sendable {
         self.tag = tag
         self.notificationId = notificationId
         self.interruptionLevel = interruptionLevel
+        self.checkinUrl = checkinUrl
     }
 }
 
@@ -85,6 +115,8 @@ public func alertTagGroup(_ eventType: String) -> String {
     if eventType.hasPrefix("DELAY") || eventType == AlertType.inboundLate.wire || eventType == AlertType.scheduleChange.wire {
         return "delay"
     }
+    // Replaces the "diverted, new destination not announced yet" alert (notify.ts tagGroup).
+    if eventType == AlertType.divertedDest.wire { return "diverted" }
     return eventType.lowercased()
 }
 
@@ -94,7 +126,20 @@ public func alertChannelId(_ type: AlertType?) -> String {
 }
 
 public func interruptionLevel(for channelId: String) -> String {
-    channelId == PushContract.channelCritical ? "time-sensitive" : "active"
+    switch channelId {
+    case PushContract.channelCritical: return "time-sensitive"
+    case PushContract.channelQuiet: return "passive"
+    default: return "active"
+    }
+}
+
+/// `alertChannelId` for an alert the server may have sent silently (P2 contract section 3). Critical alerts are
+/// always loud, so a quiet flag on a critical type is ignored. The server only marks info alerts quiet, so an
+/// unknown type that carries the flag goes quiet too.
+public func alertChannelId(_ type: AlertType?, quiet: Bool) -> String {
+    if !quiet { return alertChannelId(type) }
+    if type?.critical == true { return PushContract.channelCritical }
+    return PushContract.channelQuiet
 }
 
 /// Stable id for a tag. Same FNV-1a as the Android app, so a test can compare the two.
@@ -112,6 +157,10 @@ public func notificationId(for tag: String) -> Int {
 /// and interruption level the server actually set; otherwise the Android channel rules are used.
 public func parseIncomingPush(_ data: [String: String], apns: ApnsEnvelope? = nil) -> IncomingPush {
     let flightId = data[PushContract.keyFlightId]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    if data[PushContract.keyKind] == PushContract.kindImport {
+        let count = Int(data[PushContract.keyCount]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "") ?? 0
+        return .imported(count: max(0, count), flightId: isFlightUUID(flightId) ? flightId : nil)
+    }
     if flightId.isEmpty { return .ignored }
     switch data[PushContract.keyKind] {
     case PushContract.kindSync:
@@ -154,7 +203,18 @@ private func alertOrIgnored(_ data: [String: String], flightId: String, apns: Ap
     let fallbackGroup = wire.isEmpty ? "alert" : alertTagGroup(wire)
     let fallbackTag = PushContract.notificationTag(flightId: flightId, group: fallbackGroup)
     let tag = apns?.collapseId?.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty ?? fallbackTag
-    let channel = channelId(interruptionLevel: apns?.interruptionLevel, type: type)
+    let quietFlag = data[PushContract.keyQuiet]?.trimmingCharacters(in: .whitespacesAndNewlines) == PushContract.quietTrue
+        || apns?.interruptionLevel == "passive"
+    let friend = isFriendAlert(data)
+    // Friend alerts: only cancellation and diversion are critical (friend-alerts.ts), so a friend's delay in quiet
+    // hours is passive even though DELAY is critical for the tracker. A time-sensitive APNs level still wins.
+    let channel: String
+    if friend {
+        let serverCritical = apns?.interruptionLevel == "time-sensitive" || apns?.interruptionLevel == "critical"
+        channel = serverCritical ? PushContract.channelCritical : friendAlertChannelId(eventType: wire, quiet: quietFlag)
+    } else {
+        channel = channelId(interruptionLevel: apns?.interruptionLevel, type: type, quiet: quietFlag)
+    }
     return .alert(PushAlert(
         flightId: flightId,
         eventId: data[PushContract.keyEventId].flatMap { $0.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty },
@@ -164,18 +224,24 @@ private func alertOrIgnored(_ data: [String: String], flightId: String, apns: Ap
         channelId: channel,
         tag: tag,
         notificationId: notificationId(for: tag),
-        interruptionLevel: interruptionLevel(for: channel)
+        interruptionLevel: interruptionLevel(for: channel),
+        checkinUrl: safeCheckinURL(data[PushContract.keyCheckinUrl])?.absoluteString,
+        quiet: channel == PushContract.channelQuiet,
+        isFriend: friend,
+        friendName: friend ? data[FriendPushContract.keyFriendName]?.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty : nil
     ))
 }
 
-private func channelId(interruptionLevel: String?, type: AlertType?) -> String {
+private func channelId(interruptionLevel: String?, type: AlertType?, quiet: Bool) -> String {
     switch interruptionLevel {
     case "time-sensitive", "critical":
         return PushContract.channelCritical
-    case "active", "passive":
-        return PushContract.channelUpdates
+    case "active":
+        return quiet ? alertChannelId(type, quiet: true) : PushContract.channelUpdates
+    case "passive":
+        return alertChannelId(type, quiet: true)
     default:
-        return alertChannelId(type)
+        return alertChannelId(type, quiet: quiet)
     }
 }
 

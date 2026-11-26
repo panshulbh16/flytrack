@@ -24,10 +24,16 @@ class FlyTrackMessagingService : FirebaseMessagingService() {
 
     @Inject lateinit var facts: DeviceFactsProvider
 
+    @Inject lateinit var pushAck: PushAckSender
+
     override fun onMessageReceived(message: RemoteMessage) {
         when (val incoming = parseIncomingPush(message.data)) {
             is IncomingPush.Sync -> scheduler.enqueue(incoming.flightId, incoming.flightJson)
-            is IncomingPush.Alert -> notifier.show(incoming)
+            is IncomingPush.Alert -> {
+                notifier.show(incoming)
+                // Delivery receipt after the notification is up; returns at once, failures are ignored.
+                pushAck.ack(incoming.eventId)
+            }
             IncomingPush.Ignored -> Unit
         }
     }

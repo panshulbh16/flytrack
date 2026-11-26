@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Import flights by forwarding booking emails (P2 wave 2 contract, section 2). Pro. -->
+<resources>
+    <string name="forwarding_title">Import by email</string>
+    <string name="forwarding_settings_row">Import by email</string>
+    <string name="forwarding_settings_row_message">Forward booking emails to your own HeyGate address</string>
+    <string name="forwarding_intro">Forward an airline or travel-site booking email to your HeyGate address. We add the flights and send you an alert.</string>
+    <string name="forwarding_address_label">Your forwarding address</string>
+    <string name="forwarding_action_copy">Copy address</string>
+    <string name="forwarding_copied">Address copied</string>
+    <string name="forwarding_howto_title">How it works</string>
+    <string name="forwarding_step_1">Open a booking confirmation from IndiGo, Air India, MakeMyTrip or any airline in your email app.</string>
+    <string name="forwarding_step_2">Forward it to your address above. PDF tickets work too.</string>
+    <string name="forwarding_step_3">In a minute, the flights appear in HeyGate with alerts turned on.</string>
+    <string name="forwarding_privacy">Only the flight details are kept; the email itself is not stored. Emails that arrive while you are not on Pro are ignored.</string>
+    <string name="forwarding_failed">Couldn\'t get your forwarding address</string>
+    <string name="forwarding_teaser_title">Add flights by forwarding an email</string>
+    <string name="forwarding_teaser_body">Pro gives you a private email address. Forward any booking to it and the flights are tracked for you.</string>
+</resources>

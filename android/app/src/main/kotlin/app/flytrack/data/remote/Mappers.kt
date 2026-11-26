@@ -251,7 +251,19 @@ fun TrackedFlightWithFlight.toDomain(): TrackedFlightDetails =
 // ---- profiles -----------------------------------------------------------------------------------
 
 fun ProfileDto.toEntity(): ProfileEntity =
-    ProfileEntity(id = id, displayName = displayName, plan = plan, proUntil = parseInstantOrNull(proUntil))
+    ProfileEntity(
+        id = id,
+        displayName = displayName,
+        plan = plan,
+        proUntil = parseInstantOrNull(proUntil),
+        trialFlightId = trialFlightId,
+    )
 
 fun ProfileEntity.toDomain(): UserProfile =
-    UserProfile(id = id, displayName = displayName, plan = Plan.fromWire(plan), proUntil = proUntil)
+    UserProfile(
+        id = id,
+        displayName = displayName,
+        plan = Plan.fromWire(plan),
+        proUntil = proUntil,
+        trialFlightId = trialFlightId,
+    )

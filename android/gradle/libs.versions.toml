@@ -29,6 +29,8 @@ playServicesAuth = "21.6.0"
 mlkitText = "16.0.1"
 codeScanner = "16.1.0"
 desugar = "2.1.5"
+revenuecat = "11.4.3"
+glance = "1.2.0"
 junit = "4.13.2"
 turbine = "1.2.1"
 androidxTestRunner = "1.7.0"
@@ -77,6 +79,9 @@ androidx-credentials-play = { module = "androidx.credentials:credentials-play-se
 googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
 play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuth" }
 mlkit-text-recognition = { module = "com.google.mlkit:text-recognition", version.ref = "mlkitText" }
+revenuecat-purchases = { module = "com.revenuecat.purchases:purchases", version.ref = "revenuecat" }
+glance-appwidget = { module = "androidx.glance:glance-appwidget", version.ref = "glance" }
+glance-material3 = { module = "androidx.glance:glance-material3", version.ref = "glance" }
 play-services-code-scanner = { module = "com.google.android.gms:play-services-code-scanner", version.ref = "codeScanner" }
 desugar-jdk-libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar" }
 junit = { module = "junit:junit", version.ref = "junit" }

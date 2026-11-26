@@ -160,14 +160,24 @@ public final class FlightsModel {
 }
 
 public enum FlightDetailMessage: String, Sendable, Equatable {
-    case offline, refreshFailed, actionFailed, trackingLimitReached
+    case offline, refreshFailed, actionFailed, trackingLimitReached, shareFailed, shareNotTracked
 }
 
+/// The PNR / seat / cabin sheet on the detail screen. Writes `user_flights.pnr`, `seat` and `cabin`.
 public struct BookingEditor: Equatable, Sendable {
     public var pnr: String
     public var seat: String
+    public var cabin: Cabin?
     public var error: TrackField?
     public var isSaving: Bool
+
+    public init(pnr: String, seat: String, cabin: Cabin? = nil, error: TrackField? = nil, isSaving: Bool = false) {
+        self.pnr = pnr
+        self.seat = seat
+        self.cabin = cabin
+        self.error = error
+        self.isSaving = isSaving
+    }
 }
 
 public struct FlightDetailState: Equatable, Sendable {
@@ -178,11 +188,26 @@ public struct FlightDetailState: Equatable, Sendable {
     public var editor: BookingEditor?
     public var message: FlightDetailMessage?
     public var isClosed: Bool
+    /// Pro, the free trial flight ("Pro free for this flight"), or locked.
+    public var proAccess: FlightProAccess
+    /// Web check-in card; nil hides it.
+    public var checkin: CheckinCard?
+    public var isSharing: Bool
+    /// Set when a share link is ready; the screen opens WhatsApp or the share sheet, then calls `shareHandled()`.
+    public var shareReady: FlightShareReady?
+    /// The flight map (P2 contract section 5); nil while an airport's coordinates are unknown.
+    public var map: FlightMapModel?
+    /// Airport Health rows for the airports that still matter (P2 contract section 1); empty hides the card.
+    public var airportHealth: [AirportHealthRow]
 
     public init(
         isLoading: Bool = true, detail: FlightDetailModel? = nil, isRefreshing: Bool = false,
-        isWorking: Bool = false, editor: BookingEditor? = nil, message: FlightDetailMessage? = nil, isClosed: Bool = false
+        isWorking: Bool = false, editor: BookingEditor? = nil, message: FlightDetailMessage? = nil, isClosed: Bool = false,
+        proAccess: FlightProAccess = .locked, checkin: CheckinCard? = nil, isSharing: Bool = false, shareReady: FlightShareReady? = nil,
+        map: FlightMapModel? = nil, airportHealth: [AirportHealthRow] = []
     ) {
+        self.map = map
+        self.airportHealth = airportHealth
         self.isLoading = isLoading
         self.detail = detail
         self.isRefreshing = isRefreshing
@@ -190,6 +215,10 @@ public struct FlightDetailState: Equatable, Sendable {
         self.editor = editor
         self.message = message
         self.isClosed = isClosed
+        self.proAccess = proAccess
+        self.checkin = checkin
+        self.isSharing = isSharing
+        self.shareReady = shareReady
     }
 }
 
@@ -203,13 +232,34 @@ public final class FlightDetailScreenModel {
     private let profiles: ProfileRepository
     private let clock: FlyClock
     private let changes: FlightChangeTracker
+    private let pro: ProStateProviding?
+    private let checkinRules: CheckinRuleSource?
+    private let sharing: FlightSharing?
+    private let shareBaseURL: String?
+    private let airportHealthSource: AirportHealthSource?
+    private var healthLoadedAt: Date?
 
-    public init(flightId: String, flights: FlightRepository, profiles: ProfileRepository, clock: FlyClock, changes: FlightChangeTracker = FlightChangeTracker()) {
+    /// Airport Health is refreshed at most this often by `reload()` (the server refreshes METARs every 15 min).
+    public static let airportHealthMaxAge: TimeInterval = 15 * 60
+
+    /// `pro` nil: Pro comes from the profile alone. `checkinRules` / `sharing` / `airportHealth` nil: no check-in
+    /// card / no sharing / no Airport Health card.
+    public init(
+        flightId: String, flights: FlightRepository, profiles: ProfileRepository, clock: FlyClock,
+        changes: FlightChangeTracker = FlightChangeTracker(), pro: ProStateProviding? = nil,
+        checkinRules: CheckinRuleSource? = nil, sharing: FlightSharing? = nil, shareBaseURL: String? = nil,
+        airportHealth: AirportHealthSource? = nil
+    ) {
+        self.airportHealthSource = airportHealth
         self.flightId = flightId
         self.flights = flights
         self.profiles = profiles
         self.clock = clock
         self.changes = changes
+        self.pro = pro
+        self.checkinRules = checkinRules
+        self.sharing = sharing
+        self.shareBaseURL = shareBaseURL
     }
 
     public func load() async {
@@ -217,6 +267,18 @@ public final class FlightDetailScreenModel {
         await render()
         state.isLoading = false
         publish()
+        await refreshAirportHealth()
+        // The free trial is granted by a server trigger when the first flight is added, so the cached profile does
+        // not know `trial_flight_id` yet. Refresh it once so the badge and the unlocked Pro show straight away.
+        if await profileMayLackTrial(), (await profiles.refresh()).isSuccess {
+            await render()
+        }
+    }
+
+    /// A tracked flight and a non-Pro profile with no trial flight recorded: the trial may have just been granted.
+    private func profileMayLackTrial() async -> Bool {
+        guard await flights.trackedFlight(flightId: flightId) != nil, let profile = await profiles.profile() else { return false }
+        return !profile.isPro(now: clock.now()) && profile.trialFlightId == nil
     }
 
     public func refresh() async {
@@ -227,6 +289,7 @@ public final class FlightDetailScreenModel {
         if case .offline = result { state.message = .offline }
         else if case .failed = result { state.message = .refreshFailed }
         await render()
+        await refreshAirportHealth()
     }
 
     public func archive(_ archived: Bool) async {
@@ -258,7 +321,19 @@ public final class FlightDetailScreenModel {
 
     public func beginEditing() async {
         let tracking = await flights.trackedFlight(flightId: flightId)?.tracking
-        state.editor = BookingEditor(pnr: tracking?.pnr ?? "", seat: tracking?.seat ?? "", error: nil, isSaving: false)
+        state.editor = BookingEditor(pnr: tracking?.pnr ?? "", seat: tracking?.seat ?? "", cabin: tracking?.cabin)
+        publish()
+    }
+
+    public func setEditorCabin(_ cabin: Cabin?) {
+        state.editor?.cabin = cabin
+        state.editor?.error = nil
+        publish()
+    }
+
+    public func cancelEditing() {
+        guard state.editor?.isSaving != true else { return }
+        state.editor = nil
         publish()
     }
 
@@ -275,7 +350,7 @@ public final class FlightDetailScreenModel {
     }
 
     public func saveEditor() async {
-        guard var editor = state.editor else { return }
+        guard var editor = state.editor, !editor.isSaving else { return }
         if !isPnrInputAcceptable(editor.pnr) {
             editor.error = .pnr
             state.editor = editor
@@ -285,7 +360,8 @@ public final class FlightDetailScreenModel {
         editor.isSaving = true
         state.editor = editor
         publish()
-        let extras = TrackExtras(pnr: editor.pnr.isEmpty ? nil : editor.pnr, seat: editor.seat.isEmpty ? nil : editor.seat)
+        // An empty field clears the column. The note is not edited here, so it is left out (nil keeps it).
+        let extras = TrackExtras(pnr: editor.pnr.isEmpty ? nil : editor.pnr, seat: editor.seat.isEmpty ? nil : editor.seat, cabin: editor.cabin)
         switch await flights.updateTrackingDetails(flightId: flightId, extras: extras) {
         case .success:
             state.editor = nil
@@ -306,17 +382,90 @@ public final class FlightDetailScreenModel {
         publish()
     }
 
+    /// `create_flight_share`, then `shareReady` for the screen. Only a tracked flight can be shared.
+    public func share() async {
+        guard let sharing, !state.isSharing else { return }
+        guard let details = await flights.trackedFlight(flightId: flightId), !details.tracking.isArchived else {
+            state.message = .shareNotTracked
+            publish()
+            return
+        }
+        state.isSharing = true
+        publish()
+        let result = await sharing.createShare(flightId: flightId)
+        state.isSharing = false
+        switch result {
+        case .token(let token):
+            state.shareReady = FlightShareReady(flight: ShareFlight(details.flight), url: shareURL(base: shareBaseURL, token: token))
+        case .notTracked:
+            state.message = .shareNotTracked
+        case .offline:
+            state.message = .offline
+        case .notConfigured, .failed:
+            state.message = .shareFailed
+        }
+        publish()
+    }
+
+    public func shareHandled() {
+        state.shareReady = nil
+        publish()
+    }
+
+    /// Re-renders without a network call, e.g. after the Pro state changed or a minute passed (check-in countdown,
+    /// the plane on the map). Airport Health is asked again once it is older than `airportHealthMaxAge`.
+    public func reload() async {
+        await render()
+        if let loaded = healthLoadedAt, clock.now().timeIntervalSince(loaded) < Self.airportHealthMaxAge { return }
+        await refreshAirportHealth()
+    }
+
+    /// Departure and/or arrival airport conditions. A failed answer keeps the rows already shown.
+    private func refreshAirportHealth() async {
+        guard let airportHealthSource else { return }
+        let flight: Flight?
+        if let details = await flights.trackedFlight(flightId: flightId) {
+            flight = details.flight
+        } else {
+            flight = await flights.flight(id: flightId)
+        }
+        guard let flight else { return }
+        healthLoadedAt = clock.now()
+        let rows = await loadAirportHealth(for: flight, source: airportHealthSource)
+        if !rows.isEmpty || healthSides(flight.phase).isEmpty { state.airportHealth = rows }
+        publish()
+    }
+
     private func render() async {
         let now = clock.now()
-        let profile = await profiles.profile()
-        let isPro = profile?.isPro(now: now) == true
+        let access: FlightProAccess
+        if let pro {
+            access = await pro.proState().access(for: flightId)
+        } else {
+            let profile = await profiles.profile()
+            if profile?.isPro(now: now) == true { access = .pro }
+            else if profile?.isProForFlight(flightId, now: now) == true { access = .trial }
+            else { access = .locked }
+        }
+        let isPro = access.unlocked
+        var shown: Flight?
         if let details = await flights.trackedFlight(flightId: flightId) {
             let fields = changes.record(details.flight, now: now)
             state.detail = details.flight.detail(tracking: details.tracking, isPro: isPro, now: now, newFields: fields)
+            shown = details.flight
         } else if let flight = await flights.flight(id: flightId) {
             state.detail = flight.detail(tracking: nil, isPro: isPro, now: now)
+            shown = flight
         } else {
             state.detail = nil
+        }
+        state.proAccess = access
+        state.map = shown?.mapModel(now: now)
+        if let shown, let checkinRules {
+            let rule = await checkinRules.rule(carrier: shown.carrierIata)
+            state.checkin = checkinCard(rule: rule, flight: shown, now: now)
+        } else {
+            state.checkin = nil
         }
         state.isLoading = false
         publish()

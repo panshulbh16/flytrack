@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Arrival forecast and on-time history (P2 wave 2 contract, section 4). Pro. -->
+<resources>
+    <string name="forecast_title">Arrival forecast</string>
+    <string name="forecast_likely_arrival">Likely arrival</string>
+    <!-- %1$s is a time such as "20:46". -->
+    <string name="forecast_cd_likely_arrival">Likely arrival %1$s</string>
+    <!-- %1$s is a time such as "21:01": four in five past flights arrived by then. -->
+    <string name="forecast_p80">Very likely by %1$s</string>
+    <plurals name="forecast_after_schedule">
+        <item quantity="one">%1$d min after schedule</item>
+        <item quantity="other">%1$d min after schedule</item>
+    </plurals>
+    <plurals name="forecast_before_schedule">
+        <item quantity="one">%1$d min before schedule</item>
+        <item quantity="other">%1$d min before schedule</item>
+    </plurals>
+    <string name="forecast_at_schedule">Right on schedule</string>
+
+    <!-- %1$s confidence ("High confidence"), %2$s the basis ("based on 23 flights in 60 days"). -->
+    <string name="forecast_basis">%1$s · %2$s</string>
+    <string name="forecast_confidence_high">High confidence</string>
+    <string name="forecast_confidence_medium">Medium confidence</string>
+    <string name="forecast_confidence_low">Low confidence</string>
+    <!-- %1$d flights, %2$d days. -->
+    <plurals name="forecast_basis_history">
+        <item quantity="one">based on %1$d flight in %2$d days</item>
+        <item quantity="other">based on %1$d flights in %2$d days</item>
+    </plurals>
+    <string name="forecast_basis_schedule">based on the timetable</string>
+
+    <!-- %1$d days, e.g. "Last 60 days". -->
+    <plurals name="forecast_history_title">
+        <item quantity="one">Last %1$d day</item>
+        <item quantity="other">Last %1$d days</item>
+    </plurals>
+    <string name="forecast_on_time">Left on time</string>
+    <!-- %1$d is a whole percentage. -->
+    <string name="forecast_percent">%1$d%%</string>
+    <string name="forecast_avg_dep_delay">Average departure</string>
+    <string name="forecast_median_arr_delay">Typical arrival</string>
+    <plurals name="forecast_minutes_late">
+        <item quantity="one">%1$d min late</item>
+        <item quantity="other">%1$d min late</item>
+    </plurals>
+    <plurals name="forecast_minutes_early">
+        <item quantity="one">%1$d min early</item>
+        <item quantity="other">%1$d min early</item>
+    </plurals>
+    <string name="forecast_on_schedule">On time</string>
+    <string name="forecast_cancelled">Cancelled</string>
+    <!-- %1$d cancelled flights of %2$d flights. -->
+    <string name="forecast_cancelled_value">%1$d of %2$d</string>
+
+    <string name="forecast_teaser_title">When will it really land?</string>
+    <string name="forecast_teaser_body">Pro predicts the arrival from this flight\'s last 60 days, with how often it left on time.</string>
+</resources>

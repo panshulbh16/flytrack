@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Friends: invite codes, friends list, friends' flights, sharing per flight (P2 wave 2 contract, section 1). Free. -->
+<resources>
+    <string name="friends_title">Friends</string>
+    <string name="friends_settings_row">Friends</string>
+    <string name="friends_settings_row_message">Follow family flights and get "landed" alerts</string>
+    <!-- Shown when a friend set no display name. -->
+    <string name="friends_name_fallback">Your friend</string>
+
+    <string name="friends_invite_title">Invite family and friends</string>
+    <string name="friends_invite_message">When they add your code, you both see each other\'s flights and get an alert when one takes off or lands.</string>
+    <string name="friends_code_label">Friend code</string>
+    <string name="friends_code_expiry">Valid for 7 days, for one person.</string>
+    <string name="friends_code_copied">Code copied</string>
+    <string name="friends_action_invite_whatsapp">Invite on WhatsApp</string>
+    <string name="friends_action_invite_more">Share…</string>
+    <string name="friends_action_copy_code">Copy code</string>
+    <string name="friends_action_enter_code">Have a code? Enter it</string>
+    <!-- The invite message. %1$s is the code, e.g. "ABCD-EFGH". Both lines are sent together. -->
+    <string name="friends_invite_text_hinglish">HeyGate pe mujhe add karo, meri flights live dekho. Code: %1$s</string>
+    <string name="friends_invite_text_english">Add me on HeyGate to follow my flights: Settings → Friends → Enter a code: %1$s</string>
+    <string name="friends_invite_subject">Follow my flights on HeyGate</string>
+    <string name="friends_invite_chooser">Invite a friend</string>
+
+    <string name="friends_section_list">Your friends</string>
+    <string name="friends_empty">No friends yet. Send your code to family so you know when they land.</string>
+    <string name="friends_alerts_on">Alerts for their flights: on</string>
+    <string name="friends_alerts_off">Alerts for their flights: off</string>
+    <!-- %1$s is the friend's name. -->
+    <string name="friends_alerts_switch">Alerts for %1$s\'s flights</string>
+    <!-- %1$s is a date. -->
+    <string name="friends_since">Friends since %1$s</string>
+    <string name="friends_action_remove">Remove</string>
+    <!-- %1$s is the friend's name. -->
+    <string name="friends_remove_title">Remove %1$s?</string>
+    <string name="friends_remove_message">You will stop seeing each other\'s flights. %1$s is not told.</string>
+    <string name="friends_privacy">Friends see your upcoming flights and their status, never your PNR or seat. You can hide a flight from friends on its screen.</string>
+    <string name="friends_load_failed">Couldn\'t load your friends</string>
+    <string name="friends_message_offline">You\'re offline. Try again when you\'re connected.</string>
+    <string name="friends_message_failed">Something went wrong. Please try again.</string>
+    <string name="friends_message_removed">Friend removed</string>
+
+    <string name="friends_accept_title">Enter a friend code</string>
+    <string name="friends_accept_message">Type the 8-character code your friend sent you, or paste their whole message.</string>
+    <string name="friends_action_paste">Paste</string>
+    <string name="friends_action_add_friend">Add friend</string>
+    <string name="friends_accept_privacy">Your friend will see your upcoming flights too. You can remove them at any time.</string>
+    <!-- %1$s is the friend's name. -->
+    <string name="friends_accept_done_title">You and %1$s are now friends</string>
+    <string name="friends_accept_done_message">Their flights show on your flights screen, and you\'ll get an alert when they take off and land.</string>
+    <string name="friends_error_invalid_code">This code doesn\'t work. It may be mistyped, used or older than 7 days.</string>
+    <string name="friends_error_own_code">That\'s your own code. Send it to a friend instead.</string>
+    <string name="friends_error_already_friends">You\'re already friends.</string>
+    <string name="friends_error_limit">You or your friend already has 50 friends.</string>
+
+    <string name="friends_flights_section">Friends\' flights</string>
+    <!-- %1$s is the friend's name, e.g. "Asha's flight". -->
+    <string name="friends_flight_of">%1$s\'s flight</string>
+
+    <string name="friends_share_title">Show to friends</string>
+    <string name="friends_share_on">Your friends can see this flight and get its alerts</string>
+    <string name="friends_share_off">Hidden from your friends</string>
+</resources>

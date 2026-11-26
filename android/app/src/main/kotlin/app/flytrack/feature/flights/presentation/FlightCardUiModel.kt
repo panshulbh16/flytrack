@@ -1,5 +1,6 @@
 package app.flytrack.feature.flights.presentation
 
+import app.flytrack.core.estimate.PositionSource
 import app.flytrack.core.model.DELAY_THRESHOLD_MINUTES
 import app.flytrack.core.model.FlightPhase
 import app.flytrack.core.model.FlightStatusTone
@@ -147,10 +148,14 @@ data class FlightCardUiModel(
     /** Known values that matter in the current phase: departure side until take-off, arrival side after. */
     val info: List<FlightInfoUiModel>,
     val countdown: Countdown?,
-    /** Fraction flown (0..1) while airborne, else null. */
+    /** Fraction flown (0..1) while airborne (or estimated airborne while offline), else null. */
     val progress: Float?,
     /** When the backend last checked or changed this flight. */
     val updatedAt: Instant?,
     /** The "now" this model was computed for; relative texts are relative to it. */
     val asOf: Instant,
+    /** Where [progress] comes from: a fresh live fix or the estimate (core/estimate). Null without progress. */
+    val progressSource: PositionSource? = null,
+    /** The expected touchdown [progress] runs to; the remaining time counts down to it. */
+    val progressArrival: Instant? = null,
 )

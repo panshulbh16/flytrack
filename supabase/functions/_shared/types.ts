@@ -109,6 +109,10 @@ export const EVENT_TYPES = [
   "DIVERTED",
   "REINSTATED", // a cancellation was withdrawn (happens!)
   "INBOUND_LATE", // Pro: the aircraft operating your flight is late
+  "CHECKIN_OPEN", // web check-in window opened (free, from checkin_rules; no provider call)
+  "CHECKIN_CLOSING", // web check-in closes in 30 min or less (free)
+  "FOG_ALERT", // fog / visibility < 1000 m at the departure or arrival airport (free, critical)
+  "DIVERTED_DEST", // after DIVERTED: the diversion airport became known (critical)
 ] as const;
 export type EventType = typeof EVENT_TYPES[number];
 
@@ -129,7 +133,7 @@ export interface AlertState {
   depTerminal?: string | null;
   baggageBelt?: string | null;
   depDelayMin?: number; // last delay value we notified (0 = on time)
-  milestones?: string[]; // BOARDING, DEPARTED, LANDED, CANCELLED, DIVERTED already sent
+  milestones?: string[]; // BOARDING, DEPARTED, LANDED, CANCELLED, DIVERTED, DIVERTED_DEST already sent
   schedDep?: string | null; // scheduled departure users were last told (detects airline retimes)
   plannedArr?: string | null; // original destination (diversion messages)
   alertSeq?: number; // generation counter mixed into dedupe keys
@@ -184,14 +188,40 @@ export interface FlightRow {
   last_error: string | null;
   webhook_subscription_id: string | null;
   webhook_expires_at: string | null;
+  // check-in window (kept by the flights_checkin_window trigger) and reminders already sent
+  checkin_opens_at?: string | null;
+  checkin_closes_at?: string | null;
+  checkin_open_notified?: boolean;
+  checkin_closing_notified?: boolean;
+  /** Set the first time a live position arrives (coverage stats). */
+  live_seen?: boolean;
   created_at?: string;
   updated_at?: string;
 }
 
+/** Language of push texts (profiles.alert_language). Hinglish exists only for alerts. */
+export const ALERT_LANGUAGES = ["en", "hi", "hinglish"] as const;
+export type AlertLanguage = typeof ALERT_LANGUAGES[number];
+
+/** One row of get_flight_recipients(). The language and quiet-hours fields come from profiles. */
 export interface Recipient {
   user_id: string;
   is_pro: boolean;
   notify_prefs: Record<string, boolean>;
   device_id: string;
   fcm_token: string;
+  alert_language?: AlertLanguage | string | null; // unknown values render in English
+  quiet_hours_enabled?: boolean | null;
+  quiet_start?: string | null; // Postgres time, "23:00:00"
+  quiet_end?: string | null; // "07:00:00"
+  quiet_tz?: string | null; // IANA, e.g. "Asia/Kolkata"
+  /**
+   * "tracker": tracks the flight. "friend": a friend of a tracker with alerts on (P2 wave 2 section 1); gets only
+   * the friend events, in friend texts. Missing = tracker (rows from before migration 17, tests).
+   */
+  role?: RecipientRole | null;
+  /** For role "friend": the tracker's display name, null when unset. */
+  friend_name?: string | null;
 }
+
+export type RecipientRole = "tracker" | "friend";

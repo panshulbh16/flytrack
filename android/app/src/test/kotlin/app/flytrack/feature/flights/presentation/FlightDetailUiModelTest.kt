@@ -315,6 +315,19 @@ class FlightDetailUiModelTest {
     }
 
     @Test
+    fun `P2 alerts sit in the Weather and Disruption groups`() {
+        assertEquals(listOf(AlertType.FOG_ALERT), AlertGroup.WEATHER.types)
+        assertTrue(AlertType.DIVERTED_DEST in AlertGroup.DISRUPTION.types)
+        assertEquals(
+            "Weather comes right before the Pro-only group, which stays last",
+            AlertGroup.entries.indexOf(AlertGroup.INBOUND_AIRCRAFT) - 1,
+            AlertGroup.entries.indexOf(AlertGroup.WEATHER),
+        )
+        assertFalse(AlertGroup.WEATHER.proOnly)
+        assertEquals(mapOf(AlertType.FOG_ALERT to false), AlertGroup.WEATHER.prefs(enabled = false))
+    }
+
+    @Test
     fun `switching a group writes one notify_prefs entry per alert type, keyed like the backend`() {
         assertEquals(
             mapOf(AlertType.GATE_ASSIGNED to false, AlertType.GATE_CHANGE to false, AlertType.TERMINAL_CHANGE to false),

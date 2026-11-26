@@ -56,6 +56,9 @@ import app.flytrack.feature.flights.presentation.FlightCardUiModel
 import app.flytrack.feature.flights.ui.FlightCard
 import app.flytrack.feature.flights.ui.NextFlightCard
 import app.flytrack.feature.flights.ui.PreviewFlights
+import app.flytrack.feature.friends.FriendsFlightsUiState
+import app.flytrack.feature.friends.friendsFlightsItems
+import app.flytrack.feature.friends.rememberFriendsFlights
 import app.flytrack.feature.gmailimport.GmailSuggestion
 import app.flytrack.feature.gmailimport.ImportChooserSheet
 import app.flytrack.feature.gmailimport.isGmailImportAvailable
@@ -85,6 +88,8 @@ fun FlightsRoute(
     var choosingImport by rememberSaveable { mutableStateOf(false) }
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.onScreenResumed() }
+    // P2 wave 2: flights friends share with the user; refreshed on resume and pull-to-refresh.
+    val friends = rememberFriendsFlights()
 
     if (choosingImport) {
         ImportChooserSheet(
@@ -101,7 +106,10 @@ fun FlightsRoute(
         onImportTicket = { if (isGmailImportAvailable) choosingImport = true else navigator.openImportTicket() },
         onOpenFlight = onOpenFlight,
         onOpenSettings = onOpenSettings,
-        onRefresh = viewModel::refresh,
+        onRefresh = {
+            viewModel.refresh()
+            friends.refresh()
+        },
         onArchive = viewModel::archive,
         onUntrack = viewModel::untrack,
         onUndo = viewModel::undo,
@@ -109,6 +117,7 @@ fun FlightsRoute(
         onAddGmailSuggestion = navigator::openAddFlightFromGmail,
         onDismissGmailSuggestion = viewModel::dismissGmailSuggestion,
         topContent = { NotificationPermissionPrompt() },
+        friendsFlights = friends.state.value,
     )
 }
 
@@ -128,9 +137,12 @@ fun FlightsScreen(
     onAddGmailSuggestion: (GmailSuggestion) -> Unit = {},
     onDismissGmailSuggestion: (suggestionId: String) -> Unit = {},
     topContent: @Composable () -> Unit = {},
+    friendsFlights: FriendsFlightsUiState = FriendsFlightsUiState(),
 ) {
     val snackbars = remember { SnackbarHostState() }
     FlightsSnackbar(state.message, snackbars, onUndo, onMessageShown)
+    // Friends' flights alone are enough for the list (someone who only follows family).
+    val showEmpty = state.isEmpty && friendsFlights.flights.isEmpty()
 
     Scaffold(
         topBar = {
@@ -153,7 +165,7 @@ fun FlightsScreen(
         snackbarHost = { SnackbarHost(snackbars) },
         floatingActionButton = {
             // The empty state carries its own "Add flight" button.
-            if (!state.isLoading && !state.isEmpty) {
+            if (!state.isLoading && !showEmpty) {
                 ExtendedFloatingActionButton(
                     onClick = onAddFlight,
                     icon = { Icon(painterResource(R.drawable.ic_add), contentDescription = null) },
@@ -176,8 +188,8 @@ fun FlightsScreen(
         ) {
             when {
                 state.isLoading -> LoadingState(modifier = Modifier.fillMaxSize())
-                state.isEmpty -> EmptyFlights(state.isBackendConfigured, onAddFlight, onImportTicket)
-                else -> FlightList(state, onOpenFlight, onArchive, onUntrack)
+                showEmpty -> EmptyFlights(state.isBackendConfigured, onAddFlight, onImportTicket)
+                else -> FlightList(state, onOpenFlight, onArchive, onUntrack, friendsFlights)
             }
             }
         }
@@ -249,6 +261,7 @@ private fun FlightList(
     onOpenFlight: (String) -> Unit,
     onArchive: (String) -> Unit,
     onUntrack: (String) -> Unit,
+    friendsFlights: FriendsFlightsUiState = FriendsFlightsUiState(),
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -269,6 +282,8 @@ private fun FlightList(
                 FlightListCard(card, onOpenFlight, onArchive, onUntrack)
             }
         }
+        // P2 wave 2: friends' upcoming and just-landed flights, above the user's own past ones.
+        friendsFlightsItems(friendsFlights, onOpenFlight)
         if (state.past.isNotEmpty()) {
             item(key = "past-header", contentType = "header") {
                 SectionCaption(text = stringResource(R.string.flights_section_past), modifier = Modifier.padding(top = 8.dp))

@@ -11,6 +11,9 @@ object PushContract {
     /** Departed/landed/gate assigned: normal importance. */
     const val CHANNEL_UPDATES = "flight_updates"
 
+    /** Info alerts during the user's quiet hours (P2 contract, section 3): low importance, no sound. */
+    const val CHANNEL_QUIET = "flight_quiet"
+
     /** `click_action` of alert notifications = the intent action MainActivity listens for. */
     const val ACTION_OPEN_FLIGHT = "OPEN_FLIGHT"
 
@@ -21,6 +24,10 @@ object PushContract {
     const val KEY_EVENT_TYPE = "event_type"
     const val KEY_TITLE = "title"
     const val KEY_BODY = "body"
+
+    /** Alert only, P2: "1" when the server sent this info alert silently (quiet hours); absent otherwise. */
+    const val KEY_QUIET = "quiet"
+    const val QUIET_TRUE = "1"
 
     /** Sync messages only: the compact flight JSON (see CompactFlightDto). */
     const val KEY_FLIGHT = "flight"

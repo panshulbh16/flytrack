@@ -35,5 +35,8 @@ fun FlightDetailRoute(
         onSaveBooking = viewModel::saveBooking,
         onDismissBookingEditor = viewModel::dismissBookingEditor,
         onMessageShown = viewModel::messageShown,
+        onCabinChange = viewModel::onCabinChange,
+        onShare = viewModel::share,
+        onShareHandled = viewModel::shareHandled,
     )
 }

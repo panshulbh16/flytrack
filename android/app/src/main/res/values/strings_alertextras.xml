@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- P2 alert extras (android-passport-health-settings): the Weather alert group, quiet hours, alert language. -->
+<resources>
+    <!-- Weather alert group (FOG_ALERT), on the flight detail screen and in Settings. -->
+    <string name="flights_alert_weather">Fog and low visibility</string>
+    <string name="flights_alert_weather_description">When fog is reported at your departure or arrival airport</string>
+    <string name="settings_alert_weather">Fog at the airport</string>
+
+    <!-- Channel flight_quiet: info alerts during quiet hours. -->
+    <string name="push_channel_quiet_name">Updates during quiet hours</string>
+    <string name="push_channel_quiet_description">Departure, landing and other updates that arrive during your quiet hours. Shown without sound.</string>
+
+    <!-- Settings: quiet hours. -->
+    <string name="settings_section_quiet_hours">Quiet hours</string>
+    <string name="settings_quiet_title">Quiet hours</string>
+    <string name="settings_quiet_message">Updates such as take-off and landing arrive silently. Gate changes, delays, cancellations and fog alerts always make a sound.</string>
+    <string name="settings_quiet_start">From</string>
+    <string name="settings_quiet_end">Until</string>
+    <string name="settings_quiet_time_open">Change time</string>
+    <string name="settings_quiet_zone">Times are in %1$s</string>
+    <string name="settings_quiet_pick_start">Quiet hours start</string>
+    <string name="settings_quiet_pick_end">Quiet hours end</string>
+
+    <!-- Settings: alert language. -->
+    <string name="settings_section_alert_language">Language for alerts</string>
+    <string name="settings_alert_language_message">The language of notifications on this account. The app itself follows your phone\'s language.</string>
+    <string name="settings_alert_language_en">English</string>
+    <string name="settings_alert_language_hi" translatable="false">हिंदी</string>
+    <string name="settings_alert_language_hinglish" translatable="false">Hinglish</string>
+    <string name="settings_alert_prefs_offline">You\'re offline. Alert settings will load when you\'re back online.</string>
+    <string name="settings_alert_prefs_failed">Couldn\'t save alert settings. Try again.</string>
+    <string name="settings_alert_prefs_unavailable">Alert settings need the FlyTrack server, which this build is not connected to.</string>
+
+    <!-- Settings: passport entry. -->
+    <string name="settings_section_travel">Your travel</string>
+    <string name="settings_open_passport">Passport and Year in Review</string>
+    <string name="settings_open_passport_message">Your flights, kilometres and airports, ready to share</string>
+</resources>

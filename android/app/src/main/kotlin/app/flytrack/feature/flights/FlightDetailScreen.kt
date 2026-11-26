@@ -14,11 +14,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -45,6 +47,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -52,10 +55,24 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import app.flytrack.R
+import app.flytrack.core.model.Cabin
 import app.flytrack.core.model.FlightStatusTone
 import app.flytrack.core.model.TrackExtras
 import app.flytrack.core.result.TrackField
 import app.flytrack.core.time.FlightTimeFormat
+import app.flytrack.feature.billing.ui.ProFlightBadge
+import app.flytrack.feature.airporthealth.AirportHealthBlock
+import app.flytrack.feature.checkin.CheckinCard
+import app.flytrack.feature.calendar.AddToCalendarButton
+import app.flytrack.feature.forecast.ForecastBlock
+import app.flytrack.feature.friends.ShareWithFriendsRow
+import app.flytrack.feature.leave.WhenToLeaveCard
+import app.flytrack.feature.share.ShareRequest
+import app.flytrack.feature.share.ShareTarget
+import app.flytrack.feature.share.ShareFlightEffect
+import app.flytrack.feature.share.ShareFlightBlock
+import app.flytrack.feature.billing.ui.ProTeaser
+import app.flytrack.feature.checkin.CheckinUiModel
 import app.flytrack.feature.flights.presentation.AlertGroup
 import app.flytrack.feature.flights.presentation.AlertToggleUiModel
 import app.flytrack.feature.flights.presentation.BookingUiModel
@@ -74,6 +91,8 @@ import app.flytrack.feature.flights.ui.cabinText
 import app.flytrack.feature.flights.ui.flightDateText
 import app.flytrack.feature.flights.ui.flightInfoLabel
 import app.flytrack.feature.flights.ui.minutesAmountText
+import app.flytrack.feature.map.FlightMapButton
+import app.flytrack.feature.map.ProgressSourceRow
 import app.flytrack.ui.components.ErrorState
 import app.flytrack.ui.components.FlyTrackTopBar
 import app.flytrack.ui.components.HairlineDivider
@@ -105,9 +124,13 @@ fun FlightDetailScreen(
     onSaveBooking: () -> Unit,
     onDismissBookingEditor: () -> Unit,
     onMessageShown: (FlightDetailMessage) -> Unit,
+    onCabinChange: (Cabin?) -> Unit = {},
+    onShare: (ShareTarget) -> Unit = {},
+    onShareHandled: (ShareRequest) -> Unit = {},
 ) {
     val snackbars = remember { SnackbarHostState() }
     DetailSnackbar(state.message, snackbars, onMessageShown)
+    ShareFlightEffect(state.share, onShareHandled)
     var confirmUntrack by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
@@ -115,6 +138,16 @@ fun FlightDetailScreen(
             FlyTrackTopBar(
                 title = state.detail?.card?.designator ?: stringResource(R.string.flights_detail_title),
                 onBack = onBack,
+                actions = {
+                    if (state.canShare) {
+                        IconAction(
+                            icon = painterResource(R.drawable.ic_share),
+                            contentDescription = stringResource(R.string.share_action_more),
+                            onClick = { onShare(ShareTarget.SHARE_SHEET) },
+                            enabled = !state.isSharing,
+                        )
+                    }
+                },
             )
         },
         snackbarHost = { SnackbarHost(snackbars) },
@@ -135,6 +168,10 @@ fun FlightDetailScreen(
             ) {
                 DetailContent(
                     detail = detail,
+                    checkin = state.checkin,
+                    canShare = state.canShare,
+                    isSharing = state.isSharing,
+                    onShare = onShare,
                     isWorking = state.isWorking,
                     onAlertChange = onAlertChange,
                     onTrack = onTrack,
@@ -163,7 +200,7 @@ fun FlightDetailScreen(
         )
     }
     state.editor?.let { editor ->
-        BookingEditorDialog(editor, onPnrChange, onSeatChange, onSaveBooking, onDismissBookingEditor)
+        BookingEditorDialog(editor, onPnrChange, onSeatChange, onCabinChange, onSaveBooking, onDismissBookingEditor)
     }
 }
 
@@ -179,6 +216,8 @@ private fun DetailSnackbar(
         FlightDetailMessage.REFRESH_FAILED -> stringResource(R.string.flights_message_refresh_failed)
         FlightDetailMessage.ACTION_FAILED -> stringResource(R.string.flights_message_action_failed)
         FlightDetailMessage.TRACKING_LIMIT_REACHED -> stringResource(R.string.flights_message_tracking_limit)
+        FlightDetailMessage.SHARE_FAILED -> stringResource(R.string.share_message_failed)
+        FlightDetailMessage.SHARE_NOT_TRACKED -> stringResource(R.string.share_message_not_tracked)
     }
     LaunchedEffect(message) {
         if (message == null || text == null) return@LaunchedEffect
@@ -191,6 +230,10 @@ private fun DetailSnackbar(
 @Composable
 private fun DetailContent(
     detail: FlightDetailUiModel,
+    checkin: CheckinUiModel?,
+    canShare: Boolean,
+    isSharing: Boolean,
+    onShare: (ShareTarget) -> Unit,
     isWorking: Boolean,
     onAlertChange: (AlertGroup, Boolean) -> Unit,
     onTrack: () -> Unit,
@@ -205,7 +248,9 @@ private fun DetailContent(
             .padding(horizontal = 20.dp, vertical = 8.dp),
     ) {
         DetailHeader(detail)
+        ProFlightBadge(Modifier.padding(top = 12.dp)) // billing: "Pro free for this flight" on the trial flight
         TrackingBanner(detail.trackingState, isWorking, onTrack, onRestore = { onArchiveChange(false) })
+        checkin?.let { CheckinCard(it, Modifier.padding(top = 16.dp)) }
         Section {
             FlightTimesRow(detail.card)
             Spacer(Modifier.height(8.dp))
@@ -216,8 +261,14 @@ private fun DetailContent(
             )
             LittleNumbers(detail)
         }
+        Section { FlightMapButton(detail.card.flightId) } // map: opens the offline map sheet
         Section { EndpointBlock(stringResource(R.string.flights_departure), detail.departure) }
         Section { EndpointBlock(stringResource(R.string.flights_arrival), detail.arrival) }
+        // P2 Airport Health: draws its own hairline, and nothing once the flight has landed.
+        AirportHealthBlock(depIata = detail.card.depCode, arrIata = detail.card.arrCode, phase = detail.card.phase)
+        // P2 wave 2: when to leave (Pro, tracked upcoming flights) and the arrival forecast. Both draw their own hairline.
+        WhenToLeaveCard(detail.card.flightId)
+        ForecastBlock(detail.card.flightId)
         Section { AircraftBlock(detail) }
         if (detail.proInsight != ProInsightUiModel.None) {
             Section { ProInsightBlock(detail.proInsight) }
@@ -228,6 +279,12 @@ private fun DetailContent(
         if (detail.trackingState == TrackingState.TRACKED && detail.alerts.isNotEmpty()) {
             Section { AlertsBlock(detail.alerts, onAlertChange) }
         }
+        if (canShare) {
+            Section { ShareFlightBlock(isSharing = isSharing, onShare = { onShare(ShareTarget.WHATSAPP_FIRST) }) }
+        }
+        // P2 wave 2: who sees this flight among friends, and one event in the phone's calendar.
+        ShareWithFriendsRow(detail.card.flightId, tracked = detail.trackingState == TrackingState.TRACKED)
+        Section { AddToCalendarButton(detail.card.flightId) }
         if (detail.trackingState != TrackingState.NOT_TRACKED) {
             Section {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -297,6 +354,8 @@ private fun DetailHeader(detail: FlightDetailUiModel) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
+        // map: "Live" / "Estimated" and the time left, from the same fix as the progress (core/estimate).
+        card.progressSource?.let { source -> ProgressSourceRow(source, card.progressArrival, card.asOf) }
     }
     card.updatedAt?.let { updatedAt ->
         Spacer(Modifier.height(8.dp))
@@ -475,30 +534,9 @@ private fun AircraftBlock(detail: FlightDetailUiModel) {
 private fun ProInsightBlock(insight: ProInsightUiModel) {
     when (insight) {
         ProInsightUiModel.None -> Unit
+        // billing: free users see the teaser (`has_pro_insight`); tapping it opens the paywall.
         ProInsightUiModel.Teaser -> ProTeaser()
         is ProInsightUiModel.Details -> ProDetails(insight)
-    }
-}
-
-/** Shown to free users when `has_pro_insight` is true. It says that Pro knows more, never what. */
-@Composable
-private fun ProTeaser() {
-    Surface(
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.tertiaryContainer,
-        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-    ) {
-        Row(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-            Icon(painter = painterResource(R.drawable.ic_lock), contentDescription = null, modifier = Modifier.size(24.dp))
-            Spacer(Modifier.width(12.dp))
-            Column {
-                Text(text = stringResource(R.string.flights_pro_badge).uppercase(), style = FlyTrackTheme.type.caption)
-                Spacer(Modifier.height(2.dp))
-                Text(text = stringResource(R.string.flights_pro_title), style = MaterialTheme.typography.titleMedium)
-                Spacer(Modifier.height(4.dp))
-                Text(text = stringResource(R.string.flights_pro_teaser), style = MaterialTheme.typography.bodyMedium)
-            }
-        }
     }
 }
 
@@ -620,6 +658,7 @@ private fun BookingEditorDialog(
     editor: BookingEditorState,
     onPnrChange: (String) -> Unit,
     onSeatChange: (String) -> Unit,
+    onCabinChange: (Cabin?) -> Unit,
     onSave: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -661,6 +700,8 @@ private fun BookingEditorDialog(
                     enabled = !editor.isSaving,
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, autoCorrectEnabled = false),
                 )
+                Spacer(Modifier.height(8.dp))
+                CabinPicker(selected = editor.cabin, enabled = !editor.isSaving, onSelect = onCabinChange)
             }
         },
         confirmButton = {
@@ -670,6 +711,33 @@ private fun BookingEditorDialog(
             TextButton(onClick = onDismiss, enabled = !editor.isSaving) { Text(stringResource(R.string.action_cancel)) }
         },
     )
+}
+
+/** Economy / premium economy / business / first, plus "not added". One choice at a time. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun CabinPicker(selected: Cabin?, enabled: Boolean, onSelect: (Cabin?) -> Unit) {
+    Text(
+        text = stringResource(R.string.flights_booking_cabin),
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    Spacer(Modifier.height(4.dp))
+    FlowRow(
+        modifier = Modifier.selectableGroup(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        val options: List<Cabin?> = listOf(null) + Cabin.entries
+        for (option in options) {
+            FilterChip(
+                selected = option == selected,
+                onClick = { onSelect(option) },
+                enabled = enabled,
+                label = { Text(option?.let { cabinText(it) } ?: stringResource(R.string.flights_booking_not_added)) },
+                modifier = Modifier.semantics { role = Role.RadioButton },
+            )
+        }
+    }
 }
 
 @Preview(name = "Detail, light (free user)", showBackground = true, heightDp = 2200)
@@ -712,5 +780,8 @@ private fun PreviewScreen(detail: FlightDetailUiModel) {
         onSaveBooking = {},
         onDismissBookingEditor = {},
         onMessageShown = {},
+        onCabinChange = {},
+        onShare = {},
+        onShareHandled = {},
     )
 }

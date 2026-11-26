@@ -139,6 +139,7 @@ data class ProfileDto(
     @SerialName("display_name") val displayName: String? = null,
     val plan: String = "free",
     @SerialName("pro_until") val proUntil: String? = null,
+    @SerialName("trial_flight_id") val trialFlightId: String? = null,
 )
 
 /** Body of `POST /functions/v1/search-flight`. */

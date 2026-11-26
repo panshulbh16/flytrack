@@ -42,6 +42,9 @@ import app.flytrack.BuildConfig
 import app.flytrack.R
 import app.flytrack.core.push.PushContract
 import app.flytrack.data.repo.Appearance
+import app.flytrack.feature.billing.ui.ProSettingsSection
+import app.flytrack.feature.calendar.CalendarSettingsSection
+import app.flytrack.feature.friends.Wave2SettingsRows
 import app.flytrack.feature.flights.presentation.AlertGroup
 import app.flytrack.feature.flights.presentation.AlertToggleUiModel
 import app.flytrack.push.ChannelHealth
@@ -97,6 +100,17 @@ fun SettingsRoute(onBack: () -> Unit, viewModel: SettingsViewModel = hiltViewMod
         onGmailAutoCheck = viewModel::setGmailAutoCheck,
         onReconnectGmail = navigator::openGmailImport,
         onDisconnectGmail = viewModel::disconnectGmail,
+        proSection = { ProSettingsSection() },
+        travelSection = {
+            PassportSettingsEntry()
+            // P2 wave 2: Friends and Import by email rows, then the calendar feed.
+            Wave2SettingsRows()
+            Spacer(Modifier.height(12.dp))
+            HairlineDivider()
+            Spacer(Modifier.height(16.dp))
+            CalendarSettingsSection()
+        },
+        alertExtrasSection = { AlertPrefsSection() },
     )
 }
 
@@ -125,6 +139,12 @@ fun SettingsScreen(
     onGmailAutoCheck: (Boolean) -> Unit,
     onReconnectGmail: () -> Unit,
     onDisconnectGmail: () -> Unit,
+    /** FlyTrack Pro block (plan, Go Pro, restore); stateful, so previews leave it empty. */
+    proSection: @Composable () -> Unit = {},
+    /** Passport entry (P2); a navigation row, so previews may leave it empty. */
+    travelSection: @Composable () -> Unit = {},
+    /** Quiet hours and alert language (P2); stateful, so previews leave it empty. */
+    alertExtrasSection: @Composable () -> Unit = {},
 ) {
     val snackbars = remember { SnackbarHostState() }
     val message = state.message?.let { settingsMessage(it) }
@@ -152,6 +172,14 @@ fun SettingsScreen(
             Spacer(Modifier.height(20.dp))
             HairlineDivider()
             Spacer(Modifier.height(16.dp))
+            proSection()
+            Spacer(Modifier.height(12.dp))
+            HairlineDivider()
+            Spacer(Modifier.height(16.dp))
+            travelSection()
+            Spacer(Modifier.height(12.dp))
+            HairlineDivider()
+            Spacer(Modifier.height(16.dp))
             SectionCaption(stringResource(R.string.settings_section_appearance))
             Spacer(Modifier.height(8.dp))
             AppearancePicker(appearance, onAppearance)
@@ -168,6 +196,10 @@ fun SettingsScreen(
             state.alerts.forEach { toggle ->
                 AlertSwitch(toggle, onAlertGroup)
             }
+            Spacer(Modifier.height(12.dp))
+            HairlineDivider()
+            Spacer(Modifier.height(16.dp))
+            alertExtrasSection()
             Spacer(Modifier.height(12.dp))
             HairlineDivider()
             Spacer(Modifier.height(16.dp))
@@ -447,6 +479,8 @@ private fun alertTitle(group: AlertGroup): String = stringResource(
         AlertGroup.BAGGAGE -> R.string.settings_alert_baggage
         AlertGroup.DISRUPTION -> R.string.settings_alert_disruption
         AlertGroup.INBOUND_AIRCRAFT -> R.string.settings_alert_inbound
+        AlertGroup.CHECK_IN -> R.string.settings_alert_checkin
+        AlertGroup.WEATHER -> R.string.settings_alert_weather
     },
 )
 

@@ -34,6 +34,10 @@ struct FlyTrackApp: App {
         .onChange(of: scenePhase, initial: true) { _, phase in
             guard phase == .active else { return }
             Task { await GmailBackground.appOpened(shell: shell) }
+            // Delivery receipts for alerts that arrived while the app was in the background (P2 contract section 3).
+            Task { await shell.receipts.sweepDelivered() }
+            // A delay heard while the app was away moves the "time to leave" reminder (P2 wave 2 section 5).
+            Task { await shell.resyncLeaveReminders() }
         }
     }
 }
@@ -100,6 +104,21 @@ final class AppShell: ObservableObject {
     let gmailAuth: GmailAuth
     let shared = SharedContentHolder()
     let clock: FlyClock = SystemClock()
+    let billing: BillingGateway
+    let pro: ProCenter
+    let sharing: LiveFlightSharing
+    let checkinRules: LiveCheckinRules
+    let airportHealth: LiveAirportHealth
+    let passport: LivePassport
+    let alertPrefs: LiveAlertPrefs
+    let receipts: PushReceipts
+    // P2 wave 2 (docs/P2_WAVE2_CONTRACTS.md).
+    let friends: LiveFriends
+    let forwarding: LiveForwarding
+    let calendarFeed: LiveCalendarFeed
+    let forecast: LiveForecast
+    let travelTimes: DeviceTravelTimes
+    let leaveReminders: LocalLeaveReminders
 
     @Published var session: SessionState = .loading
     @Published var path = NavigationPath()
@@ -119,6 +138,27 @@ final class AppShell: ObservableObject {
         extractor = OnDeviceExtractor()
         gmailStore = SwiftDataGmailStore(context: context)
         gmailAuth = GmailAuth(settings: settings, api: gmailAPI)
+        let billing = makeBillingGateway()
+        self.billing = billing
+        pro = ProCenter(service: ProService(
+            billing: billing, profiles: profiles, auth: auth, sync: LiveEntitlementSync(stack: stack), clock: clock
+        ))
+        sharing = LiveFlightSharing(stack: stack, auth: auth)
+        checkinRules = LiveCheckinRules(stack: stack)
+        airportHealth = LiveAirportHealth(stack: stack)
+        passport = LivePassport(stack: stack)
+        alertPrefs = LiveAlertPrefs(stack: stack)
+        let wave2 = Wave2Backend(stack: stack, auth: auth)
+        friends = LiveFriends(backend: wave2)
+        forwarding = LiveForwarding(backend: wave2)
+        calendarFeed = LiveCalendarFeed(backend: wave2)
+        forecast = LiveForecast(backend: wave2)
+        travelTimes = DeviceTravelTimes()
+        leaveReminders = LocalLeaveReminders()
+        let receipts = PushReceipts(sender: LivePushAck(stack: stack))
+        self.receipts = receipts
+        push.receipts = receipts
+        PushBridge.shared.onDelivered = { items in receipts.received(items) }
         PushBridge.shared.onToken = { token in
             Task { @MainActor in await DeviceRegistrar.register(token: token, client: stack.client) }
         }
@@ -126,6 +166,7 @@ final class AppShell: ObservableObject {
             // Signing out or into another account changes the user. Register this phone for the new one,
             // as Android does when its session's user id changes. bootstrap() handles the launch.
             let push = push
+            let pro = pro
             Task {
                 var lastUser = client.auth.currentSession?.user.id
                 for await (_, session) in client.auth.authStateChanges {
@@ -135,6 +176,8 @@ final class AppShell: ObservableObject {
                     if let token = await push.currentToken() {
                         await DeviceRegistrar.register(token: token, client: client)
                     }
+                    // RevenueCat follows the Supabase user (contract: logIn(userId) after every sign-in).
+                    await pro.identifyAndReload()
                 }
             }
         }
@@ -142,6 +185,16 @@ final class AppShell: ObservableObject {
             Task { @MainActor in await self.handlePush(data) }
         }
         PushBridge.shared.onFlight = { [weak self] id in self?.openFlight(id) }
+        PushBridge.shared.onCheckin = { [weak self] url, flightId in
+            if let flightId { self?.openFlight(flightId) }
+            UIApplication.shared.open(url)
+        }
+        #if canImport(RevenueCat)
+        if let revenueCat = billing as? RevenueCatBilling {
+            let pro = pro
+            revenueCat.onChange = { Task { await pro.reload() } }
+        }
+        #endif
         PushBridge.shared.onGmailSuggestion = { [weak self] id, dismiss in self?.openGmailSuggestion(id, dismiss: dismiss) }
         auth.onUserDataWiped = { [weak self] in await self?.clearGmail() }
     }
@@ -195,7 +248,9 @@ final class AppShell: ObservableObject {
         if session != .notConfigured {
             _ = await flights.refresh()
             _ = await profiles.refresh()
+            await alertPrefs.applyDeviceDefaultOnce()
         }
+        await pro.identifyAndReload()
         await FlightLiveActivities.resume(client: stack.client, push: push, flights: flights)
         if let shared = ShareInbox.consume() {
             self.shared.offer(shared)
@@ -204,6 +259,11 @@ final class AppShell: ObservableObject {
     }
 
     func open(_ url: URL) {
+        // heygate://friend?code=ABCDEFGH from an invite (P2 wave 2 section 1).
+        if url.host?.lowercased() == "friend" {
+            path.append(Route.acceptInvite(inviteCode(fromURL: url)))
+            return
+        }
         if url.host == "import" || url.path == "/import" {
             if let shared = ShareInbox.consume() { self.shared.offer(shared) }
             path.append(Route.importTicket)
@@ -241,6 +301,17 @@ final class AppShell: ObservableObject {
         await push.handle(data: data)
         await FlightLiveActivities.endFinished(flights: flights)
         session = await auth.session()
+        await resyncLeaveReminders()
+    }
+
+    /// Re-plans pending "time to leave" reminders from the cache (P2 wave 2 section 5).
+    func resyncLeaveReminders() async {
+        await leaveReminders.resync(flights: flights, travel: travelTimes, pro: await pro.service.proState())
+    }
+
+    /// After a purchase or restore the profile changed; screens read the new state from `pro`.
+    func proChanged() async {
+        await pro.reload()
     }
 }
 
@@ -251,6 +322,12 @@ enum Route: Hashable {
     case importTicket
     case scanBoardingPass
     case gmailImport
+    case paywall
+    case passport
+    case friends
+    /// The accept screen, with the code from an invite link when there is one.
+    case acceptInvite(String?)
+    case forwarding
 }
 
 struct RootView: View {
@@ -274,6 +351,16 @@ struct RootView: View {
                         ScanScreen(shell: shell)
                     case .gmailImport:
                         GmailImportScreen(shell: shell)
+                    case .paywall:
+                        PaywallScreen(shell: shell)
+                    case .passport:
+                        PassportScreen(shell: shell)
+                    case .friends:
+                        FriendsScreen(shell: shell)
+                    case .acceptInvite(let code):
+                        AcceptInviteScreen(shell: shell, prefill: code)
+                    case .forwarding:
+                        ForwardingScreen(shell: shell)
                     }
                 }
         }

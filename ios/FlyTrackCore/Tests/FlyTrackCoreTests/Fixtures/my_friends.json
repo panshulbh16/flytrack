@@ -1,0 +1,5 @@
+[
+  { "friend_id": "aaaaaaaa-1111-4111-8111-111111111111", "display_name": "Asha", "alerts_enabled": true, "since": "2026-11-20T10:00:00+00:00" },
+  { "friend_id": "bbbbbbbb-2222-4222-8222-222222222222", "display_name": "  ", "alerts_enabled": false, "since": null },
+  { "display_name": "no id, skipped" }
+]

@@ -2,6 +2,12 @@ package app.flytrack.push
 
 import app.flytrack.core.model.AlertType
 import app.flytrack.core.push.PushContract
+import app.flytrack.feature.checkin.CHECKIN_EVENT_OPEN
+import app.flytrack.feature.checkin.KEY_CHECKIN_URL
+import app.flytrack.feature.checkin.checkinUrlFromPush
+import app.flytrack.feature.friends.friendAlertChannelId
+import app.flytrack.feature.friends.friendNameOf
+import app.flytrack.feature.friends.isFriendAlert
 
 /**
  * One FCM data payload, parsed without any Android type so it can be unit-tested against the
@@ -24,6 +30,14 @@ sealed interface IncomingPush {
         val channelId: String,
         val tag: String,
         val notificationId: Int,
+        /** CHECKIN_OPEN / CHECKIN_CLOSING only: the airline's https check-in page a tap opens. */
+        val checkinUrl: String? = null,
+        /** The server sent this info alert silently (the user's quiet hours): it goes on [PushContract.CHANNEL_QUIET]. */
+        val quiet: Boolean = false,
+        /** P2 wave 2: an alert about a friend's flight (`role = "friend"`); its text already names the friend. */
+        val isFriend: Boolean = false,
+        /** Friend alerts only: the friend's name (`friend_name`). */
+        val friendName: String? = null,
     ) : IncomingPush
 
     /** Not a message this app understands (missing kind, missing flight, empty alert). */
@@ -58,12 +72,33 @@ fun alertTagGroup(eventType: String): String = when {
     eventType.startsWith("BELT") -> "belt"
     eventType.startsWith("DELAY") || eventType == AlertType.INBOUND_LATE.wire ||
         eventType == AlertType.SCHEDULE_CHANGE.wire -> "delay"
+    // Replaces the "diverted, new destination not announced yet" alert.
+    eventType == AlertType.DIVERTED_DEST.wire -> "diverted"
     else -> eventType.lowercase()
 }
 
 /** Channel the server would have named for this event. Unknown types use the critical channel. */
 fun alertChannelId(type: AlertType?): String =
     if (type == null || type.critical) PushContract.CHANNEL_CRITICAL else PushContract.CHANNEL_UPDATES
+
+/**
+ * [alertChannelId] for a wire value [AlertType] may not know yet. CHECKIN_OPEN is an `info` event
+ * (P1 contract, section 3), so the server puts it on the updates channel; the app must not post the
+ * same alert loudly. CHECKIN_CLOSING is critical, which the unknown-type default already gives.
+ */
+fun alertChannelId(type: AlertType?, wire: String): String =
+    if (type == null && wire == CHECKIN_EVENT_OPEN) PushContract.CHANNEL_UPDATES else alertChannelId(type)
+
+/**
+ * [alertChannelId] for an alert the server may have sent silently (`quiet = "1"`, P2 contract section 3).
+ * Critical alerts are always loud, so a quiet flag on a critical type is ignored. The server only marks
+ * info alerts quiet, so an unknown type that carries the flag goes on the quiet channel too.
+ */
+fun alertChannelId(type: AlertType?, wire: String, quiet: Boolean): String = when {
+    !quiet -> alertChannelId(type, wire)
+    type?.critical == true -> PushContract.CHANNEL_CRITICAL
+    else -> PushContract.CHANNEL_QUIET
+}
 
 /**
  * Stable notification id for a tag. Android replaces a notification only when both the tag and
@@ -87,14 +122,22 @@ private fun alertOrIgnored(data: Map<String, String>, flightId: String): Incomin
     val type = AlertType.fromWire(wire)
     val group = if (wire.isEmpty()) "alert" else alertTagGroup(wire)
     val tag = PushContract.notificationTag(flightId, group)
+    val quiet = data[PushContract.KEY_QUIET]?.trim() == PushContract.QUIET_TRUE
+    val friend = isFriendAlert(data)
+    // Friend alerts: only cancellation and diversion are critical (friend-alerts.ts), so a friend's delay is not loud.
+    val channelId = if (friend) friendAlertChannelId(wire, quiet) else alertChannelId(type, wire, quiet)
     return IncomingPush.Alert(
         flightId = flightId,
         eventId = data[PushContract.KEY_EVENT_ID]?.takeIf { it.isNotBlank() },
         eventType = type,
         title = title,
         body = body,
-        channelId = alertChannelId(type),
+        channelId = channelId,
         tag = tag,
         notificationId = notificationIdFor(tag),
+        checkinUrl = checkinUrlFromPush(wire, data[KEY_CHECKIN_URL]),
+        quiet = channelId == PushContract.CHANNEL_QUIET,
+        isFriend = friend,
+        friendName = if (friend) friendNameOf(data) else null,
     )
 }

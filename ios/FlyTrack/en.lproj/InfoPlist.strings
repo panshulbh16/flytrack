@@ -1,0 +1,4 @@
+/* Localized Info.plist values (en). Keep in step with project.yml (targets.FlyTrack.info). */
+
+"CFBundleDisplayName" = "HeyGate";
+"NSCameraUsageDescription" = "HeyGate reads the barcode on your boarding pass to add the flight.";

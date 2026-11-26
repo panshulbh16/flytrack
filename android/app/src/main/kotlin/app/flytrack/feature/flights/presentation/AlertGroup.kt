@@ -15,7 +15,10 @@ enum class AlertGroup(val types: List<AlertType>) {
     BOARDING(listOf(AlertType.BOARDING)),
     TAKEOFF_AND_LANDING(listOf(AlertType.DEPARTED, AlertType.LANDED)),
     BAGGAGE(listOf(AlertType.BELT_ASSIGNED, AlertType.BELT_CHANGE)),
-    DISRUPTION(listOf(AlertType.CANCELLED, AlertType.DIVERTED, AlertType.REINSTATED)),
+    DISRUPTION(listOf(AlertType.CANCELLED, AlertType.DIVERTED, AlertType.REINSTATED, AlertType.DIVERTED_DEST)),
+    CHECK_IN(listOf(AlertType.CHECKIN_OPEN, AlertType.CHECKIN_CLOSING)),
+    /** Fog and low visibility at either airport (free). */
+    WEATHER(listOf(AlertType.FOG_ALERT)),
     INBOUND_AIRCRAFT(listOf(AlertType.INBOUND_LATE));
 
     /** The server sends these alerts to Pro users only. */

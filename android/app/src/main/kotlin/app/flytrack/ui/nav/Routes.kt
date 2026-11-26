@@ -41,3 +41,23 @@ data object ImportTicket
 /** Import from Gmail: connect, scan, pick a suggestion. */
 @Serializable
 data object GmailImport
+
+/** FlyTrack Pro paywall (plans from Google Play via RevenueCat, restore). Opened through LocalPaywallLauncher. */
+@Serializable
+data object Paywall
+
+/** Passport and Year in Review: the user's flown flights, counted by `my_passport`. */
+@Serializable
+data object Passport
+
+/** Friends: invite code, list with alert switches (P2 wave 2). */
+@Serializable
+data object Friends
+
+/** "Enter a friend code"; [prefillCode] when the code came from outside. */
+@Serializable
+data class AcceptFriendInvite(val prefillCode: String? = null)
+
+/** Email forwarding address and how-to (P2 wave 2, Pro). */
+@Serializable
+data object EmailForwarding
