@@ -109,6 +109,8 @@ export const EVENT_TYPES = [
   "DIVERTED",
   "REINSTATED", // a cancellation was withdrawn (happens!)
   "INBOUND_LATE", // Pro: the aircraft operating your flight is late
+  "CHECKIN_OPEN", // web check-in window opened (free, from checkin_rules; no provider call)
+  "CHECKIN_CLOSING", // web check-in closes in 30 min or less (free)
 ] as const;
 export type EventType = typeof EVENT_TYPES[number];
 
@@ -184,6 +186,13 @@ export interface FlightRow {
   last_error: string | null;
   webhook_subscription_id: string | null;
   webhook_expires_at: string | null;
+  // check-in window (kept by the flights_checkin_window trigger) and reminders already sent
+  checkin_opens_at?: string | null;
+  checkin_closes_at?: string | null;
+  checkin_open_notified?: boolean;
+  checkin_closing_notified?: boolean;
+  /** Set the first time a live position arrives (coverage stats). */
+  live_seen?: boolean;
   created_at?: string;
   updated_at?: string;
 }

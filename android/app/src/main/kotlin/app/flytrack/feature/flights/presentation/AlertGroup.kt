@@ -16,6 +16,7 @@ enum class AlertGroup(val types: List<AlertType>) {
     TAKEOFF_AND_LANDING(listOf(AlertType.DEPARTED, AlertType.LANDED)),
     BAGGAGE(listOf(AlertType.BELT_ASSIGNED, AlertType.BELT_CHANGE)),
     DISRUPTION(listOf(AlertType.CANCELLED, AlertType.DIVERTED, AlertType.REINSTATED)),
+    CHECK_IN(listOf(AlertType.CHECKIN_OPEN, AlertType.CHECKIN_CLOSING)),
     INBOUND_AIRCRAFT(listOf(AlertType.INBOUND_LATE));
 
     /** The server sends these alerts to Pro users only. */

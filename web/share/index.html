@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Live flight · HeyGate</title>
+  <meta name="description" content="Follow a shared flight live: status, gate, belt and where the plane is.">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#f6f5ef" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#14281f" media="(prefers-color-scheme: dark)">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co http://127.0.0.1:54321 http://localhost:54321; img-src 'self' data:; base-uri 'none'; form-action 'none'">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=Instrument+Serif:ital@0;1&display=swap">
+  <link rel="stylesheet" href="share.css">
+</head>
+<body>
+  <main class="page" aria-live="polite">
+    <header class="brand">
+      <span class="mark" aria-hidden="true"></span>
+      <span>HeyGate</span>
+      <span class="brand-note">shared flight</span>
+    </header>
+
+    <section id="state-loading" class="notice">
+      <p class="serif">Finding the flight…</p>
+    </section>
+
+    <section id="state-error" class="notice" hidden>
+      <h1 class="serif" id="error-title">This link isn't working</h1>
+      <p id="error-body">It may have expired or been turned off by the person who shared it.</p>
+      <button type="button" id="retry" hidden>Try again</button>
+    </section>
+
+    <article id="flight" hidden>
+      <div class="headline">
+        <p class="airline" id="airline"></p>
+        <h1 class="serif" id="title"></h1>
+        <p class="route" id="route"></p>
+        <p class="status" id="status" data-tone="ok"></p>
+      </div>
+
+      <div class="globe-wrap">
+        <canvas id="globe" role="img" aria-label="Map of the flight route"></canvas>
+        <p class="globe-note" id="globe-note" hidden></p>
+      </div>
+
+      <div class="legs">
+        <section class="leg" aria-labelledby="dep-label">
+          <h2 id="dep-label">Departs <span id="dep-code"></span></h2>
+          <p class="city" id="dep-city"></p>
+          <p class="time" id="dep-time"></p>
+          <p class="was" id="dep-was"></p>
+          <dl class="facts">
+            <div><dt>Terminal</dt><dd id="dep-terminal">–</dd></div>
+            <div><dt>Gate</dt><dd id="dep-gate">–</dd></div>
+          </dl>
+        </section>
+        <section class="leg" aria-labelledby="arr-label">
+          <h2 id="arr-label">Arrives <span id="arr-code"></span></h2>
+          <p class="city" id="arr-city"></p>
+          <p class="time" id="arr-time"></p>
+          <p class="was" id="arr-was"></p>
+          <dl class="facts">
+            <div><dt>Terminal</dt><dd id="arr-terminal">–</dd></div>
+            <div><dt>Belt</dt><dd id="arr-belt">–</dd></div>
+          </dl>
+        </section>
+      </div>
+
+      <p class="meta" id="meta"></p>
+    </article>
+
+    <footer class="foot">
+      Times are local to each airport. Shared with HeyGate, an India-first flight tracker.
+    </footer>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="vendor/d3-array@3.2.4.min.js"></script>
+  <script src="vendor/d3-geo@3.1.1.min.js"></script>
+  <script src="vendor/topojson-client@3.1.0.min.js"></script>
+  <script type="module" src="share.js"></script>
+</body>
+</html>

@@ -455,6 +455,7 @@ private fun alertTitle(group: AlertGroup): String = stringResource(
         AlertGroup.BAGGAGE -> R.string.settings_alert_baggage
         AlertGroup.DISRUPTION -> R.string.settings_alert_disruption
         AlertGroup.INBOUND_AIRCRAFT -> R.string.settings_alert_inbound
+        AlertGroup.CHECK_IN -> R.string.settings_alert_checkin
     },
 )
 

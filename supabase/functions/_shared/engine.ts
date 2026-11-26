@@ -6,6 +6,8 @@ import { ProviderError } from "./providers/provider.ts";
 import { shiftDate } from "./providers/mock.ts";
 import type { PushLogRow, Repo } from "./repo.ts";
 import { nextPollAt } from "./schedule.ts";
+import { decideCheckin } from "./checkin.ts";
+import { legHistoryRow, shouldFinalize } from "./history.ts";
 import type { FlightEvent, FlightRow, FlightSnapshot } from "./types.ts";
 
 const MIN = 60_000;
@@ -130,6 +132,7 @@ export async function ingest(
     const row = await deps.repo.insertFlight({
       ...snapshotToPatch(snap, deps.provider.name),
       alert_state: snapshotState(snap),
+      live_seen: !!snap.live,
       last_polled_at: nowIso,
       next_poll_at: nextPollAt(snap, { now, hasPro: false, webhookActive: false, changedThisPoll: false, errorCount: 0 })
         ?.toISOString() ?? null,
@@ -146,7 +149,10 @@ export async function ingest(
         now, hasPro: hasProInterest(existing, now), webhookActive: false, changedThisPoll: false, errorCount: 0,
         inboundOnly: isInboundOnly(existing, now),
       });
-      await deps.repo.updateFlight(existing.id, { lease_until: null, last_polled_at: nowIso, next_poll_at: next?.toISOString() ?? null });
+      const row = await deps.repo.updateFlight(existing.id, {
+        lease_until: null, last_polled_at: nowIso, next_poll_at: next?.toISOString() ?? null,
+      });
+      await finalizeIfStopped(deps, existing, row);
     }
     return { row: existing, events: [], changed: [] };
   }
@@ -175,8 +181,10 @@ export async function ingest(
     lease_until: null,
     poll_error_count: 0,
     last_error: null,
+    ...(snap.live && !existing.live_seen ? { live_seen: true } : {}),
   });
   if (changed.length) await deps.repo.insertHistory(row.id, source, changed, snap);
+  await finalizeIfStopped(deps, existing, row);
 
   if (inserted.length || changed.length) await fanOut(deps, row, inserted, changed.length > 0);
   return { row, events: inserted, changed };
@@ -287,11 +295,22 @@ async function recordPollError(deps: Deps, row: FlightRow, message: string) {
   const next = nextPollAt(rowToSnapshot(row), {
     now: deps.now(), hasPro: hasProInterest(row, deps.now()), webhookActive: false, changedThisPoll: false, errorCount,
   });
-  await deps.repo.updateFlight(row.id, {
+  const updated = await deps.repo.updateFlight(row.id, {
     poll_error_count: errorCount, last_error: message.slice(0, 500), lease_until: null,
     last_polled_at: deps.now().toISOString(), next_poll_at: next?.toISOString() ?? null,
   });
   deps.log?.("poll error", { flight: row.id, errorCount, message });
+  await finalizeIfStopped(deps, row, updated);
+}
+
+/** Polling just stopped (next_poll_at → null): keep the finished leg for history and coverage stats. */
+async function finalizeIfStopped(deps: Deps, before: FlightRow, after: FlightRow) {
+  if (!shouldFinalize(before, after)) return;
+  try {
+    await deps.repo.upsertLegHistory(legHistoryRow(after, deps.now()));
+  } catch (e) {
+    deps.log?.("leg history failed", { flight: after.id, error: String(e) }); // never fail a poll for stats
+  }
 }
 
 /** Pro: find the aircraft's previous leg ("Where's my plane?") and link it. Returns events sent. */
@@ -390,12 +409,21 @@ async function maybeManageWebhook(deps: Deps, row: FlightRow) {
   }
 }
 
-/** One cron tick: claim due flights in small batches until the time budget is used. */
 /** Deliver events that were inserted but never pushed (crash/timeout between insert and fan-out). */
 export async function sweepUnpushedEvents(deps: Deps): Promise<number> {
   const stuck = await deps.repo.getUnpushedEvents(2, 60, 50); // older than 2 min, younger than 60 min
+  // A check-in reminder whose window already closed is useless (the airline page says "closed"): drop it.
+  const now = deps.now().getTime();
+  const expired = stuck.filter((e) =>
+    (e.type === "CHECKIN_OPEN" || e.type === "CHECKIN_CLOSING") &&
+    Date.parse(String((e.payload as Record<string, unknown>)?.closes_at ?? "")) <= now
+  );
+  if (expired.length) await deps.repo.markEventsPushed(expired.map((e) => e.id));
   const byFlight = new Map<string, (FlightEvent & { id: string })[]>();
-  for (const e of stuck) byFlight.set(e.flightId, [...(byFlight.get(e.flightId) ?? []), e]);
+  for (const e of stuck) {
+    if (expired.includes(e)) continue;
+    byFlight.set(e.flightId, [...(byFlight.get(e.flightId) ?? []), e]);
+  }
   let n = 0;
   for (const [flightId, evs] of byFlight) {
     const row = await deps.repo.getFlight(flightId);
@@ -407,13 +435,46 @@ export async function sweepUnpushedEvents(deps: Deps): Promise<number> {
   return n;
 }
 
+/**
+ * Check-in reminders (CHECKIN_OPEN / CHECKIN_CLOSING). DB only: the window comes from checkin_rules via
+ * the flights trigger, so this never calls the provider. Event row first, then the flags, then the push:
+ * a crash in between is covered by the dedupe key and the sweeper, like every other alert.
+ */
+export async function runCheckinReminders(deps: Deps, limit = 100): Promise<number> {
+  const now = deps.now();
+  let sent = 0;
+  for (const row of await deps.repo.getDueCheckins(limit)) {
+    try {
+      const rule = await deps.repo.getCheckinRule(row.carrier_iata);
+      const d = decideCheckin(row, rule?.checkin_url ?? null, now);
+      if (!d) continue;
+      const id = await deps.repo.insertEventIfNew(row.id, d.event);
+      const updated = await deps.repo.updateFlight(row.id, d.patch);
+      if (id) {
+        await fanOut(deps, updated, [{ ...d.event, id }], false);
+        sent++;
+      }
+    } catch (e) {
+      deps.log?.("check-in reminder failed", { flight: row.id, error: String(e) });
+    }
+  }
+  if (sent) deps.log?.("check-in reminders", { sent });
+  return sent;
+}
+
+/** One cron tick: claim due flights in small batches until the time budget is used. */
 export async function runPollCycle(deps: Deps, timeBudgetMs = 25_000) {
   const started = Date.now();
-  const stats = { polled: 0, errors: 0, events: 0, batches: 0, swept: 0 };
+  const stats = { polled: 0, errors: 0, events: 0, batches: 0, swept: 0, checkins: 0 };
   try {
     stats.swept = await sweepUnpushedEvents(deps);
   } catch (e) {
     deps.log?.("sweep failed", { error: String(e) });
+  }
+  try {
+    stats.checkins = await runCheckinReminders(deps);
+  } catch (e) {
+    deps.log?.("check-in step failed", { error: String(e) });
   }
   while (Date.now() - started < timeBudgetMs) {
     const batch = await deps.repo.claimDueFlights(deps.config.batchSize, deps.config.leaseSeconds);

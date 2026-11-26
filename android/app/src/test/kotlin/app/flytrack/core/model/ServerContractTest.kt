@@ -81,7 +81,7 @@ class ServerContractTest {
         assumeTrue("backend sources not present next to the android project", migrations.isDirectory)
         val sql = migrations.listFiles()!!.sortedBy { it.name }.joinToString("\n") { it.readText() }
         // the latest migration that redefines the check wins
-        val values = Regex("""add constraint user_flights_source_check check \(source in \(([^)]*)\)\)""")
+        val values = Regex("""add constraint user_flights_source_check\s+check\s*\(source in \(([^)]*)\)\)""")
             .findAll(sql).last().groupValues[1]
         assertEquals(Regex("'([^']+)'").findAll(values).map { it.groupValues[1] }.toList(), TrackSource.entries.map { it.wire })
     }

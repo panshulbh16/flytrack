@@ -34,3 +34,6 @@ verify_jwt = false # protected by the Authorization secret REVENUECAT_WEBHOOK_AU
 
 [functions.sync-entitlement]
 verify_jwt = true
+
+[functions.shared-flight]
+verify_jwt = false # public share link: the unguessable ?t= token is the only key; returns public fields only

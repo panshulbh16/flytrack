@@ -22,7 +22,9 @@ enum class AlertType(val critical: Boolean, val proOnly: Boolean = false) {
     CANCELLED(critical = true),
     DIVERTED(critical = true),
     REINSTATED(critical = true),
-    INBOUND_LATE(critical = true, proOnly = true);
+    INBOUND_LATE(critical = true, proOnly = true),
+    CHECKIN_OPEN(critical = false),
+    CHECKIN_CLOSING(critical = true);
 
     val wire: String get() = name
 

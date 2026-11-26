@@ -198,6 +198,7 @@ fun alertGroupTitle(group: AlertGroup): String = stringResource(
         AlertGroup.BAGGAGE -> R.string.flights_alert_baggage
         AlertGroup.DISRUPTION -> R.string.flights_alert_disruption
         AlertGroup.INBOUND_AIRCRAFT -> R.string.flights_alert_inbound
+        AlertGroup.CHECK_IN -> R.string.flights_alert_checkin
     },
 )
 
@@ -212,5 +213,6 @@ fun alertGroupDescription(group: AlertGroup): String = stringResource(
         AlertGroup.BAGGAGE -> R.string.flights_alert_baggage_description
         AlertGroup.DISRUPTION -> R.string.flights_alert_disruption_description
         AlertGroup.INBOUND_AIRCRAFT -> R.string.flights_alert_inbound_description
+        AlertGroup.CHECK_IN -> R.string.flights_alert_checkin_description
     },
 )

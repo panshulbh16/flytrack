@@ -1,4 +1,5 @@
 import type { EventType, FlightEvent, FlightRow } from "./types.ts";
+import { safeCheckinUrl } from "./checkin.ts";
 
 /** Android notification channels (created by the app with the same ids). */
 export const CHANNEL_CRITICAL = "flight_critical"; // gate/belt/delay/cancel/boarding — heads-up + sound
@@ -7,13 +8,14 @@ export const CHANNEL_UPDATES = "flight_updates"; // departed/landed/gate assigne
 /** Events that are always user-visible and time-critical. */
 const CRITICAL: EventType[] = [
   "GATE_CHANGE", "TERMINAL_CHANGE", "BOARDING", "BELT_ASSIGNED", "BELT_CHANGE",
-  "DELAY", "SCHEDULE_CHANGE", "CANCELLED", "DIVERTED", "REINSTATED", "INBOUND_LATE",
+  "DELAY", "SCHEDULE_CHANGE", "CANCELLED", "DIVERTED", "REINSTATED", "INBOUND_LATE", "CHECKIN_CLOSING",
 ];
 
 /** How long FCM should keep trying to deliver — a stale gate change is worse than none. */
 const TTL_SECONDS: Partial<Record<EventType, number>> = {
   GATE_ASSIGNED: 2 * 3600, GATE_CHANGE: 2 * 3600, BOARDING: 3600, TERMINAL_CHANGE: 3 * 3600,
   BELT_ASSIGNED: 2 * 3600, BELT_CHANGE: 2 * 3600, DEPARTED: 3 * 3600, LANDED: 2 * 3600,
+  CHECKIN_CLOSING: 30 * 60, // after the close it is useless
 };
 
 /** Same tag → a newer notification REPLACES the older one in the shade (no 3 stale gate alerts). */
@@ -106,6 +108,21 @@ export function renderEvent(e: FlightEvent, tz: Tz): { title: string; body: stri
           : `Not landing at ${p.origArr} as planned. New destination not announced yet.`,
       };
     }
+    case "CHECKIN_OPEN": {
+      const closes = fmtTimeOrNull(p.closes_at, tz.dep);
+      const dep = fmtTimeOrNull(p.estDep, tz.dep);
+      return {
+        title: `Web check-in is open: ${f}`,
+        body: [`${route}${dep ? ` departs ${dep}` : ""}.`, closes && `Check in online before ${closes}.`].filter(Boolean).join(" "),
+      };
+    }
+    case "CHECKIN_CLOSING": {
+      const closes = fmtTimeOrNull(p.closes_at, tz.dep);
+      return {
+        title: `Check-in closes soon: ${f}`,
+        body: `Web check-in for ${route} closes${closes ? ` at ${closes}` : " soon"}. Check in now.`,
+      };
+    }
     case "INBOUND_LATE": {
       const ib = p.inbound as Record<string, unknown>;
       return {
@@ -182,7 +199,12 @@ export function buildAlertMessage(token: string, flightId: string, eventId: stri
   const { title, body } = renderEvent(e, tz);
   const critical = CRITICAL.includes(e.type);
   const tag = `${flightId}:${tagGroup(e.type)}`;
-  const data = { kind: "alert", flight_id: flightId, event_id: eventId, event_type: e.type, title, body };
+  const data: Record<string, string> = { kind: "alert", flight_id: flightId, event_id: eventId, event_type: e.type, title, body };
+  // Check-in reminders: a tap opens the airline's page (top-level data key, also top level of APNs userInfo).
+  if (e.type === "CHECKIN_OPEN" || e.type === "CHECKIN_CLOSING") {
+    const url = safeCheckinUrl((e.payload as Record<string, unknown>)?.checkin_url);
+    if (url) data.checkin_url = url;
+  }
   return {
     token,
     data,

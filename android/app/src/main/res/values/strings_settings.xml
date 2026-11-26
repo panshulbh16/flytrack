@@ -29,6 +29,7 @@
     <string name="settings_alert_baggage">Baggage belt</string>
     <string name="settings_alert_disruption">Cancellation and diversion</string>
     <string name="settings_alert_inbound">Where\'s my plane</string>
+    <string name="settings_alert_checkin">Web check-in reminders</string>
     <string name="settings_alert_inbound_locked">Pro</string>
     <string name="settings_alert_switch">%1$s alerts</string>
 

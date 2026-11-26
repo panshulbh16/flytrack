@@ -189,3 +189,42 @@ Seed:
 | `20261126000009_security.sql` | `can_read_flight`, search quota, device cap |
 | `20261126000010_share_checkin.sql` | shares, check-in rules and columns, `scan` source |
 | `20261126000011_history.sql` | leg history, `live_seen`, coverage view |
+
+## 8. Status (26 Nov 2026)
+
+**Built**
+* **Backend:** billing webhook, `sync-entitlement`, trial, `can_read_flight`, search quota, device cap, share links + `shared-flight`, check-in reminders, leg history + coverage view, `scan` source.
+* **Web:** public share page `web/share/`.
+* **Android:** paywall, live notification, Glance widget, share, check-in card, cabin picker.
+* **iOS:** paywall, share, check-in card, seat/cabin/PNR editor.
+
+**Verified here**
+
+| Check | Result |
+|---|---|
+| Deno tests | 104 passed |
+| `deno check` | all 8 functions pass |
+| SQL suite | all files pass |
+| Android unit tests | 677 passed |
+| Android `assembleDebug` | succeeds |
+| iOS | **not compiled** (no Swift toolchain); run `swift test` + xcodebuild on a Mac |
+
+**Before going live**
+1. Apply migrations 08–12 **before** deploying the functions.
+2. Set the secrets:
+   * Supabase: `REVENUECAT_WEBHOOK_AUTH` (`openssl rand -hex 32`) and `REVENUECAT_SECRET_API_KEY`
+   * Android `local.properties`: `REVENUECAT_ANDROID_KEY`, `SHARE_BASE_URL`
+   * iOS xcconfig: `REVENUECAT_IOS_KEY`, `SHARE_BASE_URL`
+3. In RevenueCat and the stores:
+   * Create products `heygate_pro_yearly` (₹4,999), `heygate_pro_monthly` (₹499) and `heygate_trip_pass` (₹99, consumable, NOT attached to the `pro` entitlement).
+   * Create entitlement `pro` and offering `default`.
+   * Point the webhook at `/functions/v1/revenuecat-webhook`.
+4. Deploy `web/share/` (`config.js` → `SUPABASE_URL`) to the `SHARE_BASE_URL` host.
+5. Expect one `CHECKIN_OPEN` on the first tick after deploy for every tracked flight whose window is already open.
+
+**Open product decisions**
+* Live Activity is Pro-only on iOS (free on the trial flight).
+* Sandbox/TestFlight purchases currently grant real Pro.
+* The live notification is public on the lock screen.
+* Archiving a flight doesn't revoke its share link (only deleting does).
+* Check-in rules for AI, IX, QP and SG are unverified.

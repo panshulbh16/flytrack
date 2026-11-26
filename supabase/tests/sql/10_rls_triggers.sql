@@ -8,6 +8,7 @@ insert into auth.users (id) values
   ('00000000-0000-0000-0000-00000000000b'),  -- pro user B
   ('00000000-0000-0000-0000-00000000000c');  -- free user C
 update public.profiles set plan = 'pro' where id = '00000000-0000-0000-0000-00000000000b';
+update public.profiles set trial_used = true;
 
 insert into public.flights (id, carrier_iata, flight_number, flight_date, dep_iata, arr_iata, status, sched_dep, sched_arr,
                             alert_state, prediction, next_poll_at)
