@@ -317,7 +317,16 @@ function render(f, now = new Date()) {
   ]) {
     setText(`${side}-code`, ap.iata);
     setText(`${side}-city`, ap.name || ap.city || "");
-    setText(`${side}-time`, localTime(t.best, ap.tz, now) ?? "--:--");
+    // "13:45, 27 Nov": keep the big time on one line and put the date under it in small text.
+    const [clock, date] = (localTime(t.best, ap.tz, now) ?? "--:--").split(", ");
+    const timeEl = el(`${side}-time`);
+    timeEl.textContent = clock;
+    if (date) {
+      const d = document.createElement("span");
+      d.className = "time-date";
+      d.textContent = date;
+      timeEl.append(d);
+    }
     const was = el(`${side}-was`);
     was.textContent = "";
     if (t.was) {
