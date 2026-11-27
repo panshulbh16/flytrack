@@ -72,7 +72,7 @@ end $$;
 -- clients can call neither function
 begin;
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000c5a1","role":"authenticated"}', true);
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000c5a1"}';
 do $$ begin
   begin
     perform public.tripit_claim_callback(repeat('a', 64));
@@ -86,3 +86,4 @@ end $$;
 rollback;
 
 delete from public.tripit_connections where user_id in ('00000000-0000-0000-0000-00000000c5a1', '00000000-0000-0000-0000-00000000c5b1');
+\echo tripit csrf/cooldown: ok
