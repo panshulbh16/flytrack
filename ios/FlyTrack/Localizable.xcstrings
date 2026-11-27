@@ -10203,6 +10203,56 @@
           }
         }
       }
+    },
+    "This TripIt link was started from another account. Nothing was connected. Tap Connect TripIt to start again." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "यह TripIt लिंक किसी दूसरे अकाउंट से शुरू किया गया था। कुछ भी कनेक्ट नहीं हुआ। फिर से शुरू करने के लिए TripIt कनेक्ट करें पर टैप करें।"
+          }
+        }
+      }
+    },
+    "You just synced. Try again in %lld seconds." : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "You just synced. Try again in %lld second."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "You just synced. Try again in %lld seconds."
+                }
+              }
+            }
+          }
+        },
+        "hi" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "आपने अभी सिंक किया है। %lld सेकंड बाद फिर से कोशिश करें।"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "आपने अभी सिंक किया है। %lld सेकंड बाद फिर से कोशिश करें।"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

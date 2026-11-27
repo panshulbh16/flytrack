@@ -40,6 +40,9 @@ private final class P4FakeLocation: CoarseLocating {
     }
 }
 
+/// 43 base64url characters, the shape of tripit-callback's one-time code.
+private let tripItTestCode = "AbCdEfGhIjKlMnOpQrStUvWxYz0123456789-_abcde"
+
 @MainActor
 private final class P4FakeTripIt: TripItRepository {
     var statuses: [Result<TripItStatus, TripItFailure>] = []
@@ -47,6 +50,8 @@ private final class P4FakeTripIt: TripItRepository {
     var authorize: Result<URL, TripItFailure> = .success(URL(string: "https://www.tripit.com/oauth/authorize?oauth_token=abc")!)
     var syncResult: Result<TripItSyncSummary, TripItFailure> = .success(TripItSyncSummary(segments: 3, added: 2, existing: 1, notFound: 0, skipped: 0, errors: 0))
     var disconnectResult: Result<Void, TripItFailure> = .success(())
+    var completeResult: Result<Void, TripItFailure> = .success(())
+    var completedCodes: [String] = []
     var statusCalls = 0
     var syncCalls = 0
     var disconnectCalls = 0
@@ -57,6 +62,10 @@ private final class P4FakeTripIt: TripItRepository {
         return lastStatus
     }
     func authorizeURL() async -> Result<URL, TripItFailure> { authorize }
+    func complete(code: String) async -> Result<Void, TripItFailure> {
+        completedCodes.append(code)
+        return completeResult
+    }
     func sync() async -> Result<TripItSyncSummary, TripItFailure> {
         syncCalls += 1
         return syncResult
@@ -482,6 +491,39 @@ final class TripItParsingTests: XCTestCase {
         XCTAssertNil(parseTripItCallback(URL(string: "https://tripit/connected")!))
         XCTAssertNil(parseTripItCallback(URL(string: "heygate://tripit/other")!))
     }
+
+    func testCallbackCodeURL() {
+        let code = tripItTestCode
+        XCTAssertEqual(code.count, 43)
+        XCTAssertEqual(parseTripItCallback(URL(string: "heygate://tripit/callback?code=\(code)")!), .code(code))
+        XCTAssertEqual(parseTripItCallback(URL(string: "HEYGATE://TripIt/callback/?x=1&code=\(code)")!), .code(code))
+        // missing, short, long or non-base64url codes are a failed connect, never sent to the server
+        for bad in ["", "?code=", "?code=abc", "?code=\(code)x", "?code=\(code.dropLast())%2B", "?other=\(code)"] {
+            XCTAssertEqual(parseTripItCallback(URL(string: "heygate://tripit/callback\(bad)")!), .failed(.internalError), bad)
+        }
+        XCTAssertNil(parseTripItCallback(URL(string: "https://evil.example/tripit/callback?code=\(code)")!))
+        XCTAssertNil(parseTripItCallback(URL(string: "heygate://family/callback?code=\(code)")!))
+        XCTAssertFalse(String(describing: TripItCallback.code(code)).contains(code), "the one-time code is never printed")
+        XCTAssertTrue(isTripItCallbackCode(code))
+        XCTAssertFalse(isTripItCallbackCode(String(code.dropLast()) + "="))
+        let body = JSON.object(from: tripItCompleteBody(code: code))
+        XCTAssertEqual(body.flatMap { JSON.string($0["code"]) }, code)
+    }
+
+    func testCompleteAndCooldownFailures() {
+        XCTAssertEqual(tripItFailure(status: 403, body: body(#"{"error":"not_your_link"}"#)), .notYourLink)
+        XCTAssertEqual(tripItFailure(status: 410, body: body(#"{"error":"expired"}"#)), .expired)
+        XCTAssertEqual(tripItFailure(status: 409, body: body(#"{"error":"denied"}"#)), .denied)
+        XCTAssertEqual(
+            tripItFailure(status: 429, body: body(#"{"error":"cooldown","retry_after_s":42,"message":"retry_after_s=42"}"#)),
+            .cooldown(retryAfter: 42)
+        )
+        XCTAssertEqual(tripItFailure(status: 429, body: body(#"{"error":"cooldown"}"#)), .cooldown(retryAfter: 60))
+        XCTAssertEqual(tripItFailure(status: 429, body: body(#"{"error":"cooldown","retry_after_s":0}"#)), .cooldown(retryAfter: 1))
+        XCTAssertEqual(tripItFailure(status: 429, body: nil), .cooldown(retryAfter: 60))
+        XCTAssertEqual(tripItFailure(status: 410, body: nil), .expired)
+        XCTAssertEqual(tripItFailure(status: 403, body: nil), .notYourLink)
+    }
 }
 
 @MainActor
@@ -594,6 +636,83 @@ final class TripItModelTests: XCTestCase {
         repo.disconnectResult = .failure(.offline)
         await model.disconnect()
         XCTAssertEqual(model.state.message, .offline)
+    }
+
+    func testSignInSheetCodeIsCompletedAsTheSignedInUser() async {
+        let repo = P4FakeTripIt()
+        repo.statuses = [.success(.disconnected), .success(TripItStatus(connected: true, lastSyncAt: Date()))]
+        let authorizer = P4FakeAuthorizer()
+        authorizer.result = .callback(URL(string: "heygate://tripit/callback?code=\(tripItTestCode)")!)
+        let model = TripItModel(repository: repo, authorizer: authorizer, isPro: { true }, sleep: noSleep)
+        await model.load()
+        await model.connect()
+        XCTAssertEqual(repo.completedCodes, [tripItTestCode])
+        XCTAssertEqual(model.state.phase, .connected)
+        XCTAssertEqual(model.state.message, .connected)
+        XCTAssertFalse(model.state.busy)
+    }
+
+    func testCodeFromAnotherAccountIsNotYourLink() async {
+        let repo = P4FakeTripIt()
+        repo.completeResult = .failure(.notYourLink)
+        let authorizer = P4FakeAuthorizer()
+        authorizer.result = .callback(URL(string: "heygate://tripit/callback?code=\(tripItTestCode)")!)
+        let model = TripItModel(repository: repo, authorizer: authorizer, isPro: { true }, sleep: noSleep)
+        await model.load()
+        await model.connect()
+        XCTAssertEqual(model.state.message, .notYourLink)
+        XCTAssertEqual(model.state.phase, .disconnected)
+        XCTAssertFalse(model.state.busy)
+        repo.completeResult = .failure(.expired)
+        await model.connect()
+        XCTAssertEqual(model.state.message, .expired)
+    }
+
+    func testCodeDeepLinkFromOnOpenURL() async {
+        let repo = P4FakeTripIt()
+        repo.statuses = [.success(.disconnected), .success(TripItStatus(connected: true, lastSyncAt: Date()))]
+        let model = TripItModel(repository: repo, authorizer: P4FakeAuthorizer(), isPro: { true }, sleep: noSleep)
+        await model.load()
+        let handled = await model.handle(URL(string: "heygate://tripit/callback?code=\(tripItTestCode)")!)
+        XCTAssertTrue(handled)
+        XCTAssertEqual(repo.completedCodes, [tripItTestCode])
+        XCTAssertEqual(model.state.phase, .connected)
+        XCTAssertEqual(model.state.message, .connected)
+        // a malformed code is a failed connect without a server call
+        let bad = await model.handle(URL(string: "heygate://tripit/callback?code=nope")!)
+        XCTAssertTrue(bad)
+        XCTAssertEqual(repo.completedCodes.count, 1)
+        XCTAssertEqual(model.state.message, .failed)
+    }
+
+    func testSameCodeIsSentOnlyOnce() async {
+        let repo = P4FakeTripIt()
+        repo.statuses = [.success(.disconnected), .success(TripItStatus(connected: true, lastSyncAt: Date()))]
+        let url = URL(string: "heygate://tripit/callback?code=\(tripItTestCode)")!
+        let authorizer = P4FakeAuthorizer()
+        authorizer.result = .callback(url)
+        let model = TripItModel(repository: repo, authorizer: authorizer, isPro: { true }, sleep: noSleep)
+        await model.load()
+        await model.connect()
+        // the system delivers the same link again via onOpenURL: ignored, no second (expired) call
+        let handled = await model.handle(url)
+        XCTAssertTrue(handled)
+        XCTAssertEqual(repo.completedCodes, [tripItTestCode])
+        XCTAssertEqual(model.state.message, .connected)
+        XCTAssertFalse(model.state.busy)
+    }
+
+    func testSyncCooldown() async {
+        let repo = P4FakeTripIt()
+        repo.statuses = [.success(TripItStatus(connected: true, lastSyncAt: Date()))]
+        repo.syncResult = .failure(.cooldown(retryAfter: 42))
+        let model = TripItModel(repository: repo, authorizer: P4FakeAuthorizer(), isPro: { true }, sleep: noSleep)
+        await model.load()
+        await model.syncNow()
+        XCTAssertEqual(model.state.message, .cooldown(42))
+        XCTAssertEqual(model.state.phase, .connected)
+        XCTAssertFalse(model.state.syncing)
+        XCTAssertFalse(model.state.busy)
     }
 
     func testOfflineStatusIsUnknown() async {

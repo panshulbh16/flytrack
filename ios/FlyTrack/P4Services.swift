@@ -68,10 +68,13 @@ final class P4Functions {
 
     func get(_ name: String, query: [URLQueryItem]) async -> Answer { await call(name, method: "GET", query: query) }
 
-    /// POST with an empty JSON object (`tripit-connect`, `tripit-sync`, `tripit-disconnect`).
-    func post(_ name: String) async -> Answer { await call(name, method: "POST", query: []) }
+    /// POST with a JSON body, an empty object by default (`tripit-connect`, `tripit-sync`, `tripit-disconnect`;
+    /// `tripit-complete` sends `{"code": ...}`).
+    func post(_ name: String, body: Data = Data("{}".utf8)) async -> Answer {
+        await call(name, method: "POST", query: [], body: body)
+    }
 
-    private func call(_ name: String, method: String, query: [URLQueryItem]) async -> Answer {
+    private func call(_ name: String, method: String, query: [URLQueryItem], body: Data = Data("{}".utf8)) async -> Answer {
         guard let client = stack.client, let base = AppConfig.supabaseURL, let key = AppConfig.anonKey else { return .notConfigured }
         switch await auth.ensureSignedIn() {
         case .success, .googleAccountInUse: break
@@ -97,7 +100,7 @@ final class P4Functions {
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         if method == "POST" {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            request.httpBody = Data("{}".utf8)
+            request.httpBody = body
         }
         do {
             let (data, response) = try await session.data(for: request)
@@ -205,7 +208,8 @@ final class CoarseLocation: NSObject, CoarseLocating, CLLocationManagerDelegate 
 
 // MARK: - TripIt (section 2)
 
-/// `tripit-connect` / `tripit-sync` / `tripit-disconnect` (POST, user JWT) and the `tripit_status()` RPC.
+/// `tripit-connect` / `tripit-complete` / `tripit-sync` / `tripit-disconnect` (POST, user JWT) and the
+/// `tripit_status()` RPC.
 @MainActor
 final class LiveTripIt: TripItRepository {
     private let functions: P4Functions
@@ -236,6 +240,13 @@ final class LiveTripIt: TripItRepository {
         }
     }
 
+    func complete(code: String) async -> Result<Void, TripItFailure> {
+        switch await functions.post(TripItContract.functionComplete, body: tripItCompleteBody(code: code)) {
+        case .ok: return .success(())
+        case let answer: return .failure(mapFailure(answer))
+        }
+    }
+
     func sync() async -> Result<TripItSyncSummary, TripItFailure> {
         switch await functions.post(TripItContract.functionSync) {
         case .ok(let data): return parseTripItSyncSummary(data).map { .success($0) } ?? .failure(.failed)
@@ -262,7 +273,7 @@ final class LiveTripIt: TripItRepository {
 }
 
 /// TripIt's sign-in page in ASWebAuthenticationSession; the session catches the `heygate://tripit/...` redirect
-/// itself. Not ephemeral: a user already signed in to TripIt in Safari only has to tap Allow.
+/// itself (`heygate://tripit/callback?code=...`, finished by `TripItModel` with `tripit-complete`). Not ephemeral: a user already signed in to TripIt in Safari only has to tap Allow.
 @MainActor
 final class WebTripItAuthorizer: NSObject, TripItAuthorizing, ASWebAuthenticationPresentationContextProviding {
     private var session: ASWebAuthenticationSession?

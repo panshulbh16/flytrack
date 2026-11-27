@@ -601,6 +601,8 @@ private struct TripItRows: View {
         case .disconnected: String(localized: "TripIt is disconnected.")
         case .denied: String(localized: "TripIt wasn't connected because access was not allowed.")
         case .expired: String(localized: "That took too long. Please connect again.")
+        case .notYourLink: String(localized: "This TripIt link was started from another account. Nothing was connected. Tap Connect TripIt to start again.")
+        case .cooldown(let seconds): String(localized: "You just synced. Try again in \(seconds) seconds.")
         case .revoked: String(localized: "TripIt access was removed. Connect again to keep your trips in sync.")
         case .tripitError: String(localized: "TripIt isn't answering right now. Please try again later.")
         case .proRequired: String(localized: "TripIt sync is part of Pro. You can still disconnect TripIt.")

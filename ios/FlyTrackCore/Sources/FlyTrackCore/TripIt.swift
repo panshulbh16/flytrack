@@ -2,13 +2,18 @@ import Foundation
 
 // P4 section 2 (docs/P4_CONTRACTS.md, notes in section 7): TripIt sync, Pro only. The app opens the `authorize_url`
 // from `tripit-connect` in ASWebAuthenticationSession with the callback scheme `heygate`; `tripit-callback` ends at
-// `heygate://tripit/connected` or `heygate://tripit/failed?error=...`. Settings shows the status, "Sync now" and
-// "Disconnect". Same rules as Android's `feature/tripit`.
+// `heygate://tripit/callback?code=...` (or `heygate://tripit/failed?error=...`). TripIt sends no oauth_verifier, so
+// the callback never connects anything itself (login CSRF fix, migration 35): the app sends the one-time code to
+// `tripit-complete` with the signed-in user's JWT, and the server connects only the account that started the link.
+// `heygate://tripit/connected` is still understood (older server). Settings shows the status, "Sync now" (60 s
+// cooldown) and "Disconnect". Same rules as Android's `feature/tripit`.
 
 public enum TripItContract {
     public static let functionConnect = "tripit-connect"
     public static let functionSync = "tripit-sync"
     public static let functionDisconnect = "tripit-disconnect"
+    /// POST `{"code": ...}`: finishes the connect for the signed-in user.
+    public static let functionComplete = "tripit-complete"
     public static let rpcStatus = "tripit_status"
     /// ASWebAuthenticationSession's `callbackURLScheme`.
     public static let callbackScheme = "heygate"
@@ -94,6 +99,14 @@ public func parseTripItAuthorizeURL(_ data: Data) -> URL? {
 /// Errors of the TripIt functions (body `{ "error": ... }`).
 public enum TripItFailure: Error, Equatable, Sendable {
     case proRequired
+    /// `tripit-complete`: the TripIt link was started from another HeyGate account (nothing was connected).
+    case notYourLink
+    /// `tripit-complete`: the code is unknown, already used or older than 10 minutes.
+    case expired
+    /// `tripit-complete`: TripIt refused the token exchange.
+    case denied
+    /// `tripit-sync`: "Sync now" was used less than a minute ago; try again after `retryAfter` seconds.
+    case cooldown(retryAfter: Int)
     case notConnected
     case revoked
     case tripitError
@@ -106,9 +119,14 @@ public enum TripItFailure: Error, Equatable, Sendable {
 }
 
 public func tripItFailure(status: Int, body: Data?) -> TripItFailure {
-    let code = body.flatMap(JSON.object(from:)).flatMap { JSON.string($0["error"]) }
+    let object = body.flatMap(JSON.object(from:))
+    let code = object.flatMap { JSON.string($0["error"]) }
     switch code {
     case "pro_required": return .proRequired
+    case "not_your_link": return .notYourLink
+    case "expired": return .expired
+    case "denied": return .denied
+    case "cooldown": return .cooldown(retryAfter: cooldownSeconds(object.flatMap { JSON.int($0["retry_after_s"]) }))
     case "not_connected": return .notConnected
     case "tripit_revoked": return .revoked
     case "tripit_error": return .tripitError
@@ -118,6 +136,9 @@ public func tripItFailure(status: Int, body: Data?) -> TripItFailure {
     }
     switch status {
     case 402: return .proRequired
+    case 403: return .notYourLink
+    case 410: return .expired
+    case 429: return .cooldown(retryAfter: 60)
     case 409: return .notConnected
     case 502: return .tripitError
     case 503: return .notConfigured
@@ -125,8 +146,17 @@ public func tripItFailure(status: Int, body: Data?) -> TripItFailure {
     }
 }
 
+/// `retry_after_s` clamped to 1...60 (60 when absent).
+func cooldownSeconds(_ value: Int?) -> Int {
+    guard let value else { return 60 }
+    return min(max(value, 1), 60)
+}
+
 /// How `tripit-callback` sent the user back.
-public enum TripItCallback: Equatable, Sendable {
+public enum TripItCallback: Equatable, Sendable, CustomStringConvertible {
+    /// `heygate://tripit/callback?code=...`: finish with `tripit-complete` as the signed-in user.
+    case code(String)
+    /// Older server: the callback already connected.
     case connected
     case failed(TripItCallbackError)
 }
@@ -141,13 +171,42 @@ public enum TripItCallbackError: String, Sendable, Equatable {
     case internalError = "internal"
 }
 
-/// `heygate://tripit/connected` or `heygate://tripit/failed?error=denied|expired|tripit_error|not_configured|internal`.
-/// Nil for any other URL. An unknown error value reads as `internal`.
+extension TripItCallback {
+    /// Never prints the one-time code.
+    public var description: String {
+        switch self {
+        case .code: "code(***)"
+        case .connected: "connected"
+        case .failed(let error): "failed(\(error.rawValue))"
+        }
+    }
+}
+
+/// tripit-callback's one-time code: 32 random bytes, base64url without padding (43 characters).
+public func isTripItCallbackCode(_ value: String) -> Bool {
+    value.utf8.count == 43 && value.utf8.allSatisfy { c in
+        (c >= 0x41 && c <= 0x5A) || (c >= 0x61 && c <= 0x7A) || (c >= 0x30 && c <= 0x39) || c == 0x2D || c == 0x5F
+    }
+}
+
+/// The body of `tripit-complete`.
+public func tripItCompleteBody(code: String) -> Data {
+    (try? JSONSerialization.data(withJSONObject: ["code": code])) ?? Data("{}".utf8)
+}
+
+/// `heygate://tripit/callback?code=<43 base64url chars>`, `heygate://tripit/connected` or
+/// `heygate://tripit/failed?error=denied|expired|tripit_error|not_configured|internal`. Nil for any other URL. An
+/// unknown error value reads as `internal`; a callback without a well-formed code reads as `failed(internal)`.
 public func parseTripItCallback(_ url: URL) -> TripItCallback? {
     guard url.scheme?.lowercased() == TripItContract.callbackScheme,
           url.host?.lowercased() == TripItContract.callbackHost else { return nil }
     let step = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/")).lowercased()
     switch step {
+    case "callback":
+        let code = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?
+            .first(where: { $0.name == "code" })?.value
+        guard let code, isTripItCallbackCode(code) else { return .failed(.internalError) }
+        return .code(code)
     case "connected": return .connected
     case "failed":
         let value = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?
@@ -162,6 +221,8 @@ public func parseTripItCallback(_ url: URL) -> TripItCallback? {
 public protocol TripItRepository: AnyObject {
     func status() async -> Result<TripItStatus, TripItFailure>
     func authorizeURL() async -> Result<URL, TripItFailure>
+    /// `tripit-complete` with the code from `heygate://tripit/callback?code=...`, as the signed-in user.
+    func complete(code: String) async -> Result<Void, TripItFailure>
     func sync() async -> Result<TripItSyncSummary, TripItFailure>
     func disconnect() async -> Result<Void, TripItFailure>
 }
@@ -198,6 +259,10 @@ public enum TripItMessage: Equatable, Sendable {
     case disconnected
     case denied
     case expired
+    /// `not_your_link`: the TripIt link was started from another HeyGate account; nothing was connected.
+    case notYourLink
+    /// "Sync now" again within a minute: try again after this many seconds.
+    case cooldown(Int)
     case revoked
     case tripitError
     /// A connected user whose Pro ended tapped "Sync now": the row stays (Disconnect works without Pro).
@@ -288,10 +353,29 @@ public final class TripItModel {
     /// the redirect to the app). Returns false for other URLs.
     @discardableResult
     public func handle(_ url: URL) async -> Bool {
-        guard parseTripItCallback(url) != nil else { return false }
+        guard let callback = parseTripItCallback(url) else { return false }
+        if case .code(let code) = callback {
+            // A copy of a code this model already sent (the sign-in sheet's own callback and the system's deep link
+            // can both deliver it): its single-use code would only come back as expired.
+            if handledCodes.contains(code) { return true }
+            // Busy with something else (a sync, a disconnect, or a sign-in sheet still open while the user approved
+            // in Safari): finish it later instead of dropping the user's approval.
+            if state.busy {
+                deferredCallback = url
+                return true
+            }
+        } else if state.busy {
+            deferredCallback = url
+            return true
+        }
         await handleCallback(url, ownBusy: false)
         return true
     }
+
+    /// Codes already sent to `tripit-complete` (single use: never send one twice).
+    private var handledCodes: Set<String> = []
+    /// A deep link that arrived while the model was busy; handled by `finish`.
+    private var deferredCallback: URL?
 
     public func syncNow() async {
         guard begin() else { return }
@@ -334,14 +418,22 @@ public final class TripItModel {
     private func handleCallback(_ url: URL, ownBusy: Bool) async {
         if !ownBusy { state.busy = true }
         switch parseTripItCallback(url) {
-        case .connected?:
-            await reloadStatus()
-            finish(.connected)
-            for delay in followUpDelays where state.status.lastSyncAt == nil && state.phase == .connected {
-                await sleep(delay)
-                await reloadStatus()
-                publish()
+        case .code(let code)?:
+            // The server exchanges only when this signed-in account started the link; the code is single use.
+            if handledCodes.contains(code) {
+                finish(nil)
+                return
             }
+            handledCodes.insert(code)
+            publish()
+            switch await repository.complete(code: code) {
+            case .success:
+                await didConnect()
+            case .failure(let failure):
+                finish(completeFailureMessage(failure))
+            }
+        case .connected?:
+            await didConnect()
         case .failed(let error)?:
             switch error {
             case .denied: finish(.denied)
@@ -354,6 +446,26 @@ public final class TripItModel {
             }
         case nil:
             finish(.failed)
+        }
+    }
+
+    private func didConnect() async {
+        await reloadStatus()
+        finish(.connected)
+        for delay in followUpDelays where state.status.lastSyncAt == nil && state.phase == .connected {
+            await sleep(delay)
+            await reloadStatus()
+            publish()
+        }
+    }
+
+    /// The message for a failed `tripit-complete` (nil: the row changes instead).
+    private func completeFailureMessage(_ failure: TripItFailure) -> TripItMessage? {
+        switch failure {
+        case .notYourLink: return .notYourLink
+        case .expired: return .expired
+        case .denied: return .denied
+        default: return failureMessage(failure)
         }
     }
 
@@ -377,6 +489,10 @@ public final class TripItModel {
         case .revoked: return .revoked
         case .tripitError: return .tripitError
         case .offline: return .offline
+        case .cooldown(let seconds): return .cooldown(seconds)
+        case .notYourLink: return .notYourLink
+        case .expired: return .expired
+        case .denied: return .denied
         case .notConnected, .backendMissing, .failed: return .failed
         }
     }
@@ -393,6 +509,10 @@ public final class TripItModel {
         state.busy = false
         state.message = message
         publish()
+        if let url = deferredCallback {
+            deferredCallback = nil
+            Task { @MainActor [weak self] in await self?.handle(url) }
+        }
     }
 
     private func publish() { onChange?(state) }

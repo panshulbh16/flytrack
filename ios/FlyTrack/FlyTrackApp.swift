@@ -303,8 +303,9 @@ final class AppShell: ObservableObject {
             path.append(Route.family(familyInviteCode(fromURL: url)))
             return
         }
-        // heygate://tripit/connected or /failed?error=... when a browser handed TripIt's redirect to the app
-        // (P4 section 2); ASWebAuthenticationSession normally catches it itself. Settings holds the TripIt row.
+        // heygate://tripit/callback?code=... (or /connected, /failed?error=...) when a browser handed TripIt's
+        // redirect to the app (P4 section 2); ASWebAuthenticationSession normally catches it itself. Settings holds
+        // the TripIt row, whose model finishes a code with tripit-complete as the signed-in user.
         if parseTripItCallback(url) != nil {
             p4.pendingTripItCallback = url
             if !p4.settingsVisible { path.append(Route.settings) }
