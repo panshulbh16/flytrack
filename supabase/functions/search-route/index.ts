@@ -3,6 +3,8 @@
 // Response { flights: [<search-flight row shape>] }, so the apps reuse the add-flight result list.
 // The airport-day is cached for 6 h in route_search_cache; a provider fetch costs 2 units of the same daily
 // search quota as search-flight (reserve_search_units).
+// A cache miss writes the filtered legs in bulk before answering. Ingest of legs somebody already tracks
+// (the alert path) runs after the response, via EdgeRuntime.waitUntil.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { SearchError } from "../_shared/engine.ts";
 import { buildDeps } from "../_shared/deps.ts";
@@ -12,6 +14,8 @@ import { publishableKey } from "../_shared/supabase-keys.ts";
 import { serviceClient } from "../_shared/supabase-repo.ts";
 import type { FlightSnapshot } from "../_shared/types.ts";
 import { searchResponse } from "../search-flight/respond.ts";
+
+declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void } | undefined;
 
 const STATUS: Record<SearchError["code"], number> = {
   bad_input: 400,
@@ -72,13 +76,28 @@ Deno.serve(async (req) => {
       },
     };
 
+    const background: (() => Promise<void>)[] = [];
     const rows = await searchRoute(buildDeps({ userId: user.id }), store, {
       dep: body.dep ?? "",
       arr: body.arr ?? null,
       date: body.date ?? "",
       airline: body.airline ?? null,
+    }, {
+      defer: (start) => background.push(start),
     });
-    return json(await searchResponse(db, user.id, rows));
+    // Starts now so it overlaps the airport/pro lookups. On the Supabase runtime waitUntil keeps it
+    // alive after the response; without that runtime, wait so a tracked leg's alerts are not dropped.
+    const tail = background.length
+      ? Promise.all(background.map((start) => start())).catch((e) => {
+        log("route ingest failed", { error: String(e) });
+      })
+      : null;
+    const bodyOut = await searchResponse(db, user.id, rows);
+    if (tail) {
+      if (typeof EdgeRuntime !== "undefined") EdgeRuntime.waitUntil(tail);
+      else await tail;
+    }
+    return json(bodyOut);
   } catch (e) {
     if (e instanceof SearchError) return json({ error: e.code, message: e.message }, STATUS[e.code]);
     log("route search failed", { error: String(e) });

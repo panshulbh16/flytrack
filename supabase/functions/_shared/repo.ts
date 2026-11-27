@@ -17,6 +17,23 @@ export interface ProviderCallLog {
   userId?: string | null;
 }
 
+/** Columns a bulk flight update must address the row by. Other columns in the patch are written. */
+export interface FlightUpdate extends Partial<FlightRow> {
+  id: string;
+  carrier_iata: string;
+  flight_number: string;
+  flight_date: string;
+  dep_iata: string;
+}
+
+/** One flight_status_history insert. `source` is a value the table allows (`search`, `search_stale`, ...). */
+export interface HistoryWrite {
+  flightId: string;
+  source: string;
+  changed: TrackedField[];
+  snapshot: unknown;
+}
+
 export interface PushLogRow {
   eventId: string | null;
   deviceId: string;
@@ -39,11 +56,27 @@ export interface Repo {
   claimDueFlights(limit: number, leaseSeconds: number): Promise<FlightRow[]>;
   getFlight(id: string): Promise<FlightRow | null>;
   getFlightByKey(carrier: string, number: string, date: string, depIata: string): Promise<FlightRow | null>;
+  /** Every stored leg leaving `depIata` on `date`. One query; route search uses it instead of one lookup per flight. */
+  getFlightsByAirportDate(depIata: string, date: string): Promise<FlightRow[]>;
   getFlightsByNumberDate(carrier: string, number: string, date: string): Promise<FlightRow[]>;
   /** Insert (or return existing on unique-key conflict). */
   insertFlight(row: Partial<FlightRow>): Promise<FlightRow>;
+  /**
+   * Insert many new legs in one statement. A unique-key conflict returns the stored row and does not
+   * overwrite it (same as insertFlight). Order matches `rows`.
+   */
+  insertFlights(rows: Partial<FlightRow>[]): Promise<FlightRow[]>;
   updateFlight(id: string, patch: Partial<FlightRow>): Promise<FlightRow>;
+  /**
+   * Update many existing legs in one statement. Each row includes its id and unique key. Columns left
+   * out are not changed (tracker counts, webhook, inbound link). Order matches `rows`.
+   */
+  updateFlights(rows: FlightUpdate[]): Promise<FlightRow[]>;
   insertHistory(flightId: string, source: string, changed: TrackedField[], snapshot: unknown): Promise<void>;
+  /** One insert of many flight_status_history rows. */
+  insertHistories(rows: HistoryWrite[]): Promise<void>;
+  /** Which of these flights have an iOS Live Activity. One query. */
+  liveActivityFlightIds(flightIds: string[]): Promise<string[]>;
   /** Returns the new event id, or null if dedupe_key already existed (already sent). */
   insertEventIfNew(flightId: string, e: FlightEvent): Promise<string | null>;
   markEventsPushed(ids: string[]): Promise<void>;
@@ -199,10 +232,20 @@ export class MemoryRepo implements Repo {
   }
 
   getFlightByKey(c: string, n: string, d: string, dep: string) {
-    const f = [...this.flights.values()].find((x) =>
+    const f = this.findLeg(c, n, d, dep);
+    return Promise.resolve(f ? structuredClone(f) : null);
+  }
+
+  getFlightsByAirportDate(dep: string, date: string) {
+    return Promise.resolve(
+      [...this.flights.values()].filter((f) => f.dep_iata === dep && f.flight_date === date).map((f) => structuredClone(f)),
+    );
+  }
+
+  private findLeg(c: string, n: string, d: string, dep: string): FlightRow | undefined {
+    return [...this.flights.values()].find((x) =>
       x.carrier_iata === c && x.flight_number === n && x.flight_date === d && x.dep_iata === dep
     );
-    return Promise.resolve(f ? structuredClone(f) : null);
   }
 
   getFlightsByNumberDate(c: string, n: string, d: string) {
@@ -213,24 +256,38 @@ export class MemoryRepo implements Repo {
   }
 
   insertFlight(row: Partial<FlightRow>): Promise<FlightRow> {
-    const existing = [...this.flights.values()].find((x) =>
-      x.carrier_iata === row.carrier_iata && x.flight_number === row.flight_number &&
-      x.flight_date === row.flight_date && x.dep_iata === row.dep_iata
-    );
-    if (existing) return Promise.resolve(structuredClone(existing));
+    return Promise.resolve(structuredClone(this.putNew(row)));
+  }
+
+  insertFlights(rows: Partial<FlightRow>[]): Promise<FlightRow[]> {
+    return Promise.resolve(rows.map((row) => structuredClone(this.putNew(row))));
+  }
+
+  /** Insert, or the stored row when that leg already exists (insertFlight's conflict rule). */
+  private putNew(row: Partial<FlightRow>): FlightRow {
+    const existing = this.findLeg(row.carrier_iata ?? "", row.flight_number ?? "", row.flight_date ?? "", row.dep_iata ?? "");
+    if (existing) return existing;
     const id = `f${++this.seq}`;
     const full = { ...DEFAULT_ROW, ...row, id, updated_at: this.now().toISOString() } as FlightRow;
     this.applyCheckinWindow(full);
     this.flights.set(id, full);
-    return Promise.resolve(structuredClone(full));
+    return full;
   }
 
   updateFlight(id: string, patch: Partial<FlightRow>): Promise<FlightRow> {
+    return Promise.resolve(structuredClone(this.putPatch(id, patch)));
+  }
+
+  updateFlights(rows: FlightUpdate[]): Promise<FlightRow[]> {
+    return Promise.resolve(rows.map((row) => structuredClone(this.putPatch(row.id, row))));
+  }
+
+  private putPatch(id: string, patch: Partial<FlightRow>): FlightRow {
     const f = this.flights.get(id);
     if (!f) throw new Error(`no flight ${id}`);
     Object.assign(f, structuredClone(patch), { updated_at: this.now().toISOString() });
     this.applyCheckinWindow(f);
-    return Promise.resolve(structuredClone(f));
+    return f;
   }
 
   /** What the flights_checkin_window trigger does in SQL. */
@@ -242,8 +299,22 @@ export class MemoryRepo implements Repo {
   }
 
   insertHistory(flightId: string, source: string, changed: TrackedField[]) {
-    this.history.push({ flightId, source, changed, at: this.now().toISOString() });
+    this.pushHistory(flightId, source, changed);
     return Promise.resolve();
+  }
+
+  insertHistories(rows: HistoryWrite[]) {
+    for (const r of rows) this.pushHistory(r.flightId, r.source, r.changed);
+    return Promise.resolve();
+  }
+
+  private pushHistory(flightId: string, source: string, changed: TrackedField[]) {
+    this.history.push({ flightId, source, changed, at: this.now().toISOString() });
+  }
+
+  liveActivityFlightIds(ids: string[]) {
+    const want = new Set(ids);
+    return Promise.resolve([...new Set(this.liveActivities.filter((a) => want.has(a.flightId)).map((a) => a.flightId))]);
   }
 
   insertEventIfNew(flightId: string, e: FlightEvent): Promise<string | null> {

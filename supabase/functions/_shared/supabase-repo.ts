@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 import type { FlightEvent, FlightRow, Recipient, TrackedField } from "./types.ts";
-import type { LiveActivityTarget, ProviderCallLog, PushLogRow, Repo } from "./repo.ts";
+import type { FlightUpdate, HistoryWrite, LiveActivityTarget, ProviderCallLog, PushLogRow, Repo } from "./repo.ts";
 import { secretKey } from "./supabase-keys.ts";
 import type { CheckinRule } from "./checkin.ts";
 import type { LegHistoryRow } from "./history.ts";
@@ -42,6 +42,15 @@ export class SupabaseRepo implements Repo {
     ) as FlightRow | null;
   }
 
+  async getFlightsByAirportDate(dep: string, date: string) {
+    // One airport-day. PostgREST caps a response at 1000 rows; a day at one airport stays under that.
+    const rows = must(
+      await this.db.from("flights").select("*").eq("dep_iata", dep).eq("flight_date", date).limit(1000),
+      "getFlightsByAirportDate",
+    ) as FlightRow[] | null;
+    return rows ?? [];
+  }
+
   async getFlightsByNumberDate(c: string, n: string, d: string) {
     return must(
       await this.db.from("flights").select("*").eq("carrier_iata", c).eq("flight_number", n).eq("flight_date", d),
@@ -50,28 +59,85 @@ export class SupabaseRepo implements Repo {
   }
 
   async insertFlight(row: Partial<FlightRow>): Promise<FlightRow> {
-    // ON CONFLICT DO NOTHING, then read back — two concurrent searches can't create duplicates.
-    const ins = await this.db.from("flights").upsert(row, {
+    const [one] = await this.insertFlights([row]);
+    return one;
+  }
+
+  async insertFlights(rows: Partial<FlightRow>[]): Promise<FlightRow[]> {
+    if (!rows.length) return [];
+    // ON CONFLICT DO NOTHING — two concurrent searches can't create duplicates or clobber a tracked row.
+    // defaultToNull off: columns a row omits keep their database defaults, not NULL.
+    const ins = await this.db.from("flights").upsert(rows, {
       onConflict: "carrier_iata,flight_number,flight_date,dep_iata",
       ignoreDuplicates: true,
+      defaultToNull: false,
     }).select("*");
-    if (ins.error) throw new Error(`insertFlight: ${ins.error.message}`);
-    if (ins.data?.length) return ins.data[0] as FlightRow;
-    const existing = await this.getFlightByKey(row.carrier_iata!, row.flight_number!, row.flight_date!, row.dep_iata!);
-    if (!existing) throw new Error("insertFlight: conflict but row not found");
-    return existing;
+    if (ins.error) throw new Error(`insertFlights: ${ins.error.message}`);
+    const got = new Map((ins.data as FlightRow[]).map((r) => [legKey(r), r]));
+    if (got.size < rows.length) {
+      const missing = rows.filter((r) => !got.has(legKey(r)));
+      // A single conflicting insert (polls, flight-number search) reads that leg back by key.
+      // A big overlap reads the airport-day once instead of one lookup per row.
+      if (missing.length <= 8) {
+        for (const r of missing) {
+          if (!r.carrier_iata || !r.flight_number || !r.flight_date || !r.dep_iata) continue;
+          const existing = await this.getFlightByKey(r.carrier_iata, r.flight_number, r.flight_date, r.dep_iata);
+          if (existing) got.set(legKey(existing), existing);
+        }
+      } else {
+        for (const group of airportDays(rows)) {
+          for (const r of await this.getFlightsByAirportDate(group.dep, group.date)) got.set(legKey(r), r);
+        }
+      }
+    }
+    return rows.map((r) => {
+      const hit = got.get(legKey(r));
+      if (!hit) throw new Error("insertFlights: conflict but row not found");
+      return hit;
+    });
   }
 
   async updateFlight(id: string, patch: Partial<FlightRow>): Promise<FlightRow> {
     return must(await this.db.from("flights").update(patch).eq("id", id).select("*").single(), "updateFlight") as FlightRow;
   }
 
+  async updateFlights(rows: FlightUpdate[]): Promise<FlightRow[]> {
+    if (!rows.length) return [];
+    // id stays the stored id. Columns not in the payload (tracker counts, webhook, inbound) are not updated.
+    const payload = rows.map(({ id: _id, ...rest }) => rest);
+    const res = await this.db.from("flights").upsert(payload, {
+      onConflict: "carrier_iata,flight_number,flight_date,dep_iata",
+      defaultToNull: false,
+    }).select("*");
+    if (res.error) throw new Error(`updateFlights: ${res.error.message}`);
+    const got = new Map((res.data as FlightRow[]).map((r) => [legKey(r), r]));
+    return rows.map((r) => {
+      const hit = got.get(legKey(r));
+      if (!hit) throw new Error(`updateFlights: row missing after upsert (${legKey(r)})`);
+      return hit;
+    });
+  }
+
   async insertHistory(flightId: string, source: string, changed: TrackedField[], snapshot: unknown) {
-    const { raw: _raw, ...snap } = (snapshot ?? {}) as Record<string, unknown>; // don't store provider raw twice
-    must(
-      await this.db.from("flight_status_history").insert({ flight_id: flightId, source, changed_fields: changed, snapshot: snap }),
-      "insertHistory",
-    );
+    await this.insertHistories([{ flightId, source, changed, snapshot }]);
+  }
+
+  async insertHistories(rows: HistoryWrite[]) {
+    if (!rows.length) return;
+    const payload = rows.map((r) => {
+      const { raw: _raw, ...snap } = (r.snapshot ?? {}) as Record<string, unknown>; // don't store provider raw twice
+      return { flight_id: r.flightId, source: r.source, changed_fields: r.changed, snapshot: snap };
+    });
+    must(await this.db.from("flight_status_history").insert(payload), "insertHistories");
+  }
+
+  async liveActivityFlightIds(ids: string[]): Promise<string[]> {
+    if (!ids.length) return [];
+    const rows = must(
+      await this.db.from("live_activities").select("flight_id").in("flight_id", ids),
+      "liveActivityFlightIds",
+    ) as { flight_id: string }[] | null;
+    return [...new Set((rows ?? []).map((r) => r.flight_id))];
   }
 
   async insertEventIfNew(flightId: string, e: FlightEvent): Promise<string | null> {
@@ -216,4 +282,22 @@ export class SupabaseRepo implements Repo {
       "saveConnectionState",
     );
   }
+}
+
+function legKey(r: Partial<FlightRow>): string {
+  return `${r.carrier_iata}|${r.flight_number}|${r.flight_date}|${r.dep_iata}`;
+}
+
+/** Airport-days present in a bulk insert, so a conflict can be read back in one query per day. */
+function airportDays(rows: Partial<FlightRow>[]): { dep: string; date: string }[] {
+  const seen = new Set<string>();
+  const out: { dep: string; date: string }[] = [];
+  for (const r of rows) {
+    if (!r.dep_iata || !r.flight_date) continue;
+    const k = `${r.dep_iata}|${r.flight_date}`;
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push({ dep: r.dep_iata, date: r.flight_date });
+  }
+  return out;
 }

@@ -197,6 +197,167 @@ Deno.test("route search: cached snapshots never overwrite a newer stored row", a
   assertEquals(row.dep_gate, "42", "the stored row wins over the cached snapshot");
 });
 
+/** Counts Repo calls searchRoute makes. Internal calls (ingest → updateFlight) are not counted. */
+function spyRepo(repo: ReturnType<typeof makeDeps>["repo"]) {
+  const counts: Record<string, number> = {};
+  const args: Record<string, unknown[][]> = {};
+  const wrapped = new Proxy(repo, {
+    get(target, prop, recv) {
+      if (typeof prop !== "string") return Reflect.get(target, prop, recv);
+      const value = Reflect.get(target, prop, target);
+      if (typeof value !== "function") return value;
+      return (...a: unknown[]) => {
+        counts[prop] = (counts[prop] ?? 0) + 1;
+        (args[prop] ??= []).push(a);
+        return (value as (...xs: unknown[]) => unknown).apply(target, a);
+      };
+    },
+  });
+  return { repo: wrapped, counts, args };
+}
+
+const call = (counts: Record<string, number>, name: string) => counts[name] ?? 0;
+
+Deno.test("route search: cache miss of ~200 flights bulk-ingests only the requested arr and airline", async () => {
+  const h = makeDeps(NOW);
+  const spy = spyRepo(h.repo);
+  h.deps.repo = spy.repo;
+  const store = new MemRouteStore();
+  const matching = Array.from({ length: 200 }, (_, i) => snap({
+    date: DAY,
+    number: String(i + 1),
+    carrier: "6E",
+    arrIata: "BOM",
+    schedDep: new Date(Date.parse(`${DAY}T00:00:00Z`) + i * 60_000).toISOString(),
+  }));
+  const excluded = [
+    ...Array.from({ length: 15 }, (_, i) => snap({
+      date: DAY, number: String(201 + i), carrier: "6E", arrIata: "DXB",
+      schedDep: `${DAY}T18:00:00Z`,
+    })),
+    ...Array.from({ length: 15 }, (_, i) => snap({
+      date: DAY, number: String(i + 1), carrier: "AI", airlineName: "Air India", arrIata: "BOM",
+      schedDep: `${DAY}T18:10:00Z`,
+    })),
+    ...Array.from({ length: 10 }, (_, i) => snap({
+      date: DAY, number: String(16 + i), carrier: "AI", airlineName: "Air India", arrIata: "DXB",
+      schedDep: `${DAY}T18:20:00Z`,
+    })),
+  ];
+  h.provider.getAirportDepartures = () => Promise.resolve([...matching, ...excluded]);
+
+  const rows = await searchRoute(h.deps, store, { dep: "DEL", arr: "BOM", date: DAY, airline: "6E" });
+
+  assertEquals(rows.length, 200, "the matching legs, capped at the result list");
+  assert(rows.every((r) => r.carrier_iata === "6E" && r.arr_iata === "BOM" && r.flight_date === DAY));
+  assertEquals(h.repo.flights.size, 200, "excluded legs were not written");
+  for (const f of h.repo.flights.values()) {
+    assertEquals(f.carrier_iata, "6E");
+    assertEquals(f.arr_iata, "BOM");
+  }
+  const cached = store.cache.get(`DEL:${DAY}`)!;
+  assertEquals(cached.payload.length, 240, "the cache still holds the whole airport-day");
+  assert(cached.payload.some((s) => s.arrIata === "DXB"));
+  assert(cached.payload.some((s) => s.carrier === "AI"));
+
+  assertEquals(call(spy.counts, "insertFlights"), 1);
+  assertEquals((spy.args.insertFlights[0][0] as unknown[]).length, 200);
+  assertEquals(call(spy.counts, "insertHistories"), 1);
+  assertEquals((spy.args.insertHistories[0][0] as unknown[]).length, 200);
+  assertEquals(call(spy.counts, "getFlightsByAirportDate"), 1);
+  // The old path was one get + one insert + one history row per flight (~600 calls).
+  assertEquals(call(spy.counts, "insertFlight"), 0);
+  assertEquals(call(spy.counts, "getFlightByKey"), 0);
+  assertEquals(call(spy.counts, "insertHistory"), 0);
+  assertEquals(call(spy.counts, "updateFlight"), 0);
+  const total = Object.values(spy.counts).reduce((a, b) => a + b, 0);
+  assert(total <= 5, `cache-miss DB calls must stay bounded, got ${total}: ${JSON.stringify(spy.counts)}`);
+});
+
+Deno.test("route search: refreshing 200 stored untracked legs is still one bulk write", async () => {
+  const h = makeDeps(NOW);
+  const store = new MemRouteStore();
+  const snaps = Array.from({ length: 200 }, (_, i) => snap({
+    date: DAY,
+    number: String(i + 1),
+    schedDep: new Date(Date.parse(`${DAY}T00:00:00Z`) + i * 60_000).toISOString(),
+    estDep: new Date(Date.parse(`${DAY}T00:20:00Z`) + i * 60_000).toISOString(),
+  }));
+  h.provider.getAirportDepartures = () => Promise.resolve(snaps);
+  await searchRoute(h.deps, store, { dep: "DEL", date: DAY });
+  assertEquals(h.repo.flights.size, 200);
+
+  h.clock.advance(7 * 60); // cache expired
+  const spy = spyRepo(h.repo);
+  h.deps.repo = spy.repo;
+  const again = await searchRoute(h.deps, store, { dep: "DEL", date: DAY });
+  assertEquals(again.length, 200);
+  assertEquals(h.repo.flights.size, 200, "no duplicates");
+  assertEquals(call(spy.counts, "insertFlights"), 0);
+  assertEquals(call(spy.counts, "insertFlight"), 0);
+  assertEquals(call(spy.counts, "getFlightByKey"), 0);
+  assertEquals(call(spy.counts, "updateFlights"), 1);
+  assertEquals((spy.args.updateFlights[0][0] as unknown[]).length, 200);
+  assertEquals(call(spy.counts, "updateFlight"), 0);
+  const total = Object.values(spy.counts).reduce((a, b) => a + b, 0);
+  assert(total <= 6, `refresh DB calls must stay bounded, got ${total}: ${JSON.stringify(spy.counts)}`);
+  // tracker_count stays 0: a bulk update must not look like a fresh insert
+  for (const f of h.repo.flights.values()) assertEquals(f.tracker_count, 0);
+});
+
+Deno.test("route search: a new bulk-stored leg matches what ingest would have written", async () => {
+  const s = snap({ date: DAY, number: "77", depGate: "12", schedDep: `${DAY}T04:00:00Z` });
+  const h = makeDeps(NOW);
+  h.provider.getAirportDepartures = () => Promise.resolve([s]);
+  const [row] = await searchRoute(h.deps, new MemRouteStore(), { dep: "DEL", date: DAY });
+  const viaH = makeDeps(NOW);
+  const via = (await ingest(viaH.deps, null, s, "search")).row;
+  for (const f of ["status", "dep_gate", "sched_dep", "arr_iata", "last_polled_at", "next_poll_at", "live_seen", "provider"] as const) {
+    assertEquals(row[f], via[f], f);
+  }
+  assertEquals(row.alert_state, via.alert_state);
+  assertEquals(h.repo.history.map((x) => [x.source, x.changed]), viaH.repo.history.map((x) => [x.source, x.changed]));
+  assert(h.repo.history[0].changed.includes("depGate"));
+});
+
+Deno.test("route search: a tracked leg still alerts, and that ingest can finish after the response", async () => {
+  const h = makeDeps(NOW);
+  const old = snap({
+    date: DAY, number: "77", depGate: "1", schedDep: `${DAY}T04:00:00Z`,
+    providerUpdatedAt: `${DAY}T00:00:00Z`,
+  });
+  const existing = (await ingest(h.deps, null, old, "search")).row;
+  h.repo.track(existing.id, { userId: "u", isPro: false, prefs: {}, devices: [{ id: "d", token: "tok" }] });
+  const next = { ...old, depGate: "42", providerUpdatedAt: `${DAY}T01:00:00Z` };
+  h.provider.getAirportDepartures = () => Promise.resolve([next]);
+
+  const done = await searchRoute(h.deps, new MemRouteStore(), { dep: "DEL", date: DAY });
+  assertEquals(done[0].id, existing.id);
+  assertEquals(done[0].dep_gate, "42");
+  assertEquals(h.repo.flights.get(existing.id)!.dep_gate, "42", "without defer, ingest finishes before return");
+  assert(h.pusher.sent.some((m) => m.token === "tok" && m.data?.event_type === "GATE_CHANGE"));
+
+  const h2 = makeDeps(NOW);
+  const existing2 = (await ingest(h2.deps, null, old, "search")).row;
+  h2.repo.track(existing2.id, { userId: "u", isPro: false, prefs: {}, devices: [{ id: "d", token: "tok" }] });
+  h2.provider.getAirportDepartures = () => Promise.resolve([next]);
+  const later: { start: (() => Promise<void>) | null } = { start: null };
+  const preview = await searchRoute(h2.deps, new MemRouteStore(), { dep: "DEL", date: DAY }, {
+    defer: (fn) => {
+      later.start = fn;
+    },
+  });
+  assertEquals(preview[0].dep_gate, "42", "the response already shows the fresh gate");
+  assertEquals(h2.repo.flights.get(existing2.id)!.dep_gate, "1", "ingest has not run yet");
+  assertEquals(h2.pusher.sent.length, 0);
+  const start = later.start;
+  if (!start) throw new Error("tracked ingest was handed back to the caller");
+  await start();
+  assertEquals(h2.repo.flights.get(existing2.id)!.dep_gate, "42");
+  assert(h2.pusher.sent.some((m) => m.token === "tok" && m.data?.event_type === "GATE_CHANGE"));
+  assertEquals(h2.repo.flights.get(existing2.id)!.tracker_count, 1, "ingest must not reset trackers");
+});
+
 Deno.test("route search: filterDepartures keeps that day's legs from dep, sorted, capped", () => {
   const q = { dep: "DEL", arr: null, date: DAY, airline: null };
   const s = (n: string, over: Partial<FlightSnapshot>) => snap({ date: DAY, number: n, ...over });
