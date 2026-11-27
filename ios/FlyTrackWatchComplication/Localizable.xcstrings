@@ -1,0 +1,186 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%lld min late" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld मिनट लेट"
+          }
+        }
+      }
+    },
+    "Belt %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बेल्ट %@"
+          }
+        }
+      }
+    },
+    "Boarding" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बोर्डिंग"
+          }
+        }
+      }
+    },
+    "Cancelled" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रद्द"
+          }
+        }
+      }
+    },
+    "Check-in open" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "चेक-इन खुला"
+          }
+        }
+      }
+    },
+    "Departed" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रवाना"
+          }
+        }
+      }
+    },
+    "Diverted" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "डायवर्ट हुई"
+          }
+        }
+      }
+    },
+    "Gate %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "गेट %@"
+          }
+        }
+      }
+    },
+    "Gate %@ · T%@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "गेट %1$@ · T%2$@"
+          }
+        }
+      }
+    },
+    "Gate closed" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "गेट बंद"
+          }
+        }
+      }
+    },
+    "In the air" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "हवा में"
+          }
+        }
+      }
+    },
+    "Landed" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "लैंड हुई"
+          }
+        }
+      }
+    },
+    "Next flight" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अगली फ़्लाइट"
+          }
+        }
+      }
+    },
+    "No upcoming flights" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कोई आने वाली फ़्लाइट नहीं"
+          }
+        }
+      }
+    },
+    "On time" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "समय पर"
+          }
+        }
+      }
+    },
+    "Terminal %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "टर्मिनल %@"
+          }
+        }
+      }
+    },
+    "Track one in HeyGate" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HeyGate में कोई फ़्लाइट ट्रैक करें"
+          }
+        }
+      }
+    },
+    "Your next or current flight: status, times and gate." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपकी अगली या मौजूदा फ़्लाइट: स्टेटस, समय और गेट।"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

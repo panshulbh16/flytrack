@@ -36,6 +36,30 @@ interface AppNavigator {
 
     /** Email forwarding address (P2 wave 2). */
     fun openEmailForwarding() = Unit
+
+    /** P3 A3: calendar import. */
+    fun openCalendarImport() = Unit
+
+    /** P3 A3: add-flight filled in from a calendar suggestion (flight number, or route without one), source calendar. */
+    fun openAddFlightFromCalendar(flight: String?, date: String, from: String?, to: String?) = Unit
+
+    /** P3 B10: compare Passports with a friend. */
+    fun openFriendPassport(friendId: String, friendName: String?) = Unit
+
+    /** P3 B13: family sharing. */
+    fun openFamily(prefillCode: String? = null) = Unit
+
+    /** P4 radar: [iata] = ground radar; [lat]/[lon] = around a point; all null = planes near me. */
+    fun openRadar(iata: String?, lat: Double? = null, lon: Double? = null) = Unit
+
+    /** P4 terminal map of [iata], highlighting [gate] / [belt] when known. */
+    fun openTerminalMap(iata: String, gate: String? = null, belt: String? = null, flightId: String? = null) = Unit
+
+    /** P4 "Redeem a gift code". */
+    fun openRedeemGift(prefillCode: String? = null) = Unit
+
+    /** P4 "My gifts". */
+    fun openMyGifts() = Unit
     fun back()
 }
 

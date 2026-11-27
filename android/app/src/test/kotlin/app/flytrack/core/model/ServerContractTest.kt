@@ -74,7 +74,8 @@ class ServerContractTest {
     @Test
     fun `P2 alert types are appended in the order of types_ts`() {
         val wires = AlertType.entries.map { it.wire }
-        assertEquals(listOf("FOG_ALERT", "DIVERTED_DEST"), wires.takeLast(2))
+        // P3 types follow right after them (see the P3 test).
+        assertEquals(listOf("FOG_ALERT", "DIVERTED_DEST", "GATE_CLOSED"), wires.subList(wires.indexOf("FOG_ALERT"), wires.indexOf("FOG_ALERT") + 3))
         assertTrue(AlertType.FOG_ALERT.critical && AlertType.DIVERTED_DEST.critical)
         assertFalse(AlertType.FOG_ALERT.proOnly || AlertType.DIVERTED_DEST.proOnly)
     }
@@ -109,8 +110,35 @@ class ServerContractTest {
     }
 
     @Test
-    fun `only the inbound alert is Pro-only`() {
-        assertEquals(listOf(AlertType.INBOUND_LATE), AlertType.entries.filter { it.proOnly })
+    fun `only the inbound, aircraft swap and connection alerts are Pro-only`() {
+        assertEquals(
+            listOf(AlertType.INBOUND_LATE, AlertType.AIRCRAFT_SWAP, AlertType.CONNECTION_AT_RISK),
+            AlertType.entries.filter { it.proOnly },
+        )
+    }
+
+    @Test
+    fun `P3 alert types are appended in the order of the contract`() {
+        val p3 = listOf("GATE_CLOSED", "TAKEOFF", "AT_GATE", "AIRCRAFT_SWAP", "CONNECTION_AT_RISK")
+        assertEquals(p3, AlertType.entries.map { it.wire }.takeLast(5))
+        assertEquals(p3, stringArray(source("types.ts"), "EVENT_TYPES").takeLast(5))
+        // GATE_CLOSED / TAKEOFF / AT_GATE are info (flight_updates); the two Pro ones are critical.
+        assertFalse(AlertType.GATE_CLOSED.critical || AlertType.TAKEOFF.critical || AlertType.AT_GATE.critical)
+        assertTrue(AlertType.AIRCRAFT_SWAP.critical && AlertType.CONNECTION_AT_RISK.critical)
+    }
+
+    @Test
+    fun `P3 tags match tagGroup in notify_ts`() {
+        val tagGroup = source("notify.ts").substringAfter("function tagGroup").substringBefore("\n}")
+        fun serverTag(wire: String) = Regex("""t === "$wire"\) return "([^"]+)"""").find(tagGroup)?.groupValues?.get(1)
+        for (type in listOf(AlertType.GATE_CLOSED, AlertType.TAKEOFF, AlertType.CONNECTION_AT_RISK)) {
+            assertEquals(type.wire, serverTag(type.wire), app.flytrack.push.alertTagGroup(type))
+        }
+        // No own rule: the lower-cased name, like the server's fall-through.
+        for (type in listOf(AlertType.AT_GATE, AlertType.AIRCRAFT_SWAP)) {
+            assertNull(type.wire, serverTag(type.wire))
+            assertEquals(type.wire.lowercase(), app.flytrack.push.alertTagGroup(type))
+        }
     }
 
     @Test
@@ -120,8 +148,8 @@ class ServerContractTest {
         assertTrue("null pro_until is a lifetime grant", TestData.profile(plan = Plan.PRO, proUntil = null).isPro(now))
         assertTrue(TestData.profile(plan = Plan.PRO, proUntil = now + 1.days).isPro(now))
         assertFalse(TestData.profile(plan = Plan.PRO, proUntil = now - 1.days).isPro(now))
-        assertEquals(10, TestData.profile().trackingLimit(now))
-        assertEquals(50, TestData.profile(plan = Plan.PRO).trackingLimit(now))
+        assertEquals(100, TestData.profile().trackingLimit(now))
+        assertEquals(300, TestData.profile(plan = Plan.PRO).trackingLimit(now))
     }
 
     @Test

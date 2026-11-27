@@ -58,6 +58,8 @@ data class Passport(
     val byMonth: List<MonthCount>,
     /** ISO date "2025-12-03", null when there are no flights. */
     val firstFlightDate: String?,
+    /** P3 B12: off-block to on-block minutes (crew mode shows block hours); 0 when the server has none. */
+    val blockMinutes: Int = 0,
 ) {
     val isEmpty: Boolean get() = flights == 0
 }
@@ -83,6 +85,7 @@ private data class PassportDto(
     @SerialName("co2_method") val co2Method: String? = null,
     @SerialName("by_month") val byMonth: List<MonthDto>? = null,
     @SerialName("first_flight_date") val firstFlightDate: String? = null,
+    @SerialName("block_minutes") val blockMinutes: Int = 0,
 )
 
 @Serializable private data class AirportCountDto(val iata: String? = null, val count: Int = 0)
@@ -161,6 +164,7 @@ fun parsePassport(json: JsonObject, fallbackYear: Int): Passport {
         co2Method = dto.co2Method ?: CO2_METHOD_V1,
         byMonth = dto.byMonth.orEmpty().mapNotNull { m -> m.month?.let { MonthCount(it, m.flights) } },
         firstFlightDate = dto.firstFlightDate,
+        blockMinutes = dto.blockMinutes.coerceAtLeast(0),
     )
 }
 

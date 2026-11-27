@@ -4,6 +4,8 @@ import type { PushResult } from "./fcm.ts";
 import { type CheckinRule, checkinWindow, isCheckinDue } from "./checkin.ts";
 import type { LegHistoryRow } from "./history.ts";
 import { type FogCandidate, fogCandidates, type FogWeather } from "./health.ts";
+import type { AircraftRow } from "./aircraft.ts";
+import type { ConnectionCandidate, ConnectionRisk } from "./connections.ts";
 
 export interface ProviderCallLog {
   provider: string;
@@ -66,6 +68,14 @@ export interface Repo {
   getSharedFlight(token: string): Promise<Record<string, unknown> | null>;
   /** public.fog_alert_candidates(): tracked flights near a foggy airport without a FOG_ALERT yet (DB only). */
   getFogCandidates(limit: number): Promise<FogCandidate[]>;
+  /** fetched_at of the public.aircraft row for this registration, or null when there is none (P3 A5). */
+  getAircraftFetchedAt(reg: string): Promise<string | null>;
+  /** Insert or replace one public.aircraft row. */
+  upsertAircraft(row: AircraftRow): Promise<void>;
+  /** public.connection_alert_candidates(): Pro users' connections whose risk differs from the stored one (P3 B4). */
+  getConnectionCandidates(limit: number): Promise<ConnectionCandidate[]>;
+  /** public.save_connection_state(): the risk seen and the alert generation of one connection. */
+  saveConnectionState(inFlightId: string, outFlightId: string, risk: ConnectionRisk, gen: number): Promise<void>;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -101,7 +111,10 @@ export interface MemTracker {
   prefs: Record<string, boolean>;
   devices: { id: string; token: string }[];
   /** profiles fields returned by get_flight_recipients (P2): language and quiet hours. */
-  profile?: Pick<Recipient, "alert_language" | "quiet_hours_enabled" | "quiet_start" | "quiet_end" | "quiet_tz">;
+  profile?: Pick<
+    Recipient,
+    "alert_language" | "quiet_hours_enabled" | "quiet_start" | "quiet_end" | "quiet_tz" | "crew_mode"
+  >;
 }
 
 /**
@@ -134,6 +147,15 @@ export class MemoryRepo implements Repo {
   shares: MemShare[] = [];
   /** airport_weather rows by IATA (fog alerts). */
   weather = new Map<string, FogWeather>();
+  /** public.aircraft rows by registration. */
+  aircraft = new Map<string, AircraftRow>();
+  /**
+   * Connections as connections_for_user() would compute them for Pro users (tests set these; risk included).
+   * getConnectionCandidates() joins them with connectionState like the SQL function does.
+   */
+  connections: Omit<ConnectionCandidate, "last_risk" | "gen">[] = [];
+  /** public.connection_alert_state by "in:out". */
+  connectionState = new Map<string, { risk: ConnectionRisk; gen: number }>();
   private seq = 0;
 
   constructor(private readonly now: () => Date) {}
@@ -365,6 +387,32 @@ export class MemoryRepo implements Repo {
     return Promise.resolve(
       fogCandidates([...this.flights.values()], (iata) => this.weather.get(iata), tz, sent, this.now(), limit),
     );
+  }
+
+  getAircraftFetchedAt(reg: string): Promise<string | null> {
+    return Promise.resolve(this.aircraft.get(reg)?.fetched_at ?? null);
+  }
+
+  upsertAircraft(row: AircraftRow) {
+    this.aircraft.set(row.reg, structuredClone(row));
+    return Promise.resolve();
+  }
+
+  getConnectionCandidates(limit: number): Promise<ConnectionCandidate[]> {
+    const out: ConnectionCandidate[] = [];
+    for (const c of this.connections) {
+      const st = this.connectionState.get(`${c.in_flight_id}:${c.out_flight_id}`);
+      if (st?.risk === c.risk) continue;
+      out.push({ ...structuredClone(c), last_risk: st?.risk ?? null, gen: st?.gen ?? 0 });
+    }
+    return Promise.resolve(out.slice(0, limit));
+  }
+
+  saveConnectionState(inFlightId: string, outFlightId: string, risk: ConnectionRisk, gen: number) {
+    const key = `${inFlightId}:${outFlightId}`;
+    const prev = this.connectionState.get(key);
+    this.connectionState.set(key, { risk, gen: Math.max(prev?.gen ?? 0, gen) });
+    return Promise.resolve();
   }
 }
 

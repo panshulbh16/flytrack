@@ -44,12 +44,18 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.flytrack.R
-import app.flytrack.core.model.UserProfile
 import app.flytrack.feature.billing.ActivityPurchaseHost
 import app.flytrack.feature.billing.BillingContract
 import app.flytrack.feature.billing.PlanKind
 import app.flytrack.feature.billing.ProSource
 import app.flytrack.feature.billing.ProState
+import app.flytrack.feature.gift.GiftShopPane
+import app.flytrack.feature.gift.GiftTabRequest
+import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.Tab
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import app.flytrack.ui.components.ErrorState
 import app.flytrack.ui.components.FlyTrackTopBar
 import app.flytrack.ui.components.HairlineDivider
@@ -76,6 +82,9 @@ fun PaywallRoute(onBack: () -> Unit, viewModel: PaywallViewModel = hiltViewModel
         onRestore = viewModel::restore,
         onRetry = viewModel::retry,
         onMessageShown = viewModel::messageShown,
+        // P4 Gift Pro: a second tab that sells gift codes (feature/gift). Hidden in crew mode.
+        giftTab = if (LocalUpsellsHidden.current) null else { { GiftShopPane() } },
+        startOnGiftTab = remember { GiftTabRequest.consume() },
     )
 }
 
@@ -88,7 +97,11 @@ fun PaywallScreen(
     onRestore: () -> Unit,
     onRetry: () -> Unit,
     onMessageShown: () -> Unit,
+    /** P4: content of the "Gift Pro" tab; null = no tabs. Stateful, so previews leave it out. */
+    giftTab: (@Composable () -> Unit)? = null,
+    startOnGiftTab: Boolean = false,
 ) {
+    var giftSelected by rememberSaveable { mutableStateOf(startOnGiftTab && giftTab != null) }
     val snackbars = remember { SnackbarHostState() }
     val messageText = state.message?.let { paywallMessageTextFor(it) }
     LaunchedEffect(state.message) {
@@ -108,6 +121,19 @@ fun PaywallScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp),
         ) {
+            if (giftTab != null) {
+                PrimaryTabRow(selectedTabIndex = if (giftSelected) 1 else 0, containerColor = MaterialTheme.colorScheme.background) {
+                    Tab(selected = !giftSelected, onClick = { giftSelected = false }, text = { Text(stringResource(R.string.gift_tab_pro)) })
+                    Tab(selected = giftSelected, onClick = { giftSelected = true }, text = { Text(stringResource(R.string.gift_tab_gift)) })
+                }
+                Spacer(Modifier.height(16.dp))
+                if (giftSelected) {
+                    giftTab()
+                    LegalLinks()
+                    Spacer(Modifier.height(24.dp))
+                    return@Column
+                }
+            }
             Text(
                 text = stringResource(R.string.billing_paywall_title),
                 style = MaterialTheme.typography.displaySmall,
@@ -157,11 +183,7 @@ private fun Benefits() {
         Benefit(R.drawable.ic_plane, stringResource(R.string.billing_benefit_inbound_title), stringResource(R.string.billing_benefit_inbound_body))
         Benefit(R.drawable.ic_bell, stringResource(R.string.billing_benefit_late_title), stringResource(R.string.billing_benefit_late_body))
         Benefit(R.drawable.ic_clock, stringResource(R.string.billing_benefit_live_title), stringResource(R.string.billing_benefit_live_body))
-        Benefit(
-            R.drawable.ic_ticket,
-            stringResource(R.string.billing_benefit_limit_title),
-            stringResource(R.string.billing_benefit_limit_body, UserProfile.PRO_TRACKING_LIMIT, UserProfile.FREE_TRACKING_LIMIT),
-        )
+        // P3 A1: tracking is unlimited for everyone, so the number of flights is no longer a Pro benefit.
     }
 }
 
@@ -329,6 +351,7 @@ private fun LegalLinks() {
 /** "Pro until 3 Dec 2026" / "Trip pass until …" / "Pro, with no end date", in the phone's zone. */
 @Composable
 internal fun proUntilText(pro: ProState): String {
+    if (pro.isViaFamily) return familyProText(pro.familyOwnerName)
     val until = pro.proUntil ?: return stringResource(R.string.billing_pro_no_end)
     val date = formatProDate(until)
     return if (pro.source == ProSource.TRIP_PASS) {

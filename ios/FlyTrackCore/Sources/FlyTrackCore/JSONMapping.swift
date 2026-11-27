@@ -39,7 +39,13 @@ public func flight(from view: [String: Any]) -> Flight? {
         arrAirport: airport(prefix: "arr", in: view),
         inboundFlightId: JSON.string(view["inbound_flight_id"]),
         prediction: prediction(from: view["prediction"]),
-        hasProInsight: JSON.bool(view["has_pro_insight"]) ?? false
+        hasProInsight: JSON.bool(view["has_pro_insight"]) ?? false,
+        depOffblockAt: parseInstant(JSON.string(view["dep_offblock_at"])),
+        depRunwayAt: parseInstant(JSON.string(view["dep_runway_at"])),
+        arrRunwayAt: parseInstant(JSON.string(view["arr_runway_at"])),
+        arrOnblockAt: parseInstant(JSON.string(view["arr_onblock_at"])),
+        aircraftIcaoType: JSON.string(view["aircraft_icao_type"]),
+        aircraftAgeYears: JSON.double(view["aircraft_age_years"])
     )
 }
 
@@ -78,6 +84,12 @@ public func flightViewJSON(_ flight: Flight) -> String {
     putDate("last_polled_at", flight.lastPolledAt)
     putDate("updated_at", flight.updatedAt)
     put("inbound_flight_id", flight.inboundFlightId)
+    putDate("dep_offblock_at", flight.depOffblockAt)
+    putDate("dep_runway_at", flight.depRunwayAt)
+    putDate("arr_runway_at", flight.arrRunwayAt)
+    putDate("arr_onblock_at", flight.arrOnblockAt)
+    put("aircraft_icao_type", flight.aircraftIcaoType)
+    if let age = flight.aircraftAgeYears { object["aircraft_age_years"] = age }
     if let live = flight.live {
         object["live_lat"] = live.lat
         object["live_lon"] = live.lon

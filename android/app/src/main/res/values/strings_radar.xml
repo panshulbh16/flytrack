@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- feature/radar: ground radar and "Planes near me" (docs/P4_CONTRACTS.md section 1). -->
+    <string name="radar_title_ground">Ground radar · %1$s</string>
+    <string name="radar_title_near_me">Planes near me</string>
+    <string name="radar_title_around">Planes around your flight</string>
+    <string name="radar_action_ground">Ground radar</string>
+    <string name="radar_action_near_me">Planes near me</string>
+    <string name="radar_settings_near_me_message">Live aircraft within 75 km of you</string>
+    <string name="radar_cd_map">Radar map with %1$d aircraft</string>
+
+    <string name="radar_location_title">See the planes around you</string>
+    <string name="radar_location_message">HeyGate uses your approximate location only, rounded to about 5 km, and only while this screen is open.</string>
+    <string name="radar_location_action">Use my location</string>
+    <string name="radar_location_denied_title">Location not allowed</string>
+    <string name="radar_location_denied_message">Allow approximate location for HeyGate in your phone\'s settings to see planes near you.</string>
+    <string name="radar_location_open_settings">Open settings</string>
+    <string name="radar_location_off_title">Location is off</string>
+    <string name="radar_location_off_message">Turn on location in your phone\'s quick settings, then try again.</string>
+    <string name="radar_location_unavailable_title">Couldn\'t find you</string>
+    <string name="radar_location_unavailable_message">Your phone didn\'t share a position in time. Try again in a moment.</string>
+    <string name="radar_locating">Finding your area…</string>
+    <string name="radar_loading">Looking for aircraft…</string>
+
+    <string name="radar_coming_soon_title">Radar is coming soon</string>
+    <string name="radar_coming_soon_message">Live aircraft positions will appear here shortly. Your flights and alerts work as usual.</string>
+    <string name="radar_unknown_airport_title">No radar for this airport</string>
+    <string name="radar_unknown_airport_message">We don\'t know where %1$s is yet.</string>
+    <string name="radar_failed_title">Radar didn\'t load</string>
+    <string name="radar_failed_message">Something went wrong on our side. Try again in a moment.</string>
+
+    <string name="radar_pro_title">Radar is part of HeyGate Pro</string>
+    <string name="radar_pro_message">See aircraft taxiing at your airport and the planes flying over you, live.</string>
+    <string name="radar_pro_locked_crew">Radar needs HeyGate Pro.</string>
+
+    <plurals name="radar_count_ground">
+        <item quantity="one">%1$d aircraft on the ground</item>
+        <item quantity="other">%1$d aircraft on the ground</item>
+    </plurals>
+    <plurals name="radar_count_near">
+        <item quantity="one">%1$d aircraft within %2$d km</item>
+        <item quantity="other">%1$d aircraft within %2$d km</item>
+    </plurals>
+    <string name="radar_empty_ground">No aircraft on the ground right now.</string>
+    <string name="radar_empty_near">No aircraft within %1$d km right now.</string>
+    <string name="radar_refresh_note">Refreshes every 10 seconds</string>
+    <string name="radar_notice_offline">You\'re offline. Showing the last positions.</string>
+    <string name="radar_notice_feed">Positions didn\'t update this time. Trying again…</string>
+    <string name="radar_notice_slowed">Refreshing less often for a minute.</string>
+
+    <string name="radar_on_ground">On ground</string>
+    <string name="radar_altitude_ft">%1$s ft</string>
+    <string name="radar_speed_kts">%1$d kts</string>
+    <string name="radar_distance_km">%1$s km away</string>
+    <string name="radar_trend_climbing">Climbing</string>
+    <string name="radar_trend_descending">Descending</string>
+    <string name="radar_trend_level">Level</string>
+    <string name="radar_cd_row">%1$s, %2$s, %3$s, %4$s</string>
+    <string name="radar_selected">Selected</string>
+</resources>

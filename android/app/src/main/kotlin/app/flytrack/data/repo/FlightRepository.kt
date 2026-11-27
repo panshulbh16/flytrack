@@ -2,6 +2,7 @@ package app.flytrack.data.repo
 
 import app.flytrack.core.model.AlertType
 import app.flytrack.core.model.Flight
+import app.flytrack.core.model.RouteSearchQuery
 import app.flytrack.core.model.TrackExtras
 import app.flytrack.core.model.TrackedFlightDetails
 import app.flytrack.core.result.ActionResult
@@ -35,8 +36,22 @@ interface FlightRepository {
     suspend fun search(flightText: String, date: LocalDate): SearchResult
 
     /**
+     * P3 B6: [search] with `mode: "past"`, for dates up to 365 days back ([app.flytrack.core.time.PastSearchWindow]).
+     * The legs it finds are never polled; track them with `TrackExtras(archived = true)` so they land in Passport.
+     */
+    suspend fun searchPast(flightText: String, date: LocalDate): SearchResult
+
+    /**
+     * P3 B5: that day's departures from an airport through the `search-route` Edge Function (costs two units of
+     * the daily search quota). [query] is validated first ([RouteSearchQuery.isValid],
+     * [app.flytrack.core.time.RouteSearchWindow]). Found legs are cached like [search] results.
+     */
+    suspend fun searchRoute(query: RouteSearchQuery): SearchResult
+
+    /**
      * Starts tracking (inserts into `user_flights`). A flight that was archived earlier is
-     * un-archived instead. [extras] are validated first (PNR `^[A-Z0-9]{5,8}$`, seat up to 5
+     * un-archived instead, except for `extras.archived` (a past flight for Passport), which inserts an
+     * archived row and leaves an existing row as it is. [extras] are validated first (PNR `^[A-Z0-9]{5,8}$`, seat up to 5
      * characters, note up to 200).
      */
     suspend fun track(flightId: String, extras: TrackExtras = TrackExtras()): TrackResult

@@ -22,6 +22,8 @@ final class RevenueCatBilling: BillingGateway {
     private let apiKey: String
     private var latest: StoreEntitlement?
     private var packages: [PlanKind: Package] = [:]
+    /// P4 section 3: the gift consumables, fetched by product id (they are in no offering and no entitlement).
+    private var giftProducts: [GiftProduct: StoreProduct] = [:]
     private var listener: Task<Void, Never>?
     /// Called whenever CustomerInfo changes, so the Pro state on screen follows a renewal or an expiry.
     var onChange: (@MainActor () -> Void)?
@@ -148,7 +150,53 @@ final class RevenueCatBilling: BillingGateway {
 
     private static func code(_ error: Error) -> RevenueCat.ErrorCode? { (error as NSError).asErrorCode }
 }
+
+/// P4 section 3: Gift Pro. The purchase never grants Pro to the buyer (no entitlement); RevenueCat's webhook turns the
+/// transaction into a code, which the gift tab then reads from `my_gifts()`.
+extension RevenueCatBilling: GiftStore {
+    func loadGiftOffer() async -> GiftOfferResult {
+        configureIfNeeded()
+        let products = await Purchases.shared.products(GiftProduct.allCases.map(\.productId))
+        var found: [GiftProduct: StoreProduct] = [:]
+        var options: [GiftOption] = []
+        for product in products {
+            guard let gift = GiftProduct(productId: product.productIdentifier), found[gift] == nil else { continue }
+            found[gift] = product
+            options.append(GiftOption(
+                product: gift,
+                price: StorePrice(formatted: product.localizedPriceString, amount: product.price, currencyCode: product.currencyCode ?? "")
+            ))
+        }
+        giftProducts = found
+        return options.isEmpty ? .notAvailable : .available(options)
+    }
+
+    func purchaseGift(_ product: GiftProduct) async -> PurchaseOutcome {
+        configureIfNeeded()
+        if giftProducts[product] == nil { _ = await loadGiftOffer() }
+        guard let item = giftProducts[product] else { return .notAvailable }
+        do {
+            let result = try await Purchases.shared.purchase(product: item)
+            apply(result.customerInfo)
+            return result.userCancelled ? .cancelled : .purchased
+        } catch {
+            switch Self.code(error) {
+            case .purchaseCancelledError?: return .cancelled
+            case .paymentPendingError?: return .pending
+            case .networkError?, .offlineConnectionError?: return .offline
+            case .purchaseNotAllowedError?, .configurationError?, .productNotAvailableForPurchaseError?: return .notAvailable
+            default: return .failed(error.localizedDescription)
+            }
+        }
+    }
+}
 #endif
+
+/// The store for the paywall's Gift Pro tab: RevenueCat when configured, otherwise "Gifts coming soon".
+@MainActor
+func makeGiftStore(_ billing: BillingGateway) -> GiftStore {
+    (billing as? GiftStore) ?? UnavailableBilling()
+}
 
 /// The Pro state every screen reads. Reloaded at launch, after sign-in changes, after a purchase or restore, and when
 /// RevenueCat reports new CustomerInfo.

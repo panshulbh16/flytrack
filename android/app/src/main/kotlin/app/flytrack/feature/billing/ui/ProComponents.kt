@@ -37,6 +37,9 @@ import app.flytrack.feature.billing.FlightProAccess
 import app.flytrack.feature.billing.ProRepository
 import app.flytrack.feature.billing.ProState
 import app.flytrack.feature.billing.TrialFlightWatcher
+import app.flytrack.feature.family.FamilyRepository
+import app.flytrack.feature.social.ProfileFlagsRepository
+import kotlinx.coroutines.launch
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -54,28 +57,58 @@ val LocalPaywallLauncher = staticCompositionLocalOf { PaywallLauncher { } }
 /** The user's Pro state for any composable under [ProStateProvider]; [ProState.Free] in previews. */
 val LocalProState = compositionLocalOf { ProState.Free }
 
+/**
+ * P3 B12: true while crew mode is on. Every Pro upsell (teasers, "Go Pro", "See plans") checks it and shows
+ * nothing, so crew members are never sold to. Features keep working exactly as for any free user.
+ */
+val LocalUpsellsHidden = compositionLocalOf { false }
+
+/**
+ * P3 B12: crew mode is on (`profiles.crew_mode`). Screens use it for crew wording: block times on the timeline
+ * (off-block to on-block) and block hours in Passport. Provided next to [LocalUpsellsHidden].
+ */
+val LocalCrewMode = compositionLocalOf { false }
+
 /** Activity-wide Pro state; starting it also configures the store SDK. */
 @HiltViewModel
-class ProStatusViewModel @Inject constructor(pro: ProRepository, trialWatcher: TrialFlightWatcher) : ViewModel() {
+class ProStatusViewModel @Inject constructor(
+    pro: ProRepository,
+    trialWatcher: TrialFlightWatcher,
+    flags: ProfileFlagsRepository,
+    family: FamilyRepository,
+) : ViewModel() {
     init {
         pro.start()
         trialWatcher.start()
+        // P3: crew mode and family Pro are cached on the device; read them once per app start.
+        viewModelScope.launch { flags.refresh() }
+        viewModelScope.launch { family.myFamily() }
     }
 
     val state: StateFlow<ProState> = pro.observe().stateIn(viewModelScope, SharingStarted.Eagerly, ProState.Free)
+
+    val upsellsHidden: StateFlow<Boolean> = flags.crewMode.stateIn(viewModelScope, SharingStarted.Eagerly, false)
 }
 
-/** Provides [LocalProState] and [LocalPaywallLauncher] to [content]. Used once, by the NavHost. */
+/** Provides [LocalProState], [LocalUpsellsHidden] and [LocalPaywallLauncher] to [content]. Used once, by the NavHost. */
 @Composable
 fun ProStateProvider(onOpenPaywall: () -> Unit, content: @Composable () -> Unit) {
     val viewModel = hiltViewModel<ProStatusViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val upsellsHidden by viewModel.upsellsHidden.collectAsStateWithLifecycle()
     CompositionLocalProvider(
         LocalProState provides state,
+        LocalUpsellsHidden provides upsellsHidden,
+        LocalCrewMode provides upsellsHidden,
         LocalPaywallLauncher provides PaywallLauncher(onOpenPaywall),
         content = content,
     )
 }
+
+/** "Pro via Asha's family", or "Pro via your family" when the owner set no name. */
+@Composable
+fun familyProText(ownerName: String?): String =
+    if (ownerName != null) stringResource(R.string.family_pro_via, ownerName) else stringResource(R.string.family_pro_via_unnamed)
 
 /** Small pill: "Pro", or "Pro free for this flight". */
 @Composable
@@ -121,6 +154,7 @@ fun ProFlightBadge(flightId: String, modifier: Modifier = Modifier) {
  */
 @Composable
 fun ProTeaser(modifier: Modifier = Modifier, onClick: (() -> Unit)? = null) {
+    if (LocalUpsellsHidden.current) return
     val launcher = LocalPaywallLauncher.current
     val open = onClick ?: launcher::openPaywall
     Surface(

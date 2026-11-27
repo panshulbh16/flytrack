@@ -26,7 +26,13 @@ enum class TrackSource(val wire: String) {
     SCAN("scan"),
 
     /** Added by forwarding a booking email to the user's HeyGate address (P2 wave 2, section 2). */
-    EMAIL("email");
+    EMAIL("email"),
+
+    /** Added from a device-calendar suggestion (P3 A3). */
+    CALENDAR("calendar"),
+
+    /** Added by TripIt sync (P4 section 2); the server inserts these rows. */
+    TRIPIT("tripit");
 
     companion object {
         fun fromWire(value: String?): TrackSource = entries.firstOrNull { it.wire == value } ?: MANUAL
@@ -67,6 +73,11 @@ data class TrackExtras(
     val cabin: Cabin? = null,
     val source: TrackSource = TrackSource.MANUAL,
     val note: String? = null,
+    /**
+     * P3 B6: a past flight added for Passport. It is inserted with `archived_at = now()`, so it is never an
+     * active flight (no alerts, no tracking cap) and an existing row is never un-archived for it.
+     */
+    val archived: Boolean = false,
 ) {
     companion object {
         const val MAX_SEAT_LENGTH = 5

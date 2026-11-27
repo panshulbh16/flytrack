@@ -35,6 +35,7 @@ import app.flytrack.data.repo.SettingsStore
 import app.flytrack.feature.checkin.KEY_CHECKIN_URL
 import app.flytrack.feature.checkin.openCheckinPageFromPush
 import app.flytrack.feature.gmailimport.GmailAppOpenCheck
+import app.flytrack.feature.tripit.TripItDeepLinks
 import app.flytrack.ui.components.BackendNotConfiguredBanner
 import app.flytrack.ui.nav.EXTRA_GMAIL_SUGGESTION_ID
 import app.flytrack.ui.nav.FlyTrackNavHost
@@ -62,6 +63,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         // Only a fresh start handles the launch intent; after rotation it was already handled.
         if (savedInstanceState == null) {
+            // P4: heygate://tripit/... back from the TripIt Custom Tab; FlyTrackNavHost opens Settings for it.
+            TripItDeepLinks.offer(intent.dataString)
             viewModel.onIntent(intent.toIncomingIntent())
             openCheckinPageIfAsked(intent)
             ackOpenedAlert(intent)
@@ -96,6 +99,7 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        TripItDeepLinks.offer(intent.dataString)
         viewModel.onIntent(intent.toIncomingIntent())
         openCheckinPageIfAsked(intent)
         ackOpenedAlert(intent)

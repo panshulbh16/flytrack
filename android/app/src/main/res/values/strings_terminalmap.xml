@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- feature/terminalmap: offline terminal maps from OpenStreetMap (docs/P4_CONTRACTS.md section 4). -->
+    <string name="terminalmap_title">%1$s terminal map</string>
+    <string name="terminalmap_action_open">Terminal map</string>
+    <string name="terminalmap_not_available_title">Terminal map not available yet</string>
+    <string name="terminalmap_not_available_message">We don\'t have a map of %1$s yet. More airports are coming.</string>
+    <!-- Required by the ODbL licence: keep it visible on every terminal map. Not translated. -->
+    <string name="terminalmap_attribution" translatable="false">© OpenStreetMap contributors (ODbL)</string>
+    <string name="terminalmap_offline_note">Works offline</string>
+    <string name="terminalmap_cd_map">Map of the terminals at %1$s</string>
+
+    <string name="terminalmap_your_gate">Your gate %1$s</string>
+    <string name="terminalmap_gate_not_on_map">Gate %1$s isn\'t on this map yet.</string>
+    <string name="terminalmap_gate_unknown">Your gate will be marked here once it\'s announced.</string>
+    <string name="terminalmap_belt">Baggage belt %1$s</string>
+    <string name="terminalmap_belt_area">Baggage belts are highlighted on the map.</string>
+
+    <string name="terminalmap_section_places">Places</string>
+    <string name="terminalmap_search_label">Search food, toilets, lounges…</string>
+    <string name="terminalmap_search_clear">Clear search</string>
+    <string name="terminalmap_no_places">No places mapped here yet.</string>
+    <string name="terminalmap_no_match">Nothing matches \"%1$s\".</string>
+    <string name="terminalmap_level">Level %1$s</string>
+    <string name="terminalmap_metres_from_gate">About %1$d m from your gate</string>
+    <string name="terminalmap_show_on_map">Show on map</string>
+
+    <string name="terminalmap_kind_food">Food</string>
+    <string name="terminalmap_kind_toilets">Toilets</string>
+    <string name="terminalmap_kind_lounge">Lounge</string>
+    <string name="terminalmap_kind_atm">ATM</string>
+    <string name="terminalmap_kind_prayer_room">Prayer room</string>
+    <string name="terminalmap_kind_pharmacy">Pharmacy</string>
+    <string name="terminalmap_kind_charging">Charging</string>
+    <string name="terminalmap_kind_shop">Shop</string>
+
+    <string name="terminalmap_pro_title">Terminal maps are part of HeyGate Pro</string>
+    <string name="terminalmap_pro_message">Find your gate, food, toilets and lounges, even offline.</string>
+    <string name="terminalmap_pro_locked_crew">Terminal maps need HeyGate Pro.</string>
+</resources>

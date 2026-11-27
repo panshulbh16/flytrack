@@ -148,31 +148,32 @@ do $$ declare r text; begin
            where user_id = '00000000-0000-0000-0000-0000000098a1' and flight_id = '98989898-0000-0000-0000-000000000002'),
          'unarchived, PNR filled in';
 end $$;
--- the tracking limit is reported, not raised (free user a2 with 10 active flights)
+-- the tracking limit is reported, not raised (free user a2 with 100 active flights: the P3 cap)
+-- flight i has id 98989898-0000-0000-0000-00000001 + 4 digits; i = 0 ends in ...010000, i = 100 in ...010100
 insert into public.flights (id, carrier_iata, flight_number, flight_date, dep_iata, arr_iata, sched_dep, sched_arr)
-select ('98989898-0000-0000-0000-0000000001' || lpad(i::text, 2, '0'))::uuid, 'SG', (9850 + i)::text, current_date + 5,
+select ('98989898-0000-0000-0000-00000001' || lpad(i::text, 4, '0'))::uuid, 'SG', (8500 + i)::text, current_date + 5,
        'DEL', 'BOM', now() + interval '5 days', now() + interval '5 days 2 hours'
-  from generate_series(0, 10) i;
+  from generate_series(0, 100) i;
 insert into public.user_flights (user_id, flight_id)
-select '00000000-0000-0000-0000-0000000098a2', ('98989898-0000-0000-0000-0000000001' || lpad(i::text, 2, '0'))::uuid
-  from generate_series(0, 9) i;
+select '00000000-0000-0000-0000-0000000098a2', ('98989898-0000-0000-0000-00000001' || lpad(i::text, 4, '0'))::uuid
+  from generate_series(0, 99) i;
 do $$ begin
-  assert public.import_track_flight('00000000-0000-0000-0000-0000000098a2', '98989898-0000-0000-0000-000000000110', null) = 'limit',
+  assert public.import_track_flight('00000000-0000-0000-0000-0000000098a2', '98989898-0000-0000-0000-000000010100', null) = 'limit',
          'limit reported';
   assert not exists (select 1 from public.user_flights where user_id = '00000000-0000-0000-0000-0000000098a2'
-                      and flight_id = '98989898-0000-0000-0000-000000000110'), 'nothing inserted at the limit';
+                      and flight_id = '98989898-0000-0000-0000-000000010100'), 'nothing inserted at the limit';
 end $$;
 -- a user already over the limit (e.g. after a downgrade) re-importing an active flight gets 'exists' and
 -- the PNR, not 'limit': filling the PNR must not re-run the tracking-limit trigger
 alter table public.user_flights disable trigger user_flights_limit;
 insert into public.user_flights (user_id, flight_id)
-values ('00000000-0000-0000-0000-0000000098a2', '98989898-0000-0000-0000-000000000110');
+values ('00000000-0000-0000-0000-0000000098a2', '98989898-0000-0000-0000-000000010100');
 alter table public.user_flights enable trigger user_flights_limit;
 do $$ declare r text; begin
-  r := public.import_track_flight('00000000-0000-0000-0000-0000000098a2', '98989898-0000-0000-0000-000000000100', 'xyz789');
+  r := public.import_track_flight('00000000-0000-0000-0000-0000000098a2', '98989898-0000-0000-0000-000000010000', 'xyz789');
   assert r = 'exists', 'over the limit, already tracked: ' || r;
   assert (select pnr from public.user_flights where user_id = '00000000-0000-0000-0000-0000000098a2'
-           and flight_id = '98989898-0000-0000-0000-000000000100') = 'XYZ789', 'PNR filled in over the limit';
+           and flight_id = '98989898-0000-0000-0000-000000010000') = 'XYZ789', 'PNR filled in over the limit';
 end $$;
 
 -- clients can insert source 'email' rows too (the check accepts every source, unknown ones fail)

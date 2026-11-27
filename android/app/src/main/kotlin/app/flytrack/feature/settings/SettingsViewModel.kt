@@ -14,6 +14,9 @@ import app.flytrack.feature.flights.presentation.AlertGroup
 import app.flytrack.feature.flights.presentation.AlertToggleUiModel
 import app.flytrack.feature.gmailimport.GmailConnection
 import app.flytrack.feature.gmailimport.GmailWorkScheduler
+import app.flytrack.feature.social.FamilyGrant
+import app.flytrack.feature.social.NoSocialStore
+import app.flytrack.feature.social.SocialStore
 import app.flytrack.push.NotificationHealth
 import app.flytrack.push.NotificationHealthSource
 import app.flytrack.push.PushAvailability
@@ -78,6 +81,8 @@ class SettingsViewModel @Inject constructor(
     private val gmailConnection: GmailConnection,
     private val gmailWork: GmailWorkScheduler,
     version: AppVersion,
+    /** P3 B13: a family member is Pro on the server while their own `plan` stays free. */
+    private val social: SocialStore = NoSocialStore,
 ) : ViewModel() {
 
     private val health = MutableStateFlow(healthSource.read())
@@ -90,6 +95,7 @@ class SettingsViewModel @Inject constructor(
         val profile: app.flytrack.core.model.UserProfile?,
         val consent: Boolean,
         val muted: Set<AlertType>,
+        val familyGrant: FamilyGrant?,
     )
 
     private data class Transient(
@@ -105,7 +111,8 @@ class SettingsViewModel @Inject constructor(
         profiles.observeProfile(),
         settings.cloudTicketParsingConsent,
         defaultAlerts.muted,
-    ) { session, profile, consent, muted -> Stored(session, profile, consent, muted) }
+        social.familyGrant,
+    ) { session, profile, consent, muted, family -> Stored(session, profile, consent, muted, family) }
 
     private val transient = combine(health, push.availability, linking, message, pendingToken) { healthNow, pushNow, isLinking, msg, token ->
         Transient(healthNow, pushNow, isLinking, msg, token)
@@ -118,7 +125,10 @@ class SettingsViewModel @Inject constructor(
     ) { email, autoCheck, needsReconnect -> email?.let { GmailSettingsUi(it, autoCheck, needsReconnect) } }
 
     val uiState: StateFlow<SettingsUiState> = combine(stored, transient, gmail) { storedNow, transientNow, gmailNow ->
-        val isPro = storedNow.profile?.isPro(clock.now()) == true
+        // Own Pro, or Pro through a family (the cached my_family / sync-entitlement grant of this user).
+        val signedInUser = (storedNow.session as? SessionState.SignedIn)?.userId
+        val viaFamily = signedInUser != null && storedNow.familyGrant?.userId == signedInUser
+        val isPro = storedNow.profile?.isPro(clock.now()) == true || viaFamily
         SettingsUiState(
             account = storedNow.session.toAccount(),
             linking = transientNow.linking,

@@ -105,15 +105,6 @@
 
     <!-- Problems when tracking a leg -->
     <string name="addflight_limit_title">ट्रैकिंग की सीमा पूरी हो गई</string>
-    <!-- %1$d is the free limit (also the plural count), %2$d the Pro limit -->
-    <plurals name="addflight_limit_message_free">
-        <item quantity="one">आप पहले से %1$d फ़्लाइट ट्रैक कर रहे हैं, जो फ़्री प्लान की अधिकतम सीमा है। Pro में %2$d तक फ़्लाइट्स ट्रैक होती हैं। जिस फ़्लाइट की अब ज़रूरत नहीं, उसे आर्काइव करें या हटाएँ, फिर इसे ट्रैक करें।</item>
-        <item quantity="other">आप पहले से %1$d फ़्लाइट्स ट्रैक कर रहे हैं, जो फ़्री प्लान की अधिकतम सीमा है। Pro में %2$d तक फ़्लाइट्स ट्रैक होती हैं। जिस फ़्लाइट की अब ज़रूरत नहीं, उसे आर्काइव करें या हटाएँ, फिर इसे ट्रैक करें।</item>
-    </plurals>
-    <plurals name="addflight_limit_message_pro">
-        <item quantity="one">आप पहले से %1$d फ़्लाइट ट्रैक कर रहे हैं, जो Pro की अधिकतम सीमा है। जिस फ़्लाइट की अब ज़रूरत नहीं, उसे आर्काइव करें या हटाएँ, फिर इसे ट्रैक करें।</item>
-        <item quantity="other">आप पहले से %1$d फ़्लाइट्स ट्रैक कर रहे हैं, जो Pro की अधिकतम सीमा है। जिस फ़्लाइट की अब ज़रूरत नहीं, उसे आर्काइव करें या हटाएँ, फिर इसे ट्रैक करें।</item>
-    </plurals>
     <string name="addflight_limit_action">मेरी फ़्लाइट्स पर जाएँ</string>
     <string name="addflight_track_offline">आप ऑफ़लाइन हैं, इसलिए यह फ़्लाइट नहीं जुड़ी। अपना कनेक्शन जाँचें और फिर से ट्रैक करें दबाएँ।</string>
     <string name="addflight_track_gone">यह फ़्लाइट अब उपलब्ध नहीं है। नई जानकारी के लिए फिर से खोजें।</string>

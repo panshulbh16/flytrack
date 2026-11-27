@@ -53,6 +53,9 @@ fun Passport.monthBars(today: LocalDate): List<MonthBar> {
     }
 }
 
+/** P3 B12: whole block hours (off-block to on-block), rounded to the nearest hour. */
+val Passport.blockHours: Int get() = (blockMinutes / 60.0).roundToInt()
+
 /** Whole hours in the air, rounded to the nearest hour. */
 val Passport.hoursInAir: Int get() = (airborneMinutes / 60.0).roundToInt()
 
@@ -67,14 +70,19 @@ val Passport.earthLaps: Double?
     }
 
 /** Big numbers of the stats grid, in display order. */
-enum class StatKind { FLIGHTS, DISTANCE_KM, HOURS, AIRPORTS, COUNTRIES, AIRLINES }
+enum class StatKind {
+    FLIGHTS, DISTANCE_KM, HOURS, AIRPORTS, COUNTRIES, AIRLINES,
+
+    /** P3 B12: crew mode counts block hours (off-block to on-block) instead of hours in the air. */
+    BLOCK_HOURS,
+}
 
 data class StatTile(val kind: StatKind, val value: Int)
 
-fun Passport.statTiles(): List<StatTile> = listOf(
+fun Passport.statTiles(crewMode: Boolean = false): List<StatTile> = listOf(
     StatTile(StatKind.FLIGHTS, flights),
     StatTile(StatKind.DISTANCE_KM, distanceKm),
-    StatTile(StatKind.HOURS, hoursInAir),
+    if (crewMode) StatTile(StatKind.BLOCK_HOURS, blockHours) else StatTile(StatKind.HOURS, hoursInAir),
     StatTile(StatKind.AIRPORTS, airports.size),
     StatTile(StatKind.COUNTRIES, countries.size),
     StatTile(StatKind.AIRLINES, airlines.size),

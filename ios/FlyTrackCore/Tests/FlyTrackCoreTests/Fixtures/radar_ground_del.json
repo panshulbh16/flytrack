@@ -1,0 +1,14 @@
+{
+  "center": { "lat": 28.5665, "lon": 77.1031 },
+  "radius_km": 5,
+  "aircraft": [
+    { "icao24": "800C1A", "callsign": "IGO2341", "reg": "VT-IZA", "lat": 28.5702, "lon": 77.1105, "alt_ft": 0, "gs_kts": 12.4, "track_deg": 271.6, "on_ground": true, "seen_at": "2026-11-27T10:15:02Z", "flight": "6E2341" },
+    { "icao24": "800b44", "callsign": "AIC101", "lat": 28.5668, "lon": 77.1035, "alt_ft": 0, "gs_kts": 0, "track_deg": -90, "on_ground": true, "seen_at": "2026-11-27T10:15:01Z" },
+    { "icao24": "8015c3", "callsign": "", "reg": "VT-ANB", "lat": 28.5500, "lon": 77.0900, "alt_ft": 0, "gs_kts": 3, "track_deg": 725, "on_ground": true, "seen_at": "2026-11-27T10:14:58Z" },
+    { "icao24": "80a1b2", "callsign": "SEJ8169", "lat": 28.5800, "lon": 77.1200, "alt_ft": 2300, "gs_kts": 160, "track_deg": 100, "on_ground": false, "vrate_fpm": 1800, "seen_at": "2026-11-27T10:15:00Z" },
+    { "icao24": "", "callsign": "BAD1", "lat": 28.5, "lon": 77.1, "alt_ft": 0, "gs_kts": 0, "track_deg": 0, "on_ground": true, "seen_at": "2026-11-27T10:15:00Z" },
+    { "icao24": "800fff", "callsign": "NOPOS", "alt_ft": 0, "gs_kts": 0, "track_deg": 0, "on_ground": true, "seen_at": "2026-11-27T10:15:00Z" }
+  ],
+  "feed": "opensky",
+  "as_of": "2026-11-27T10:15:05.120Z"
+}

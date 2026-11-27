@@ -355,18 +355,24 @@ public enum AlertGroup: String, CaseIterable, Sendable, Equatable {
     case delays, gate, boarding, takeoffAndLanding, baggage, disruption, inboundAircraft, checkin
     /// Fog and low visibility at either airport (FOG_ALERT, free). Same group as Android's WEATHER.
     case weather
+    /// P3: the airline swapped the aircraft before departure (Pro). Android's AIRCRAFT_SWAP group.
+    case aircraftSwap
+    /// P3: the connection from this flight is at risk (Pro). Android's CONNECTIONS group.
+    case connections
 
     public var types: [AlertType] {
         switch self {
         case .delays: return [.delay, .delayReduced, .scheduleChange]
         case .gate: return [.gateAssigned, .gateChange, .terminalChange]
-        case .boarding: return [.boarding]
-        case .takeoffAndLanding: return [.departed, .landed]
+        case .boarding: return [.boarding, .gateClosed]
+        case .takeoffAndLanding: return [.departed, .takeoff, .landed, .atGate]
         case .baggage: return [.beltAssigned, .beltChange]
         case .disruption: return [.cancelled, .diverted, .reinstated, .divertedDest]
         case .inboundAircraft: return [.inboundLate]
         case .checkin: return [.checkinOpen, .checkinClosing]
         case .weather: return [.fogAlert]
+        case .aircraftSwap: return [.aircraftSwap]
+        case .connections: return [.connectionAtRisk]
         }
     }
 

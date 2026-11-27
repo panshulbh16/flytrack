@@ -22,6 +22,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import app.flytrack.R
 import app.flytrack.feature.billing.ui.LocalPaywallLauncher
+import app.flytrack.feature.billing.ui.LocalUpsellsHidden
 import app.flytrack.ui.theme.FlyTrackTheme
 
 /**
@@ -30,6 +31,8 @@ import app.flytrack.ui.theme.FlyTrackTheme
  */
 @Composable
 fun ProFeatureTeaser(title: String, body: String, modifier: Modifier = Modifier) {
+    // P3 B12: crew mode hides every upsell.
+    if (LocalUpsellsHidden.current) return
     val launcher = LocalPaywallLauncher.current
     Surface(
         onClick = launcher::openPaywall,

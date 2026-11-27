@@ -1,5 +1,5 @@
 import type { FlightKey, FlightSnapshot, FlightStatus, LivePosition } from "../types.ts";
-import type { FlightDataProvider, ProviderCallInfo } from "./provider.ts";
+import { type AircraftInfo, type FlightDataProvider, ProviderError, type ProviderCallInfo } from "./provider.ts";
 
 /**
  * Deterministic, clock-driven mock provider. The same flight evolves realistically as `now()` moves.
@@ -10,7 +10,26 @@ import type { FlightDataProvider, ProviderCallInfo } from "./provider.ts";
  * Numbers 5000–8999 = the inbound leg flown by the same aircraft before flight (n-5000).
  * Numbers >= 9000 or 4000–4999 = "not found".
  * Tail number of flight n (and its inbound leg) = "VT-M" + n padded to 4 digits.
+ * Block times: pushback 2 min after the departure estimate, takeoff MOCK_TAXI_OUT(n) min later, touchdown at
+ * the arrival estimate, on-block MOCK_TAXI_IN min after touchdown.
+ * Airport departures: own flights 1..MOCK_DEPARTURE_RANGE whose route leaves that airport, carrier by n.
+ * Every registration resolves to MOCK_AIRCRAFT.
  */
+
+/** Taxi-out minutes of mock flight n: 8, 11 or 14. */
+export const MOCK_TAXI_OUT = (n: number) => 8 + (n % 3) * 3;
+export const MOCK_TAXI_IN = 8;
+export const MOCK_DEPARTURE_RANGE = 240;
+export const MOCK_CARRIERS = ["6E", "AI", "QP", "SG", "IX"] as const;
+/** The fixed aircraft the mock returns for any tail (age is computed against the mock clock). */
+export const MOCK_AIRCRAFT: Omit<AircraftInfo, "reg" | "ageYears"> = {
+  model: "Airbus A320neo",
+  icaoType: "A20N",
+  firstFlightDate: "2018-03-14",
+  deliveryDate: "2018-04-20",
+  airlineIata: "6E",
+  seatConfig: "186 seats",
+};
 
 interface Route {
   dep: string;
@@ -148,6 +167,7 @@ function simulate(p: LegPlan, now: number): FlightSnapshot {
   const delay = p.delayAt(now);
   const D = S + delay * MIN; // current departure estimate
   const offBlock = D + 2 * MIN;
+  const takeoff = offBlock + MOCK_TAXI_OUT(Number.parseInt(p.number, 10) || 0) * MIN;
   let estArr = A + delay * MIN;
 
   const snap: FlightSnapshot = {
@@ -160,6 +180,7 @@ function simulate(p: LegPlan, now: number): FlightSnapshot {
     schedArr: iso(A), estArr: delay > 0 ? iso(estArr) : null, actArr: null,
     arrTerminal: p.reversed ? r.depTerm : r.arrTerm, arrGate: null, baggageBelt: null,
     aircraftModel: known ? "Airbus A320neo" : null, aircraftReg: known ? p.reg : null,
+    depOffblockAt: null, depRunwayAt: null, arrRunwayAt: null, arrOnblockAt: null,
     delayReason: null, live: null,
     providerRef: `mock:${p.carrier}${p.number}:${p.date}`,
     providerUpdatedAt: iso(now),
@@ -177,7 +198,9 @@ function simulate(p: LegPlan, now: number): FlightSnapshot {
   if (now >= offBlock) {
     status = "departed";
     snap.actDep = iso(offBlock);
+    snap.depOffblockAt = iso(offBlock);
   }
+  if (now >= takeoff) snap.depRunwayAt = iso(takeoff);
   if (now >= offBlock + 15 * MIN) status = "en_route";
 
   // Diversion: decided mid-flight, new destination + new ETA
@@ -194,9 +217,11 @@ function simulate(p: LegPlan, now: number): FlightSnapshot {
   if (status !== "diverted" && now >= estArr - 25 * MIN && now >= offBlock) status = "approaching";
   if (now >= estArr && now >= offBlock) {
     snap.actArr = iso(estArr);
+    snap.arrRunwayAt = iso(estArr);
+    if (now >= estArr + MOCK_TAXI_IN * MIN) snap.arrOnblockAt = iso(estArr + MOCK_TAXI_IN * MIN);
     status = status === "diverted" ? "diverted" : "landed";
   }
-  if (status === "landed" && now >= estArr + 8 * MIN) status = "arrived";
+  if (status === "landed" && now >= estArr + MOCK_TAXI_IN * MIN) status = "arrived";
   if (snap.actArr) {
     snap.arrGate = p.reversed ? null : "A4";
     snap.baggageBelt = p.beltAt(now, estArr);
@@ -260,6 +285,43 @@ export class MockProvider implements FlightDataProvider {
     legs.sort((a, b) => Date.parse(a.schedDep!) - Date.parse(b.schedDep!));
     return Promise.resolve(legs);
   }
+
+  getAirportDepartures(iata: string, fromLocal: string, toLocal: string): Promise<FlightSnapshot[]> {
+    this.record("airport_departures");
+    const from = parseLocalIst(fromLocal), to = parseLocalIst(toLocal);
+    if (from == null || to == null || to < from) {
+      return Promise.reject(new ProviderError("bad local time range", null, false));
+    }
+    const code = iata.trim().toUpperCase();
+    const now = this.now().getTime();
+    const out: FlightSnapshot[] = [];
+    for (const date of new Set([localDate(from), localDate(to)])) {
+      for (let n = 1; n <= MOCK_DEPARTURE_RANGE; n++) {
+        if (route(n).dep !== code) continue;
+        const S = schedDepMs(n, date);
+        if (S < from || S > to) continue;
+        out.push(simulate(ownPlan(MOCK_CARRIERS[n % MOCK_CARRIERS.length], n, date), now));
+      }
+    }
+    out.sort((a, b) => Date.parse(a.schedDep!) - Date.parse(b.schedDep!));
+    return Promise.resolve(out);
+  }
+
+  getAircraft(reg: string): Promise<AircraftInfo | null> {
+    this.record("aircraft_by_registration");
+    const r = reg.trim().toUpperCase();
+    if (!/^[A-Z0-9-]{2,10}$/.test(r)) return Promise.resolve(null);
+    const first = Date.parse(`${MOCK_AIRCRAFT.firstFlightDate}T00:00:00Z`);
+    const age = Math.round(((this.now().getTime() - first) / (365.25 * 86400_000)) * 10) / 10;
+    return Promise.resolve({ reg: r, ...MOCK_AIRCRAFT, ageYears: age });
+  }
+}
+
+/** "YYYY-MM-DDTHH:mm" in IST (the mock's only zone) → UTC ms, or null. */
+function parseLocalIst(v: string): number | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(v);
+  if (!m) return null;
+  return Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]) - IST_OFFSET_MIN * MIN;
 }
 
 export function shiftDate(date: string, days: number): string {

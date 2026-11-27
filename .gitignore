@@ -15,6 +15,7 @@ node_modules/
 android/.gradle/
 android/build/
 android/app/build/
+android/wear/build/
 android/local.properties
 *.keystore
 *.jks

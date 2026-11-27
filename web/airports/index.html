@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Indian airport delays today · HeyGate</title>
+  <meta name="description" content="Live status of India's busiest airports: delays, fog and cancellations at Delhi, Mumbai, Bengaluru, Hyderabad, Chennai, Kolkata and more.">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#f6f5ef" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#14281f" media="(prefers-color-scheme: dark)">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co http://127.0.0.1:54321 http://localhost:54321; img-src 'self' data:; base-uri 'none'; form-action 'none'">
+  <meta property="og:title" content="Indian airport delays today · HeyGate">
+  <meta property="og:description" content="Live delays, fog and cancellations at India's busiest airports.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=Instrument+Serif:ital@0;1&display=swap">
+  <link rel="stylesheet" href="../share/share.css">
+  <link rel="stylesheet" href="public.css">
+</head>
+<body>
+  <main class="page">
+    <header class="brand">
+      <span class="mark" aria-hidden="true"></span>
+      <span>HeyGate</span>
+      <span class="brand-note">airports</span>
+    </header>
+
+    <section class="hero">
+      <h1 class="serif">Airports today</h1>
+      <p class="lede">How India's busiest airports are running right now: departure delays, fog and cancellations.</p>
+    </section>
+
+    <ul class="list" id="metros" aria-label="Airports">
+      <!-- Static links for search engines and for when scripts are off; airports.js redraws them with live levels. -->
+      <li><a href="airport.html#DEL"><span class="place"><span class="code">DEL</span><span><span class="city">New Delhi</span></span></span></a></li>
+      <li><a href="airport.html#BOM"><span class="place"><span class="code">BOM</span><span><span class="city">Mumbai</span></span></span></a></li>
+      <li><a href="airport.html#BLR"><span class="place"><span class="code">BLR</span><span><span class="city">Bengaluru</span></span></span></a></li>
+      <li><a href="airport.html#HYD"><span class="place"><span class="code">HYD</span><span><span class="city">Hyderabad</span></span></span></a></li>
+      <li><a href="airport.html#MAA"><span class="place"><span class="code">MAA</span><span><span class="city">Chennai</span></span></span></a></li>
+      <li><a href="airport.html#CCU"><span class="place"><span class="code">CCU</span><span><span class="city">Kolkata</span></span></span></a></li>
+    </ul>
+
+    <footer class="foot">
+      Levels come from live weather reports and the departures HeyGate follows. Not an official airport source.
+      <a href="../report/">The year in flights</a>
+    </footer>
+  </main>
+
+  <script src="../share/config.js"></script>
+  <script type="module" src="airports.js"></script>
+</body>
+</html>

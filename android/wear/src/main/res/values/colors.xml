@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Design-brief tokens, dark theme. -->
+    <color name="wear_background">#FF000000</color>
+    <color name="wear_ink">#FFF6F4E7</color>
+    <color name="wear_muted">#FFC0CDBB</color>
+    <color name="forest">#FF244735</color>
+</resources>

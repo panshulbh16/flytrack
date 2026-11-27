@@ -3,6 +3,7 @@ package app.flytrack.data.repo
 import app.flytrack.core.flightnumber.parseFlightNumber
 import app.flytrack.core.model.AlertType
 import app.flytrack.core.model.Flight
+import app.flytrack.core.model.RouteSearchQuery
 import app.flytrack.core.model.TrackExtras
 import app.flytrack.core.model.TrackedFlightDetails
 import app.flytrack.core.model.bestDeparture
@@ -13,6 +14,8 @@ import app.flytrack.core.result.BadInputReason
 import app.flytrack.core.result.SearchResult
 import app.flytrack.core.result.TrackField
 import app.flytrack.core.result.TrackResult
+import app.flytrack.core.time.PastSearchWindow
+import app.flytrack.core.time.RouteSearchWindow
 import app.flytrack.core.time.SearchWindow
 import app.flytrack.data.local.AirportDao
 import app.flytrack.data.local.FlightDao
@@ -24,6 +27,9 @@ import app.flytrack.data.remote.BackendException
 import app.flytrack.data.remote.airportEntities
 import app.flytrack.data.remote.dto.CompactFlightDto
 import app.flytrack.data.remote.dto.FlightViewDto
+import app.flytrack.data.remote.dto.SearchFlightRequest
+import app.flytrack.data.remote.dto.SearchFlightResponse
+import app.flytrack.data.remote.dto.SearchRouteRequest
 import app.flytrack.data.remote.dto.UserFlightDto
 import app.flytrack.data.remote.dto.UserFlightInsertDto
 import app.flytrack.data.remote.isForeignKeyViolation
@@ -98,6 +104,40 @@ class FlightRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun searchPast(flightText: String, date: LocalDate): SearchResult = withContext(io) {
+        val number = parseFlightNumber(flightText)
+            ?: return@withContext SearchResult.BadInput(BadInputReason.FLIGHT_NUMBER)
+        if (!PastSearchWindow.contains(date, clock.now())) return@withContext SearchResult.BadInput(BadInputReason.DATE)
+        functionSearch(SEARCH_FLIGHT_FUNCTION, json.encodeToString(SearchFlightRequest.serializer(), SearchFlightRequest(number.display, date.toString(), MODE_PAST)))
+    }
+
+    override suspend fun searchRoute(query: RouteSearchQuery): SearchResult = withContext(io) {
+        val q = query.normalized()
+        if (!q.isValid) return@withContext SearchResult.BadInput(BadInputReason.OTHER)
+        if (!RouteSearchWindow.contains(q.date, clock.now())) return@withContext SearchResult.BadInput(BadInputReason.DATE)
+        functionSearch(SEARCH_ROUTE_FUNCTION, json.encodeToString(SearchRouteRequest.serializer(), SearchRouteRequest(q.dep, q.arr, q.date.toString(), q.airline)))
+    }
+
+    /** The P3 searches go through the generic function door; the answer has search-flight's shape. */
+    private suspend fun functionSearch(function: String, body: String): SearchResult = try {
+        requireSession()
+        val rows = try {
+            json.decodeFromString(SearchFlightResponse.serializer(), api.invokeFunction(function, body)).flights
+        } catch (e: kotlinx.serialization.SerializationException) {
+            throw BackendException.Malformed(e)
+        } catch (e: IllegalArgumentException) {
+            throw BackendException.Malformed(e)
+        }
+        if (rows.isEmpty()) {
+            SearchResult.NotFound
+        } else {
+            cacheFlights(rows)
+            SearchResult.Found(rows.map { it.toDomain() }.sortedWith(compareBy<Flight, kotlin.time.Instant?>(nullsLast()) { it.bestDeparture }))
+        }
+    } catch (e: BackendException) {
+        e.toSearchResult()
+    }
+
     private fun BackendException.toSearchResult(): SearchResult = when (this) {
         is BackendException.NotConfigured -> SearchResult.NotConfigured
         is BackendException.Network -> SearchResult.Offline
@@ -137,6 +177,7 @@ class FlightRepositoryImpl @Inject constructor(
                         cabin = extras.cabin?.wire,
                         source = extras.source.wire,
                         note = valid.note,
+                        archivedAt = if (extras.archived) clock.now().toString() else null,
                     ),
                 )
             } catch (e: BackendException.Http) {
@@ -154,7 +195,9 @@ class FlightRepositoryImpl @Inject constructor(
     private suspend fun trackExisting(flightId: String, valid: Checked.Valid, extras: TrackExtras): TrackResult {
         val existing = api.userFlightByFlightId(flightId)
             ?: return TrackResult.Failed("user_flights row exists but is not readable")
-        if (existing.archivedAt == null) {
+        // A past flight for Passport never changes an existing row: an archived one is already in Passport,
+        // an active one stays tracked.
+        if (existing.archivedAt == null || extras.archived) {
             storeTracking(existing)
             return TrackResult.AlreadyTracked(existing.toEntity().toDomain())
         }
@@ -358,5 +401,9 @@ class FlightRepositoryImpl @Inject constructor(
     private companion object {
         /** Untracked flights (old search results) are dropped from the cache after this long. */
         val CACHE_RETENTION = 7.days
+
+        const val SEARCH_FLIGHT_FUNCTION = "search-flight"
+        const val SEARCH_ROUTE_FUNCTION = "search-route"
+        const val MODE_PAST = "past"
     }
 }

@@ -1,0 +1,81 @@
+/* Extra components for the public airport pages and the yearly report. Loaded after ../share/share.css,
+   whose tokens (--paper, --card, --ink, --muted, --line, --orange, --route, --ok, --warn, --bad, --serif,
+   --sans) and light / dark themes they reuse. */
+.lede { margin: 0 0 20px; color: var(--muted); font-size: 17px; max-width: 46ch; }
+.hero { padding: 28px 0 12px; }
+.hero h1 { font-size: clamp(40px, 10vw, 64px); line-height: 1; margin: 0 0 10px; }
+.crumbs { margin: 16px 0 0; font-size: 14px; }
+.crumbs a, .list a, .foot a { color: var(--ink); text-underline-offset: 3px; }
+a:focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; border-radius: 4px; }
+
+.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.list li a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px 16px;
+  text-decoration: none;
+  min-height: 64px;
+}
+.list .code { font-family: var(--serif); font-size: 30px; line-height: 1; margin-right: 12px; }
+.list .place { display: flex; align-items: center; min-width: 0; }
+.list .city { display: block; margin: 0; font-size: 16px; font-weight: 600; }
+.list .name { display: block; margin: 0; font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+
+.chip {
+  flex: none;
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.chip[data-tone="ok"] { color: var(--ok); }
+.chip[data-tone="warn"] { color: var(--warn); }
+.chip[data-tone="bad"] { color: var(--bad); }
+.chip[data-tone="none"] { color: var(--muted); border-style: dashed; }
+
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 16px 0; }
+.tile { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; min-width: 0; }
+.tile dt { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.tile dd { margin: 4px 0 0; font-family: var(--serif); font-size: 34px; line-height: 1.05; overflow-wrap: anywhere; }
+.tile .sub { display: block; font-family: var(--sans); font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin: 16px 0; }
+.panel h2 { margin: 0 0 4px; font-family: var(--serif); font-weight: 400; font-size: 28px; }
+.panel .note { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
+
+.ranks { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.ranks li { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: baseline; }
+.ranks .who { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.ranks .val { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14px; }
+.ranks .bar { grid-column: 1 / -1; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.ranks .bar span { display: block; height: 100%; background: var(--route); border-radius: 3px; }
+.ranks .bar[data-tone="ok"] span { background: var(--ok); }
+
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 560px) { .two { grid-template-columns: 1fr; } }
+.two .panel { margin: 0; }
+
+.actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0 0; }
+.actions button, .actions a {
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  padding: 10px 18px;
+  border-radius: 999px;
+  text-decoration: none;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.empty { color: var(--muted); margin: 0; }
+.two + .two { margin-top: 12px; }
+.panel .globe-wrap { margin: 0 0 14px; }
+#routes-globe { display: block; width: 100%; height: min(70vw, 380px); min-height: 220px; }

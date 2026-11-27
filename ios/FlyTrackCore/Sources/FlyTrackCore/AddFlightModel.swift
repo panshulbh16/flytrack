@@ -8,10 +8,13 @@ public struct AddFlightPrefill: Hashable, Sendable {
     public var seat: String?
     /// Set when Add flight was opened from a Gmail suggestion; marked added once the flight is tracked.
     public var gmailSuggestionId: String?
+    /// P3 B5: open the "By route" tab with these airports (IATA) and `date` (a calendar suggestion without a number).
+    public var routeFrom: String?
+    public var routeTo: String?
 
     public init(
         flight: String? = nil, date: String? = nil, pnr: String? = nil, source: TrackSource? = nil, seat: String? = nil,
-        gmailSuggestionId: String? = nil
+        gmailSuggestionId: String? = nil, routeFrom: String? = nil, routeTo: String? = nil
     ) {
         self.flight = flight
         self.date = date
@@ -19,6 +22,8 @@ public struct AddFlightPrefill: Hashable, Sendable {
         self.source = source
         self.seat = seat
         self.gmailSuggestionId = gmailSuggestionId
+        self.routeFrom = routeFrom
+        self.routeTo = routeTo
     }
 
     public var isEmpty: Bool {
@@ -26,6 +31,12 @@ public struct AddFlightPrefill: Hashable, Sendable {
             && (date?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
             && (pnr?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
     }
+
+    /// True when Add flight should open on the "By route" tab.
+    public var isRoute: Bool { !(routeFrom?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true) }
+
+    /// What the flight-number tab gets when this prefill opens the route tab: nothing but the source.
+    public var forNumberTab: AddFlightPrefill { isRoute ? AddFlightPrefill(source: source) : self }
 }
 
 public struct SearchQuery: Hashable, Sendable {
@@ -95,6 +106,10 @@ public struct AddFlightState: Equatable, Sendable {
     public var isBackendConfigured: Bool
     public var canRaiseSearchLimit: Bool
     public var finishedFlightId: String?
+    /// P3 B6: "Add a past flight (for Passport)". Dates go back 365 days; the flight is archived on add.
+    public var pastMode: Bool = false
+    /// The past-flight toggle is offered (the app wired a `PastFlightSearching`).
+    public var canAddPastFlights: Bool = false
 
     public var isSearching: Bool { if case .searching = search { return true }; return false }
     public var isTracking: Bool { trackingFlightId != nil }
@@ -166,6 +181,7 @@ public final class AddFlightModel {
     private var trackedByFlightId: [String: TrackedFlight] = [:]
     private var profile: UserProfile?
     private var searchGeneration = 0
+    private let past: PastFlightSearching?
 
     public init(
         prefill: AddFlightPrefill = AddFlightPrefill(),
@@ -177,8 +193,10 @@ public final class AddFlightModel {
         isAnonymous: Bool,
         defaultAlerts: DefaultAlertPreferences,
         gmailStore: GmailSuggestionStoring? = nil,
-        gmailSystem: GmailSystem? = nil
+        gmailSystem: GmailSystem? = nil,
+        past: PastFlightSearching? = nil
     ) {
+        self.past = past
         self.flights = flights
         self.clock = clock
         self.defaultAlerts = defaultAlerts
@@ -218,6 +236,7 @@ public final class AddFlightModel {
             // The caller awaits `search()` after init; auto-search is started by `start()`.
         }
         self.autoSearch = resolved.autoSearch
+        state.canAddPastFlights = past != nil
     }
 
     private let autoSearch: Bool
@@ -249,6 +268,24 @@ public final class AddFlightModel {
         state.date = date
         state.dateRejected = false
         state.prefillNotice = nil
+        publish()
+    }
+
+    /// P3 B6: switches between upcoming flights and past flights (for Passport). The date range follows; a date that
+    /// falls outside it moves to the nearest allowed day (yesterday when turning past mode on from today or later).
+    public func setPastMode(_ on: Bool) {
+        if state.isTracking || on == state.pastMode || (on && past == nil) { return }
+        state.pastMode = on
+        state.search = .idle
+        state.trackNotice = nil
+        state.dateRejected = false
+        let now = clock.now()
+        let range = on ? PastSearchWindow.dates(now: now) : selectableDates(today: state.today, now: now)
+        state.firstSelectableDate = range.lowerBound
+        state.lastSelectableDate = range.upperBound
+        var date = state.date
+        if on && date >= state.today { date = state.today.adding(days: -1) }
+        state.date = min(max(date, range.lowerBound), range.upperBound)
         publish()
     }
 
@@ -288,7 +325,12 @@ public final class AddFlightModel {
         publish()
         searchGeneration += 1
         let generation = searchGeneration
-        let result = await flights.search(flightText: query.flight, date: query.date)
+        let result: SearchResult
+        if state.pastMode, let past {
+            result = await past.searchPast(flightText: query.flight, date: query.date)
+        } else {
+            result = await flights.search(flightText: query.flight, date: query.date)
+        }
         if generation != searchGeneration { return }
         apply(result, query: query)
         publish()
@@ -300,9 +342,17 @@ public final class AddFlightModel {
         state.trackingFlightId = flightId
         state.trackNotice = nil
         publish()
-        switch await flights.track(flightId: flightId, extras: extras) {
+        let pastMode = state.pastMode && past != nil
+        let result: TrackResult
+        if pastMode, let past {
+            result = await past.trackPast(flightId: flightId, extras: extras)
+        } else {
+            result = await flights.track(flightId: flightId, extras: extras)
+        }
+        switch result {
         case .tracked:
-            await applyDefaultMutes(flightId)
+            // A past flight sends no alerts, so the default mutes do not matter for it.
+            if !pastMode { await applyDefaultMutes(flightId) }
             await finish(flightId)
         case .alreadyTracked(let tracking):
             await saveDetailsAndFinish(tracking, extras)

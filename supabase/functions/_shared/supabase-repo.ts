@@ -5,6 +5,8 @@ import { secretKey } from "./supabase-keys.ts";
 import type { CheckinRule } from "./checkin.ts";
 import type { LegHistoryRow } from "./history.ts";
 import type { FogCandidate } from "./health.ts";
+import type { AircraftRow } from "./aircraft.ts";
+import type { ConnectionCandidate, ConnectionRisk } from "./connections.ts";
 
 /** Service-role client (bypasses RLS). Only ever used inside Edge Functions. */
 export function serviceClient(): SupabaseClient {
@@ -190,5 +192,28 @@ export class SupabaseRepo implements Repo {
 
   async getFogCandidates(limit: number): Promise<FogCandidate[]> {
     return must(await this.db.rpc("fog_alert_candidates", { p_limit: limit }), "fogCandidates") ?? [];
+  }
+
+  async getAircraftFetchedAt(reg: string): Promise<string | null> {
+    const r = must(
+      await this.db.from("aircraft").select("fetched_at").eq("reg", reg).maybeSingle(),
+      "aircraft",
+    ) as { fetched_at: string } | null;
+    return r?.fetched_at ?? null;
+  }
+
+  async upsertAircraft(row: AircraftRow) {
+    must(await this.db.from("aircraft").upsert(row, { onConflict: "reg" }), "upsertAircraft");
+  }
+
+  async getConnectionCandidates(limit: number): Promise<ConnectionCandidate[]> {
+    return must(await this.db.rpc("connection_alert_candidates", { p_limit: limit }), "connectionCandidates") ?? [];
+  }
+
+  async saveConnectionState(inFlightId: string, outFlightId: string, risk: ConnectionRisk, gen: number) {
+    must(
+      await this.db.rpc("save_connection_state", { p_in: inFlightId, p_out: outFlightId, p_risk: risk, p_gen: gen }),
+      "saveConnectionState",
+    );
   }
 }

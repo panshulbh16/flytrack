@@ -32,6 +32,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.flytrack.R
+import app.flytrack.feature.radar.PlanesAroundFlightButton
 import app.flytrack.core.estimate.PositionSource
 import app.flytrack.core.model.FlightStatusTone
 import app.flytrack.core.time.relativeTime
@@ -120,7 +121,7 @@ fun FlightMapScreen(state: FlightMapUiState, onClose: () -> Unit) {
                         }
                     }
                     HairlineDivider()
-                    MapInfoPanel(model)
+                    MapInfoPanel(model, onClose)
                 }
             }
         }
@@ -141,7 +142,7 @@ fun PositionSourceChip(source: PositionSource, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun MapInfoPanel(model: FlightMapUiModel) {
+private fun MapInfoPanel(model: FlightMapUiModel, onClose: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -155,7 +156,11 @@ private fun MapInfoPanel(model: FlightMapUiModel) {
             color = MaterialTheme.colorScheme.onSurface,
         )
         when (model.state) {
-            MapFlightState.AIRBORNE -> AirborneInfo(model)
+            MapFlightState.AIRBORNE -> {
+                AirborneInfo(model)
+                // P4 radar: planes around the flight's live or estimated position.
+                model.plane?.let { plane -> PlanesAroundFlightButton(point = plane.point, onBeforeOpen = onClose) }
+            }
             MapFlightState.NOT_DEPARTED -> InfoLine(stringResource(R.string.map_state_not_departed))
             MapFlightState.ARRIVED -> InfoLine(stringResource(R.string.map_state_arrived))
             MapFlightState.CANCELLED -> InfoLine(stringResource(R.string.map_state_cancelled))

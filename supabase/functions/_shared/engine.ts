@@ -18,6 +18,9 @@ import { isQuietFor } from "./quiet-hours.ts";
 import { legHistoryRow, shouldFinalize } from "./history.ts";
 import { fogEvent } from "./health.ts";
 import { isFriendEvent } from "./friend-alerts.ts";
+import { crewMutes } from "./crew.ts";
+import { aircraftRow, aircraftStale, normalizeReg } from "./aircraft.ts";
+import { decideConnection, groupConnections } from "./connections.ts";
 import type { FlightEvent, FlightRow, FlightSnapshot } from "./types.ts";
 
 const MIN = 60_000;
@@ -60,6 +63,8 @@ export function rowToSnapshot(r: FlightRow): FlightSnapshot {
     schedArr: r.sched_arr, estArr: r.est_arr, actArr: r.act_arr,
     arrTerminal: r.arr_terminal, arrGate: r.arr_gate, baggageBelt: r.baggage_belt,
     aircraftModel: r.aircraft_model, aircraftReg: r.aircraft_reg, delayReason: r.delay_reason,
+    depOffblockAt: r.dep_offblock_at ?? null, depRunwayAt: r.dep_runway_at ?? null,
+    arrRunwayAt: r.arr_runway_at ?? null, arrOnblockAt: r.arr_onblock_at ?? null,
     live: r.live_lat != null && r.live_lon != null
       ? { lat: r.live_lat, lon: r.live_lon, altFt: r.live_alt_ft, headingDeg: r.live_heading, speedKts: r.live_speed_kts, at: r.live_updated_at ?? "" }
       : null,
@@ -77,6 +82,8 @@ export function snapshotToPatch(s: FlightSnapshot, provider: string): Partial<Fl
     sched_arr: s.schedArr, est_arr: s.estArr, act_arr: s.actArr,
     arr_terminal: s.arrTerminal, arr_gate: s.arrGate, baggage_belt: s.baggageBelt,
     aircraft_model: s.aircraftModel, aircraft_reg: s.aircraftReg, delay_reason: s.delayReason,
+    dep_offblock_at: s.depOffblockAt ?? null, dep_runway_at: s.depRunwayAt ?? null,
+    arr_runway_at: s.arrRunwayAt ?? null, arr_onblock_at: s.arrOnblockAt ?? null,
     live_lat: s.live?.lat ?? null, live_lon: s.live?.lon ?? null, live_alt_ft: s.live?.altFt ?? null,
     live_heading: s.live?.headingDeg ?? null, live_speed_kts: s.live?.speedKts ?? null,
     live_updated_at: s.live?.at ?? null,
@@ -95,7 +102,9 @@ function mergeSticky(prev: FlightSnapshot | null, next: FlightSnapshot): FlightS
     if (out[k] == null && prev[k] != null) out[k] = prev[k];
   }
   // actual times never go back to null once known
-  for (const k of ["actDep", "actArr"] as const) if (out[k] == null && prev[k] != null) out[k] = prev[k];
+  for (const k of ["actDep", "actArr", "depOffblockAt", "depRunwayAt", "arrRunwayAt", "arrOnblockAt"] as const) {
+    if (out[k] == null && prev[k] != null) out[k] = prev[k];
+  }
   return out;
 }
 
@@ -202,7 +211,14 @@ export async function ingest(
 
 // ---------- push fan-out (sent immediately, inside the same invocation = "instant") ----------
 
-export async function fanOut(deps: Deps, row: FlightRow, events: (FlightEvent & { id: string })[], sendSync: boolean) {
+/** onlyUsers: alerts go to these users only (CONNECTION_AT_RISK concerns the users who have that connection). */
+export async function fanOut(
+  deps: Deps,
+  row: FlightRow,
+  events: (FlightEvent & { id: string })[],
+  sendSync: boolean,
+  target: { onlyUsers?: ReadonlySet<string> } = {},
+) {
   const recipients = await deps.repo.getRecipients(row.id);
   // A Live Activity the user started keeps updating even if they muted notifications on that phone.
   const activities = sendSync ? await deps.repo.getLiveActivities(row.id) : [];
@@ -224,7 +240,9 @@ export async function fanOut(deps: Deps, row: FlightRow, events: (FlightEvent & 
       const friend = r.role === "friend";
       // Friends of a tracker get only the free milestone events (P2 wave 2 section 1), never Pro ones.
       if (friend ? !isFriendEvent(e) : e.proOnly && !r.is_pro) continue;
+      if (target.onlyUsers && !target.onlyUsers.has(r.user_id)) continue;
       if (r.notify_prefs?.[e.type] === false) continue; // user muted this alert type
+      if (crewMutes(r, e)) continue; // crew mode: no check-in / boarding alerts (P3 B12)
       // Each recipient gets their own language; info alerts go silent in their quiet hours (P2 sections 3, 4).
       const opts = {
         lang: r.alert_language ?? "en",
@@ -308,6 +326,11 @@ export async function pollFlight(deps: Deps, row: FlightRow): Promise<{ ok: bool
   } catch (e) {
     deps.log?.("inbound/webhook step failed", { flight: row.id, error: String(e) });
   }
+  try {
+    await maybeFetchAircraft(deps, res.row);
+  } catch (e) {
+    deps.log?.("aircraft lookup failed", { flight: row.id, error: String(e) }); // never fail a poll for it
+  }
   return { ok: true, events };
 }
 
@@ -332,6 +355,20 @@ async function finalizeIfStopped(deps: Deps, before: FlightRow, after: FlightRow
   } catch (e) {
     deps.log?.("leg history failed", { flight: after.id, error: String(e) }); // never fail a poll for stats
   }
+}
+
+/**
+ * Pro: age and type of the tail (P3 A5). Looked up once per registration and 30 days, the first time a
+ * Pro-tracked flight has a tail; a tail swap brings a new registration and so a new lookup.
+ */
+export async function maybeFetchAircraft(deps: Deps, row: FlightRow): Promise<boolean> {
+  const reg = normalizeReg(row.aircraft_reg);
+  if (row.pro_tracker_count <= 0 || !reg || !deps.provider.getAircraft) return false;
+  const now = deps.now();
+  if (!aircraftStale(await deps.repo.getAircraftFetchedAt(reg), now)) return false;
+  const info = await deps.provider.getAircraft(reg);
+  await deps.repo.upsertAircraft(aircraftRow(reg, info, now));
+  return true;
 }
 
 /** Pro: find the aircraft's previous leg ("Where's my plane?") and link it. Returns events sent. */
@@ -449,7 +486,19 @@ export async function sweepUnpushedEvents(deps: Deps): Promise<number> {
   for (const [flightId, evs] of byFlight) {
     const row = await deps.repo.getFlight(flightId);
     if (!row) continue;
-    await fanOut(deps, row, evs, false);
+    // CONNECTION_AT_RISK concerns only the users who have that connection: the trackers of both legs
+    // (runConnectionAlerts targets them the same way), never every Pro tracker of the arriving flight.
+    const conn = evs.filter((e) => e.type === "CONNECTION_AT_RISK");
+    const rest = evs.filter((e) => e.type !== "CONNECTION_AT_RISK");
+    if (rest.length) await fanOut(deps, row, rest, false);
+    for (const e of conn) {
+      const outId = (e.payload as Record<string, unknown> | null)?.out_flight_id;
+      const users = typeof outId === "string"
+        ? new Set((await deps.repo.getRecipients(outId)).filter((r) => r.role !== "friend").map((r) => r.user_id))
+        : new Set<string>();
+      if (users.size) await fanOut(deps, row, [e], false, { onlyUsers: users });
+      else await deps.repo.markEventsPushed([e.id]); // nobody to tell (connection gone): don't retry it
+    }
     n += evs.length;
   }
   if (n) deps.log?.("swept unpushed events", { n });
@@ -514,10 +563,43 @@ export async function runFogAlerts(deps: Deps, limit = 100): Promise<number> {
   return sent;
 }
 
+/**
+ * Connection alerts (CONNECTION_AT_RISK, Pro). DB only: candidates come from connection_alert_candidates()
+ * (trips and risk derived in SQL from tracked flights). Event row first, then the stored state, then the push
+ * to the users who have that connection; a crash in between is covered by the dedupe key and the sweeper.
+ */
+export async function runConnectionAlerts(deps: Deps, limit = 100): Promise<number> {
+  let sent = 0;
+  for (const { c, users } of groupConnections(await deps.repo.getConnectionCandidates(limit))) {
+    try {
+      const d = decideConnection(c);
+      if (!d.event) {
+        await deps.repo.saveConnectionState(c.in_flight_id, c.out_flight_id, d.risk, d.gen);
+        continue;
+      }
+      const row = await deps.repo.getFlight(c.in_flight_id);
+      if (!row) continue;
+      const event = {
+        ...d.event,
+        payload: { flight: `${row.carrier_iata} ${row.flight_number}`, dep: row.dep_iata, arr: row.arr_iata, ...d.event.payload },
+      };
+      const id = await deps.repo.insertEventIfNew(row.id, event);
+      await deps.repo.saveConnectionState(c.in_flight_id, c.out_flight_id, d.risk, d.gen);
+      if (!id) continue;
+      await fanOut(deps, row, [{ ...event, id }], false, { onlyUsers: users });
+      sent++;
+    } catch (e) {
+      deps.log?.("connection alert failed", { in: c.in_flight_id, out: c.out_flight_id, error: String(e) });
+    }
+  }
+  if (sent) deps.log?.("connection alerts", { sent });
+  return sent;
+}
+
 /** One cron tick: claim due flights in small batches until the time budget is used. */
 export async function runPollCycle(deps: Deps, timeBudgetMs = 25_000) {
   const started = Date.now();
-  const stats = { polled: 0, errors: 0, events: 0, batches: 0, swept: 0, checkins: 0, fog: 0 };
+  const stats = { polled: 0, errors: 0, events: 0, batches: 0, swept: 0, checkins: 0, fog: 0, connections: 0 };
   try {
     stats.swept = await sweepUnpushedEvents(deps);
   } catch (e) {
@@ -549,6 +631,12 @@ export async function runPollCycle(deps: Deps, timeBudgetMs = 25_000) {
         await recordPollError(deps, f, String(e)).catch(() => {});
       }
     });
+  }
+  // After the polls, so a delay ingested in this tick is judged in the same tick.
+  try {
+    stats.connections = await runConnectionAlerts(deps);
+  } catch (e) {
+    deps.log?.("connection step failed", { error: String(e) });
   }
   return stats;
 }

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- feature/gift: Gift Pro (docs/P4_CONTRACTS.md section 3). -->
+    <string name="gift_tab_pro">Get Pro</string>
+    <string name="gift_tab_gift">Gift Pro</string>
+    <string name="gift_title">Gift HeyGate Pro</string>
+    <string name="gift_subtitle">Give someone live alerts, inbound-plane tracking and more. You get a code to send them.</string>
+    <string name="gift_section_options">Choose a gift</string>
+    <string name="gift_option_year">One year of Pro</string>
+    <string name="gift_option_trip">One trip (7 days)</string>
+    <string name="gift_option_price_year">%1$s · 365 days, one payment</string>
+    <string name="gift_option_price_trip">%1$s · 7 days, one payment</string>
+    <string name="gift_action_buy">Buy gift</string>
+    <string name="gift_note">A gift doesn\'t change your own plan. Codes never expire until they\'re used.</string>
+    <string name="gift_coming_soon_title">Gifts are coming soon</string>
+    <string name="gift_coming_soon_message">You\'ll be able to gift HeyGate Pro here shortly.</string>
+    <string name="gift_load_failed_title">Couldn\'t load gifts</string>
+    <string name="gift_load_failed_message">Please try again in a moment.</string>
+
+    <string name="gift_waiting">Payment done. Getting your gift code…</string>
+    <string name="gift_ready_title">Your gift is ready</string>
+    <string name="gift_ready_message">Send this code. They redeem it in HeyGate: Settings, Redeem a gift code.</string>
+    <string name="gift_code_later_title">Payment done</string>
+    <string name="gift_code_later_message">Your code is on its way. It will appear in My gifts in a minute.</string>
+    <string name="gift_action_whatsapp">Send on WhatsApp</string>
+    <string name="gift_action_share">Share…</string>
+    <string name="gift_action_copy">Copy code</string>
+    <string name="gift_copied">Code copied</string>
+    <string name="gift_action_buy_another">Buy another gift</string>
+    <string name="gift_action_my_gifts">My gifts</string>
+    <string name="gift_cd_code">Gift code %1$s</string>
+
+    <string name="gift_msg_pending">Payment pending. Your code appears in My gifts once it completes.</string>
+    <string name="gift_msg_offline">You\'re offline. Try again when you\'re connected.</string>
+    <string name="gift_msg_not_available">Gifts aren\'t available right now.</string>
+    <string name="gift_msg_failed">The purchase didn\'t go through. You haven\'t been charged.</string>
+
+    <!-- Share text: the Hinglish line first, then English, like flight sharing. %1$s = the code. -->
+    <string name="gift_share_hinglish">Maine aapko HeyGate Pro gift kiya hai! Code: %1$s</string>
+    <string name="gift_share_english">I\'ve gifted you HeyGate Pro! Code: %1$s. Open HeyGate, go to Settings, Redeem a gift code.</string>
+    <string name="gift_share_subject">A HeyGate Pro gift for you</string>
+    <string name="gift_share_chooser">Send your gift</string>
+    <string name="gift_share_no_app">No app on this phone can share text.</string>
+
+    <string name="gift_settings_redeem">Redeem a gift code</string>
+    <string name="gift_settings_redeem_message">Got a HeyGate Pro gift? Enter the code here.</string>
+    <string name="gift_settings_my_gifts">My gifts</string>
+    <string name="gift_settings_my_gifts_message">Codes you bought, and whether they\'ve been used</string>
+    <string name="gift_settings_give">Gift Pro</string>
+    <string name="gift_settings_give_message">Give someone HeyGate Pro</string>
+
+    <string name="gift_redeem_title">Redeem a gift code</string>
+    <string name="gift_redeem_label">Gift code</string>
+    <string name="gift_redeem_hint">ABCD-EFGH-JKMN</string>
+    <string name="gift_redeem_message">Enter the 12-character code you were sent. You can paste the whole message.</string>
+    <string name="gift_redeem_action">Redeem</string>
+    <string name="gift_redeem_done_title">Enjoy HeyGate Pro</string>
+    <plurals name="gift_redeem_done_days">
+        <item quantity="one">%1$d day of Pro was added.</item>
+        <item quantity="other">%1$d days of Pro were added.</item>
+    </plurals>
+    <string name="gift_redeem_done_until">Pro until %1$s</string>
+    <string name="gift_redeem_invalid">That code doesn\'t exist. Check it and try again.</string>
+    <string name="gift_redeem_already">This code has already been used.</string>
+    <string name="gift_redeem_voided">This gift was refunded, so the code no longer works.</string>
+    <string name="gift_redeem_own">This is your own gift. Send it to someone else to use.</string>
+    <string name="gift_redeem_rate_limited">Too many tries. Please wait an hour and try again.</string>
+    <string name="gift_redeem_lifetime">You already have Pro with no end date, so the code is still unused. Pass it on!</string>
+    <string name="gift_redeem_offline">You\'re offline. Try again when you\'re connected.</string>
+    <string name="gift_redeem_failed">Something went wrong. Please try again.</string>
+
+    <string name="gift_my_title">My gifts</string>
+    <string name="gift_my_empty_title">No gifts yet</string>
+    <string name="gift_my_empty_message">Gift HeyGate Pro to family and friends from the paywall\'s Gift Pro tab.</string>
+    <string name="gift_status_unused">Not used yet</string>
+    <string name="gift_status_redeemed">Redeemed %1$s</string>
+    <string name="gift_status_redeemed_plain">Redeemed</string>
+    <string name="gift_status_voided">Refunded</string>
+    <string name="gift_bought_on">Bought %1$s</string>
+    <string name="gift_kind_year">1 year of Pro</string>
+    <plurals name="gift_kind_days">
+        <item quantity="one">%1$d day of Pro</item>
+        <item quantity="other">%1$d days of Pro</item>
+    </plurals>
+</resources>

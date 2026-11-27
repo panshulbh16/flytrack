@@ -8,6 +8,11 @@ export const ENTITLEMENT_ID = "pro";
 export const PRO_PRODUCTS: ReadonlySet<string> = new Set(["heygate_pro_yearly", "heygate_pro_monthly"]);
 export const TRIP_PASS_PRODUCT = "heygate_trip_pass";
 export const TRIP_PASS_DAYS = 7;
+/**
+ * Gift Pro (docs/P4_CONTRACTS.md section 3): consumables that create a code for someone else. They are not
+ * attached to the `pro` entitlement and never give the purchaser Pro.
+ */
+export const GIFT_PRODUCTS: Readonly<Record<string, number>> = { heygate_gift_year: 365, heygate_gift_trip: 7 };
 export const REVENUECAT_API_BASE = "https://api.revenuecat.com/v1";
 
 const DAY_MS = 86_400_000;
@@ -29,6 +34,9 @@ export interface RcEvent {
   event_timestamp_ms?: number | null;
   environment?: string | null;
   cancel_reason?: string | null;
+  /** Store transaction of a purchase (and of the purchase a CANCELLATION / refund is about). */
+  transaction_id?: string | null;
+  original_transaction_id?: string | null;
   transferred_from?: string[] | null;
   transferred_to?: string[] | null;
   [key: string]: unknown;
@@ -87,6 +95,48 @@ export function isActive(p: Entitlement, now: Date): boolean {
 /** Play sends "productId:basePlanId"; App Store sends the plain product id. */
 export function baseProductId(productId: string | null | undefined): string {
   return (productId ?? "").split(":")[0];
+}
+
+/** Days a gift product gives, or null when the product is not a gift. */
+export function giftDays(productId: string | null | undefined): number | null {
+  return GIFT_PRODUCTS[baseProductId(productId)] ?? null;
+}
+
+/** The store transaction a gift event is about; the RevenueCat event id when the store sent none. */
+export function giftTransactionId(ev: RcEvent): string {
+  const t = [ev.transaction_id, ev.original_transaction_id].find((v) => typeof v === "string" && v.trim());
+  return (t ?? `rc_event:${ev.id}`).trim().slice(0, 200);
+}
+
+/** One redeemed gift code (public.redeemed_gifts). */
+export interface RedeemedGift {
+  redeemedAt: number;
+  /** Start of the gift's window at redemption: the later of then and the Pro end it stacked on. */
+  startsAt: number;
+  days: number;
+}
+
+/**
+ * End of the Pro time redeemed gifts give (ms), or null when there are none. `baseEnd` is when the
+ * user's store Pro (subscription / trip pass) really ends as now known: a natural expiry or renewal, or the
+ * refund time. Each gift starts at the latest of its redemption, the previous gift's end, and its recorded
+ * start pulled back to `baseEnd` when the store Pro it stacked on ended early. So a gift stacked on a
+ * subscription that is later refunded gives its own days from the refund, never the refunded time, and the
+ * result never exceeds what the gift promised at redemption. Stable: depends on recorded times only.
+ */
+export function giftEnd(gifts: readonly RedeemedGift[], baseEnd: number | null): number | null {
+  let t: number | null = null;
+  for (const g of [...gifts].sort((a, b) => a.redeemedAt - b.redeemedAt)) {
+    const stackedOn = baseEnd === null ? g.redeemedAt : Math.min(baseEnd, g.startsAt);
+    const start = Math.max(g.redeemedAt, t ?? g.redeemedAt, stackedOn);
+    t = start + g.days * DAY_MS;
+  }
+  return t;
+}
+
+function numericGrant(...grants: (number | null | undefined)[]): number | null {
+  const ns = grants.filter((g): g is number => typeof g === "number");
+  return ns.length ? Math.max(...ns) : null;
 }
 
 export function tripPassEnd(purchasedAtMs: number): number {
@@ -161,17 +211,25 @@ export interface EventHistory {
   tripEnd: number | null;
   /** Latest expiration a Pro subscription event set, or null. */
   subExpiry: number | null;
+  /** Gift codes the user redeemed. Not RevenueCat's to take away (see giftEnd). */
+  gifts?: readonly RedeemedGift[];
 }
 
 /** What an event means for one user's profile when we cannot ask RevenueCat. */
 export function decideFromEvent(ev: RcEvent, current: Entitlement, history: EventHistory, now: Date): Decision {
   const nowMs = now.getTime();
-  const activeTrip: Grant = history.tripEnd !== null && history.tripEnd > nowMs ? history.tripEnd : null;
+  const tripOnly: Grant = history.tripEnd !== null && history.tripEnd > nowMs ? history.tripEnd : null;
+  const gifts = history.gifts ?? [];
+  /** Grants that outlive a subscription change, given when store Pro really ends: trip pass + gift time. */
+  const keep = (storeEnd: number | null): Grant => {
+    const g = gifts.length ? giftEnd(gifts, numericGrant(storeEnd, history.tripEnd)) : null;
+    return laterGrant(tripOnly, g !== null && g > nowMs ? g : null);
+  };
 
   if (SETS_EXPIRY.has(ev.type)) {
     if (!isProEvent(ev)) return { kind: "none", reason: "not_pro_product" };
     if (typeof ev.expiration_at_ms !== "number") return { kind: "none", reason: "no_expiration" };
-    return { kind: "set", grant: laterGrant(ev.expiration_at_ms, activeTrip), reason: "pro_expiration" };
+    return { kind: "set", grant: laterGrant(ev.expiration_at_ms, keep(ev.expiration_at_ms)), reason: "pro_expiration" };
   }
 
   switch (ev.type) {
@@ -187,7 +245,8 @@ export function decideFromEvent(ev: RcEvent, current: Entitlement, history: Even
     case "CANCELLATION": {
       // Auto-renew turned off: still Pro until expiry. A refund (CUSTOMER_SUPPORT) ends Pro now.
       if (ev.cancel_reason !== "CUSTOMER_SUPPORT" || !isProEvent(ev)) return { kind: "none", reason: "cancellation" };
-      return { kind: "set", grant: activeTrip, reason: "refund" };
+      const refundedAt = typeof ev.event_timestamp_ms === "number" ? Math.min(ev.event_timestamp_ms, nowMs) : nowMs;
+      return { kind: "set", grant: keep(refundedAt), reason: "refund" };
     }
     case "EXPIRATION": {
       if (!isProEvent(ev)) return { kind: "none", reason: "not_pro_product" };
@@ -197,7 +256,7 @@ export function decideFromEvent(ev: RcEvent, current: Entitlement, history: Even
         return { kind: "none", reason: "newer_grant" };
       }
       // "unless another active grant exists": a trip pass keeps Pro until it ends.
-      return { kind: "set", grant: activeTrip, reason: "expired" };
+      return { kind: "set", grant: keep(endedAt), reason: "expired" };
     }
     case "BILLING_ISSUE":
       return { kind: "none", reason: "grace_period" };
@@ -231,7 +290,20 @@ export interface BillingStore {
   latestTripPassPurchase(userId: string): Promise<number | null>;
   /** Latest expires_at (ms) of the user's applied Pro subscription events (SETS_EXPIRY types), or null. */
   latestSubscriptionExpiry(userId: string): Promise<number | null>;
+  /** Gift Pro: the code for a store transaction, created once (null = no profile for the purchaser). */
+  createGiftCode?(purchaserId: string, productId: string, days: number, txn: string): Promise<GiftCodeResult | null>;
+  /** Gift Pro refund: voids the transaction's code unless it was redeemed. */
+  voidGiftCode?(txn: string): Promise<VoidGiftResult>;
+  /** Gift codes the user redeemed (public.redeemed_gifts). */
+  redeemedGifts?(userId: string): Promise<RedeemedGift[]>;
 }
+
+export interface GiftCodeResult {
+  code: string;
+  created: boolean;
+}
+
+export type VoidGiftResult = "voided" | "already_voided" | "redeemed" | "not_found";
 
 export interface RevenueCatApi {
   getSubscriber(appUserId: string): Promise<RcSubscriber>;
@@ -288,7 +360,22 @@ export async function refreshFromRevenueCat(deps: BillingDeps, userId: string): 
   const profile = await deps.store.getProfile(userId);
   if (!profile) return "unknown_user";
   const sub = await deps.rc.getSubscriber(userId);
-  return await write(deps, userId, profile, entitlementFromGrant(grantFromSubscriber(sub), deps.now()));
+  const now = deps.now();
+  const store = grantFromSubscriber(sub);
+  // RevenueCat keeps an ended (or refunded) entitlement with its real end date, so this is stable
+  const storeEnd = store === "lifetime" ? null : store;
+  const grant = laterGrant(store, activeGiftGrant(await redeemedGifts(deps, userId), storeEnd, now));
+  return await write(deps, userId, profile, entitlementFromGrant(grant, now));
+}
+
+async function redeemedGifts(deps: BillingDeps, userId: string): Promise<RedeemedGift[]> {
+  return deps.store.redeemedGifts ? await deps.store.redeemedGifts(userId) : [];
+}
+
+/** Pro time from redeemed gifts, when still running. RevenueCat does not know about it. */
+function activeGiftGrant(gifts: readonly RedeemedGift[], storeEnd: number | null, now: Date): Grant {
+  const end = gifts.length ? giftEnd(gifts, storeEnd) : null;
+  return end !== null && end > now.getTime() ? end : null;
 }
 
 async function write(
@@ -318,6 +405,7 @@ function eventUsers(ev: RcEvent): string[] {
 /** Applies one webhook event. Returns a short outcome string for billing_events.outcome. */
 export async function applyEvent(deps: BillingDeps, ev: RcEvent): Promise<string> {
   if (ev.type === "TEST") return "test";
+  if (giftDays(ev.product_id) !== null) return await applyGiftEvent(deps, ev);
   const ids = eventUsers(ev);
   const known = ids.filter(isSupabaseUserId);
   const skipped = ids.filter((id) => !isSupabaseUserId(id));
@@ -343,11 +431,17 @@ async function applyDerived(deps: BillingDeps, userId: string, ev: RcEvent): Pro
   const profile = await deps.store.getProfile(userId);
   if (!profile) return "unknown_user";
   const now = deps.now();
-  const [lastTrip, subExpiry] = await Promise.all([
+  const [lastTrip, subExpiry, gifts] = await Promise.all([
     deps.store.latestTripPassPurchase(userId),
     deps.store.latestSubscriptionExpiry(userId),
+    redeemedGifts(deps, userId),
   ]);
-  const d = decideFromEvent(ev, profile, { tripEnd: lastTrip === null ? null : tripPassEnd(lastTrip), subExpiry }, now);
+  const d = decideFromEvent(
+    ev,
+    profile,
+    { tripEnd: lastTrip === null ? null : tripPassEnd(lastTrip), subExpiry, gifts },
+    now,
+  );
   if (d.kind === "none") return "unchanged";
   return await write(deps, userId, profile, entitlementFromGrant(d.grant, now));
 }
@@ -374,8 +468,22 @@ async function transferFromEvent(deps: BillingDeps, ev: RcEvent): Promise<ApplyO
       outcomes.push("unchanged");
       continue;
     }
-    moved = laterGrant(moved, g);
-    outcomes.push(await write(deps, id, p, { plan: "free", proUntil: null }));
+    // Redeemed gift time belongs to the account, not to the store purchases that move: the sender keeps
+    // the gifts (laid out from their redemption, as the store Pro is gone), and only the store part moves.
+    const gifts = await redeemedGifts(deps, id);
+    let store: Grant = g;
+    if (gifts.length) {
+      const [lastTrip, subExpiry] = await Promise.all([
+        deps.store.latestTripPassPurchase(id),
+        deps.store.latestSubscriptionExpiry(id),
+      ]);
+      const recorded = numericGrant(subExpiry, lastTrip === null ? null : tripPassEnd(lastTrip));
+      if (recorded !== null) store = recorded > now.getTime() ? recorded : null;
+      // no store events recorded (bought before the webhook existed): the profile, as before gifts
+      else if (typeof g !== "number" || g <= (giftEnd(gifts, null) ?? 0)) store = null;
+    }
+    moved = laterGrant(moved, store);
+    outcomes.push(await write(deps, id, p, entitlementFromGrant(activeGiftGrant(gifts, null, now), now)));
   }
   for (const id of to) {
     const p = await deps.store.getProfile(id);
@@ -386,6 +494,42 @@ async function transferFromEvent(deps: BillingDeps, ev: RcEvent): Promise<ApplyO
     outcomes.push(await write(deps, id, p, entitlementFromGrant(laterGrant(grantFromProfile(p, now), moved), now)));
   }
   return outcomes;
+}
+
+// ---------- Gift Pro -------------------------------------------------------------------------------
+
+/**
+ * A gift product's event. NON_RENEWING_PURCHASE creates the transaction's single code (idempotent on
+ * store_transaction_id) and does not touch the purchaser's plan. CANCELLATION is a refund: the code is
+ * voided unless someone already redeemed it (then nothing changes and it is logged). The code itself is
+ * never logged: it is a bearer secret until redeemed.
+ */
+export async function applyGiftEvent(deps: BillingDeps, ev: RcEvent): Promise<string> {
+  const days = giftDays(ev.product_id);
+  if (days === null) return "not_gift";
+  const txn = giftTransactionId(ev);
+  switch (ev.type) {
+    case "NON_RENEWING_PURCHASE": {
+      const buyer = ev.app_user_id ?? "";
+      if (!isSupabaseUserId(buyer)) {
+        deps.log("billing: gift purchase without a Supabase app_user_id", { eventId: ev.id });
+        return "unknown_user";
+      }
+      if (!deps.store.createGiftCode) throw new Error("billing store cannot create gift codes");
+      const r = await deps.store.createGiftCode(buyer, baseProductId(ev.product_id), days, txn);
+      if (!r) return "unknown_user";
+      return r.created ? "gift_created" : "gift_exists";
+    }
+    case "CANCELLATION": {
+      if (!deps.store.voidGiftCode) throw new Error("billing store cannot void gift codes");
+      const r = await deps.store.voidGiftCode(txn);
+      if (r === "redeemed") deps.log("billing: refunded gift was already redeemed; kept", { eventId: ev.id });
+      if (r === "not_found") deps.log("billing: refund for an unknown gift transaction", { eventId: ev.id });
+      return `gift_${r}`;
+    }
+    default:
+      return "gift_ignored";
+  }
 }
 
 // ---------- webhook --------------------------------------------------------------------------------
@@ -459,6 +603,38 @@ export interface EntitlementResponse {
   plan: "pro" | "free";
   pro_until: string | null;
   trial_flight_id: string | null;
+  /**
+   * P3 B13: set when the user is Pro only through a family (public.family_pro_source); the apps show
+   * "Pro via {owner_name}'s family". Absent / null for own Pro and for free users.
+   */
+  via_family?: { owner_name: string | null } | null;
+}
+
+/** public.family_pro_source(user): the family owner whose Pro the user shares, or null. */
+export interface FamilyProSource {
+  owner_id: string;
+  owner_name: string | null;
+  pro_until: string | null;
+}
+
+/**
+ * Own Pro wins; otherwise a family's Pro makes the response Pro until the owner's end (null = no end).
+ * A member's Pro is never passed on further: family_pro_source only ever names an owner with own Pro.
+ */
+export function applyFamilyPro(
+  resp: EntitlementResponse,
+  family: FamilyProSource | null,
+  now: Date,
+): EntitlementResponse {
+  if (resp.plan === "pro" || !family) return { ...resp, via_family: null };
+  const until = family.pro_until ? Date.parse(family.pro_until) : null;
+  if (until !== null && (Number.isNaN(until) || until <= now.getTime())) return { ...resp, via_family: null };
+  return {
+    ...resp,
+    plan: "pro",
+    pro_until: until === null ? null : new Date(until).toISOString(),
+    via_family: { owner_name: family.owner_name ?? null },
+  };
 }
 
 export function entitlementResponse(p: ProfileBilling, now: Date): EntitlementResponse {
@@ -531,6 +707,35 @@ export class SupabaseBillingStore implements BillingStore {
     if (error) throw new Error(`billing_events trip: ${error.message}`);
     const at = (data as { purchased_at: string }[] | null)?.[0]?.purchased_at;
     return at ? Date.parse(at) : null;
+  }
+
+  async createGiftCode(purchaserId: string, productId: string, days: number, txn: string) {
+    const { data, error } = await this.db.rpc("create_gift_code", {
+      p_purchaser: purchaserId,
+      p_product: productId,
+      p_days: days,
+      p_txn: txn,
+    });
+    if (error) throw new Error(`create_gift_code: ${error.message}`);
+    return (data as GiftCodeResult | null) ?? null;
+  }
+
+  async voidGiftCode(txn: string): Promise<VoidGiftResult> {
+    const { data, error } = await this.db.rpc("void_gift_code", { p_txn: txn });
+    if (error) throw new Error(`void_gift_code: ${error.message}`);
+    return data as VoidGiftResult;
+  }
+
+  async redeemedGifts(userId: string): Promise<RedeemedGift[]> {
+    const { data, error } = await this.db.rpc("redeemed_gifts", { p_user: userId });
+    if (error) throw new Error(`redeemed_gifts: ${error.message}`);
+    const out: RedeemedGift[] = [];
+    for (const r of (data ?? []) as { redeemed_at?: string; starts_at?: string; days?: number }[]) {
+      const redeemedAt = parseMs(r.redeemed_at), startsAt = parseMs(r.starts_at);
+      if (redeemedAt === null || typeof r.days !== "number") continue;
+      out.push({ redeemedAt, startsAt: startsAt ?? redeemedAt, days: r.days });
+    }
+    return out;
   }
 
   async latestSubscriptionExpiry(userId: string): Promise<number | null> {

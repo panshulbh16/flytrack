@@ -14,6 +14,8 @@ const CRITICAL: EventType[] = [
   "GATE_CHANGE", "TERMINAL_CHANGE", "BOARDING", "BELT_ASSIGNED", "BELT_CHANGE",
   "DELAY", "SCHEDULE_CHANGE", "CANCELLED", "DIVERTED", "REINSTATED", "INBOUND_LATE", "CHECKIN_CLOSING",
   "FOG_ALERT", "DIVERTED_DEST",
+  // P3: GATE_CLOSED / TAKEOFF / AT_GATE are info (flight_updates); these two are Pro and critical.
+  "AIRCRAFT_SWAP", "CONNECTION_AT_RISK",
 ];
 
 /** How long FCM should keep trying to deliver — a stale gate change is worse than none. */
@@ -22,11 +24,18 @@ const TTL_SECONDS: Partial<Record<EventType, number>> = {
   BELT_ASSIGNED: 2 * 3600, BELT_CHANGE: 2 * 3600, DEPARTED: 3 * 3600, LANDED: 2 * 3600,
   CHECKIN_CLOSING: 30 * 60, // after the close it is useless
   FOG_ALERT: 4 * 3600, // sent at most 4 h before the departure/arrival it is about
+  GATE_CLOSED: 30 * 60, // only useful while the plane is still at the gate
+  TAKEOFF: 3 * 3600,
+  AT_GATE: 3600,
+  CONNECTION_AT_RISK: 3 * 3600,
 };
 
 /** Same tag → a newer notification REPLACES the older one in the shade (no 3 stale gate alerts). */
 function tagGroup(t: EventType): string {
   if (t === "TERMINAL_CHANGE") return "terminal"; // own tag: must never be replaced by a gate alert
+  if (t === "GATE_CLOSED") return "boarding"; // replaces "Boarding now", never a gate change
+  if (t === "TAKEOFF") return "departed"; // the runway time refines "has departed"
+  if (t === "CONNECTION_AT_RISK") return "connection";
   if (t.startsWith("GATE")) return "gate";
   if (t.startsWith("BELT")) return "belt";
   if (t.startsWith("DELAY") || t === "INBOUND_LATE" || t === "SCHEDULE_CHANGE") return "delay";
@@ -221,6 +230,8 @@ export function compactFlight(r: FlightRow): Record<string, unknown> {
     st: r.status, sd: r.sched_dep, ed: r.est_dep, ad: r.act_dep, sa: r.sched_arr, ea: r.est_arr, aa: r.act_arr,
     dt: r.dep_terminal, dg: r.dep_gate, at: r.arr_terminal, ag: r.arr_gate, bb: r.baggage_belt,
     ac: r.aircraft_model, reg: r.aircraft_reg,
+    // P3 block times (off-block, takeoff, touchdown, on-block): crew mode and the timeline read them offline
+    ofb: r.dep_offblock_at ?? null, rwd: r.dep_runway_at ?? null, rwa: r.arr_runway_at ?? null, onb: r.arr_onblock_at ?? null,
     lat: r.live_lat, lon: r.live_lon, alt: r.live_alt_ft, lu: r.live_updated_at,
     u: r.updated_at ?? new Date().toISOString(),
   };

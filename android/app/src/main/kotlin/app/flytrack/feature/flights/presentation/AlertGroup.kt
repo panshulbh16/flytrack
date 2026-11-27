@@ -12,14 +12,20 @@ import app.flytrack.core.model.TrackedFlight
 enum class AlertGroup(val types: List<AlertType>) {
     DELAYS(listOf(AlertType.DELAY, AlertType.DELAY_REDUCED, AlertType.SCHEDULE_CHANGE)),
     GATE(listOf(AlertType.GATE_ASSIGNED, AlertType.GATE_CHANGE, AlertType.TERMINAL_CHANGE)),
-    BOARDING(listOf(AlertType.BOARDING)),
-    TAKEOFF_AND_LANDING(listOf(AlertType.DEPARTED, AlertType.LANDED)),
+    BOARDING(listOf(AlertType.BOARDING, AlertType.GATE_CLOSED)),
+    TAKEOFF_AND_LANDING(listOf(AlertType.DEPARTED, AlertType.TAKEOFF, AlertType.LANDED, AlertType.AT_GATE)),
     BAGGAGE(listOf(AlertType.BELT_ASSIGNED, AlertType.BELT_CHANGE)),
     DISRUPTION(listOf(AlertType.CANCELLED, AlertType.DIVERTED, AlertType.REINSTATED, AlertType.DIVERTED_DEST)),
     CHECK_IN(listOf(AlertType.CHECKIN_OPEN, AlertType.CHECKIN_CLOSING)),
     /** Fog and low visibility at either airport (free). */
     WEATHER(listOf(AlertType.FOG_ALERT)),
-    INBOUND_AIRCRAFT(listOf(AlertType.INBOUND_LATE));
+    INBOUND_AIRCRAFT(listOf(AlertType.INBOUND_LATE)),
+
+    /** P3: the airline swapped the aircraft before departure (Pro). */
+    AIRCRAFT_SWAP(listOf(AlertType.AIRCRAFT_SWAP)),
+
+    /** P3: the connection from this flight is at risk (Pro). */
+    CONNECTIONS(listOf(AlertType.CONNECTION_AT_RISK));
 
     /** The server sends these alerts to Pro users only. */
     val proOnly: Boolean get() = types.all { it.proOnly }

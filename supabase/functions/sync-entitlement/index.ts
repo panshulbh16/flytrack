@@ -1,8 +1,15 @@
 // POST (Authorization: Bearer <user JWT>). The apps call it after a purchase or restore.
 // Re-fetches RevenueCat for the caller, updates their profile and returns
-// { plan: "pro"|"free", pro_until: iso|null, trial_flight_id: uuid|null }.
+// { plan: "pro"|"free", pro_until: iso|null, trial_flight_id: uuid|null, via_family: {owner_name}|null }.
+// via_family (P3 B13): the user is Pro through their family owner's plan, not their own.
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { revenueCatApi, SupabaseBillingStore, syncEntitlement } from "../_shared/billing.ts";
+import {
+  applyFamilyPro,
+  type FamilyProSource,
+  revenueCatApi,
+  SupabaseBillingStore,
+  syncEntitlement,
+} from "../_shared/billing.ts";
 import { cors, json, log } from "../_shared/http.ts";
 import { publishableKey } from "../_shared/supabase-keys.ts";
 import { serviceClient } from "../_shared/supabase-repo.ts";
@@ -24,14 +31,17 @@ Deno.serve(async (req) => {
 
   const rcKey = Deno.env.get("REVENUECAT_SECRET_API_KEY")?.trim();
   try {
+    const db = serviceClient();
     const result = await syncEntitlement({
-      store: new SupabaseBillingStore(serviceClient()),
+      store: new SupabaseBillingStore(db),
       rc: rcKey ? revenueCatApi(rcKey) : null,
       now: () => new Date(),
       log,
     }, user.id);
     if (!result) return json({ error: "no_profile" }, 404);
-    return json(result);
+    const fam = await db.rpc("family_pro_source", { p_user: user.id });
+    if (fam.error) throw new Error(`family_pro_source: ${fam.error.message}`);
+    return json(applyFamilyPro(result, (fam.data as FamilyProSource | null) ?? null, new Date()));
   } catch (e) {
     log("sync-entitlement failed", { error: String(e) });
     return json({ error: "upstream" }, 502);

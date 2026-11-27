@@ -22,7 +22,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import app.flytrack.R
-import app.flytrack.core.model.UserProfile
 import app.flytrack.feature.billing.ProRepository
 import app.flytrack.feature.billing.ProSource
 import app.flytrack.feature.billing.ProState
@@ -101,16 +100,19 @@ fun ProSettingsContent(
             }
         } else {
             Text(
-                text = stringResource(R.string.billing_settings_free, UserProfile.FREE_TRACKING_LIMIT),
+                text = stringResource(R.string.billing_settings_free_unlimited),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Spacer(Modifier.height(12.dp))
-            PrimaryButton(
-                text = stringResource(R.string.billing_settings_go_pro),
-                onClick = onGoPro,
-                modifier = Modifier.fillMaxWidth(),
-            )
+            // P3 B12: crew mode hides every upsell.
+            if (!LocalUpsellsHidden.current) {
+                Spacer(Modifier.height(12.dp))
+                PrimaryButton(
+                    text = stringResource(R.string.billing_settings_go_pro),
+                    onClick = onGoPro,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
         }
         if (billingAvailable) {
             TextButton(onClick = onRestore, enabled = !state.isRestoring) {

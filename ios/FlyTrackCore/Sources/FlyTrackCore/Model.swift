@@ -55,19 +55,35 @@ public enum AlertType: String, CaseIterable, Sendable, Equatable, Hashable {
     case fogAlert = "FOG_ALERT"
     /// After DIVERTED: the diversion airport became known (P2 contract section 3). Critical.
     case divertedDest = "DIVERTED_DEST"
+    // P3 (docs/P3_CONTRACTS.md section C): appended in exactly the order of EVENT_TYPES.
+    /// Status `gate_closed` (A2, info).
+    case gateClosed = "GATE_CLOSED"
+    /// Runway time known: the aircraft is airborne (A2, info).
+    case takeoff = "TAKEOFF"
+    /// On-block time known: the aircraft reached the arrival gate (A2, info).
+    case atGate = "AT_GATE"
+    /// The tail number changed before departure (A5, Pro, critical).
+    case aircraftSwap = "AIRCRAFT_SWAP"
+    /// A connection from this flight went from ok or tight to at risk (B4, Pro, critical).
+    case connectionAtRisk = "CONNECTION_AT_RISK"
 
     public var wire: String { rawValue }
 
     public var critical: Bool {
         switch self {
-        case .delayReduced, .gateAssigned, .departed, .landed, .checkinOpen:
+        case .delayReduced, .gateAssigned, .departed, .landed, .checkinOpen, .gateClosed, .takeoff, .atGate:
             return false
         default:
             return true
         }
     }
 
-    public var proOnly: Bool { self == .inboundLate }
+    public var proOnly: Bool {
+        switch self {
+        case .inboundLate, .aircraftSwap, .connectionAtRisk: return true
+        default: return false
+        }
+    }
 
     public static func fromWire(_ value: String?) -> AlertType? {
         guard let value else { return nil }
@@ -92,7 +108,8 @@ public enum Cabin: String, CaseIterable, Sendable, Equatable {
 public enum TrackSource: String, CaseIterable, Sendable, Equatable {
     /// `scan` is a boarding-pass barcode read with the camera or from a photo (P1 contract section 5).
     /// `email` is a booking email forwarded to the user's HeyGate address (P2 wave 2 contract section 2).
-    case manual, pdf, share, screenshot, gmail, scan, email
+    /// `calendar` is a suggestion from the device calendar (P3 A3, migration 21).
+    case manual, pdf, share, screenshot, gmail, scan, email, calendar
 
     public var wire: String { rawValue }
 
@@ -222,6 +239,19 @@ public struct Flight: Hashable, Sendable {
     public var inboundFlightId: String?
     public var prediction: InboundPrediction?
     public var hasProInsight: Bool
+    // P3 (docs/P3_CONTRACTS.md A2, A5): block times for everyone, the ICAO type for everyone, the age for Pro.
+    /// Pushback (off-block).
+    public var depOffblockAt: Date?
+    /// Takeoff (runway time).
+    public var depRunwayAt: Date?
+    /// Touchdown (runway time).
+    public var arrRunwayAt: Date?
+    /// At the arrival gate (on-block).
+    public var arrOnblockAt: Date?
+    /// "A20N"; from the `aircraft` table.
+    public var aircraftIcaoType: String?
+    /// Years, one decimal; only when the caller is Pro for the flight.
+    public var aircraftAgeYears: Double?
 
     public init(
         id: String,
@@ -254,7 +284,13 @@ public struct Flight: Hashable, Sendable {
         arrAirport: Airport? = nil,
         inboundFlightId: String? = nil,
         prediction: InboundPrediction? = nil,
-        hasProInsight: Bool = false
+        hasProInsight: Bool = false,
+        depOffblockAt: Date? = nil,
+        depRunwayAt: Date? = nil,
+        arrRunwayAt: Date? = nil,
+        arrOnblockAt: Date? = nil,
+        aircraftIcaoType: String? = nil,
+        aircraftAgeYears: Double? = nil
     ) {
         self.id = id
         self.carrierIata = carrierIata
@@ -287,6 +323,12 @@ public struct Flight: Hashable, Sendable {
         self.inboundFlightId = inboundFlightId
         self.prediction = prediction
         self.hasProInsight = hasProInsight
+        self.depOffblockAt = depOffblockAt
+        self.depRunwayAt = depRunwayAt
+        self.arrRunwayAt = arrRunwayAt
+        self.arrOnblockAt = arrOnblockAt
+        self.aircraftIcaoType = aircraftIcaoType
+        self.aircraftAgeYears = aircraftAgeYears
     }
 
     public var designator: String { "\(carrierIata) \(flightNumber)" }
@@ -382,8 +424,10 @@ public func normalizePnr(_ input: String?) -> String? {
 }
 
 public struct UserProfile: Hashable, Sendable {
-    public static let freeTrackingLimit = 10
-    public static let proTrackingLimit = 50
+    /// P3 A1: no product limit any more, only the server's anti-abuse cap (`enforce_tracking_limit`, migration 21).
+    /// The apps never upsell on a count.
+    public static let freeTrackingLimit = 100
+    public static let proTrackingLimit = 300
 
     public var id: String
     public var displayName: String?

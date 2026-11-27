@@ -29,6 +29,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.flytrack.R
 import app.flytrack.core.model.FlightPhase
 import app.flytrack.feature.billing.ui.LocalPaywallLauncher
+import app.flytrack.feature.billing.ui.LocalUpsellsHidden
+import app.flytrack.feature.intel.AirportTrendsBlock
 import app.flytrack.ui.components.HairlineDivider
 import app.flytrack.ui.components.SectionCaption
 import app.flytrack.ui.components.StatusPill
@@ -95,7 +97,11 @@ private fun AirportRow(entry: AirportHealthEntry) {
             Spacer(Modifier.width(12.dp))
             StatusPill(text = levelWord(health.level), tone = health.level.tone)
         }
-        health.detail?.let { DetailRows(it) }
+        health.detail?.let {
+            DetailRows(it)
+            // P3: delay trends by hour and by day (Pro; the detail is only there for Pro).
+            AirportTrendsBlock(health.iata)
+        }
     }
 }
 
@@ -145,6 +151,8 @@ private fun DetailRow(label: String, value: String) {
 
 @Composable
 private fun HealthTeaser() {
+    // P3 B12: crew mode hides every upsell.
+    if (LocalUpsellsHidden.current) return
     val launcher = LocalPaywallLauncher.current
     Surface(
         onClick = launcher::openPaywall,

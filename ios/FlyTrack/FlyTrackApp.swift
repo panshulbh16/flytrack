@@ -1,3 +1,4 @@
+import Combine
 import FlyTrackCore
 import SwiftData
 import SwiftUI
@@ -119,6 +120,16 @@ final class AppShell: ObservableObject {
     let forecast: LiveForecast
     let travelTimes: DeviceTravelTimes
     let leaveReminders: LocalLeaveReminders
+    // P3 flight intelligence and widgets (docs/P3_CONTRACTS.md A2, A4, A5, B1–B4, B7).
+    let intel: LiveFlightIntel
+    let widgets = WidgetPublisher()
+    // P3 search / social / watch (docs/P3_CONTRACTS.md A3, B5, B6, B9, B10, B12, B13).
+    let p3: P3Center
+    // P4: radar, TripIt, Gift Pro, terminal maps (docs/P4_CONTRACTS.md).
+    let p4: P4Center
+    private var p3Changes: AnyCancellable?
+    private var p4Changes: AnyCancellable?
+    private var crewModeChanges: AnyCancellable?
 
     @Published var session: SessionState = .loading
     @Published var path = NavigationPath()
@@ -140,8 +151,11 @@ final class AppShell: ObservableObject {
         gmailAuth = GmailAuth(settings: settings, api: gmailAPI)
         let billing = makeBillingGateway()
         self.billing = billing
+        // P3 B13: a family member has no Pro of their own in `profiles`; the cached family grant fills the gap.
+        let familyGrant = FamilyGrantCache(stack: stack)
         pro = ProCenter(service: ProService(
-            billing: billing, profiles: profiles, auth: auth, sync: LiveEntitlementSync(stack: stack), clock: clock
+            billing: billing, profiles: profiles, auth: auth, sync: LiveEntitlementSync(stack: stack), clock: clock,
+            family: familyGrant
         ))
         sharing = LiveFlightSharing(stack: stack, auth: auth)
         checkinRules = LiveCheckinRules(stack: stack)
@@ -153,6 +167,9 @@ final class AppShell: ObservableObject {
         forwarding = LiveForwarding(backend: wave2)
         calendarFeed = LiveCalendarFeed(backend: wave2)
         forecast = LiveForecast(backend: wave2)
+        intel = LiveFlightIntel(backend: wave2)
+        p3 = P3Center(stack: stack, flights: flights, backend: wave2, familyGrant: familyGrant)
+        p4 = P4Center(stack: stack, auth: auth, backend: wave2, billing: billing)
         travelTimes = DeviceTravelTimes()
         leaveReminders = LocalLeaveReminders()
         let receipts = PushReceipts(sender: LivePushAck(stack: stack))
@@ -167,6 +184,7 @@ final class AppShell: ObservableObject {
             // as Android does when its session's user id changes. bootstrap() handles the launch.
             let push = push
             let pro = pro
+            let p3 = p3
             Task {
                 var lastUser = client.auth.currentSession?.user.id
                 for await (_, session) in client.auth.authStateChanges {
@@ -176,6 +194,8 @@ final class AppShell: ObservableObject {
                     if let token = await push.currentToken() {
                         await DeviceRegistrar.register(token: token, client: client)
                     }
+                    // P3: crew mode and the family's Pro belong to the new user (read before Pro is resolved).
+                    await p3.refresh()
                     // RevenueCat follows the Supabase user (contract: logIn(userId) after every sign-in).
                     await pro.identifyAndReload()
                 }
@@ -196,7 +216,20 @@ final class AppShell: ObservableObject {
         }
         #endif
         PushBridge.shared.onGmailSuggestion = { [weak self] id, dismiss in self?.openGmailSuggestion(id, dismiss: dismiss) }
-        auth.onUserDataWiped = { [weak self] in await self?.clearGmail() }
+        auth.onUserDataWiped = { [weak self] in
+            await self?.clearGmail()
+            self?.widgets.clear()
+            self?.p3.clear()
+        }
+        // Screens observe the shell; crew mode and the family's Pro live in `p3`.
+        p3Changes = p3.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }
+        p4Changes = p4.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }
+        // P3 B12: turning crew mode on cancels pending when-to-leave reminders at once; turning it off re-plans them.
+        crewModeChanges = p3.$crewMode.removeDuplicates().dropFirst().sink { [weak self] _ in
+            Task { @MainActor in await self?.resyncLeaveReminders() }
+        }
+        // The widget reads the App Group snapshot the app rewrites after every sync (P3 A4).
+        flights.onCacheChanged = { [weak self] in await self?.publishWidgets() }
     }
 
     /// One scanner per run (Gmail screen, app-open check, BGTask). It keeps no state between scans.
@@ -249,6 +282,7 @@ final class AppShell: ObservableObject {
             _ = await flights.refresh()
             _ = await profiles.refresh()
             await alertPrefs.applyDeviceDefaultOnce()
+            await p3.refresh()
         }
         await pro.identifyAndReload()
         await FlightLiveActivities.resume(client: stack.client, push: push, flights: flights)
@@ -262,6 +296,24 @@ final class AppShell: ObservableObject {
         // heygate://friend?code=ABCDEFGH from an invite (P2 wave 2 section 1).
         if url.host?.lowercased() == "friend" {
             path.append(Route.acceptInvite(inviteCode(fromURL: url)))
+            return
+        }
+        // heygate://family?code=ABCDEFGH from a family invite (P3 B13).
+        if url.host?.lowercased() == "family" {
+            path.append(Route.family(familyInviteCode(fromURL: url)))
+            return
+        }
+        // heygate://tripit/callback?code=... (or /connected, /failed?error=...) when a browser handed TripIt's
+        // redirect to the app (P4 section 2); ASWebAuthenticationSession normally catches it itself. Settings holds
+        // the TripIt row, whose model finishes a code with tripit-complete as the signed-in user.
+        if parseTripItCallback(url) != nil {
+            p4.pendingTripItCallback = url
+            if !p4.settingsVisible { path.append(Route.settings) }
+            return
+        }
+        // heygate://gift?code=ABCD-EFGH-JKMN from a gift message (P4 section 3).
+        if url.host?.lowercased() == "gift" {
+            path.append(Route.redeemGift(giftCode(fromURL: url)))
             return
         }
         if url.host == "import" || url.path == "/import" {
@@ -304,8 +356,21 @@ final class AppShell: ObservableObject {
         await resyncLeaveReminders()
     }
 
+    /// Rewrites the widget snapshot from the cached, tracked flights (P3 A4).
+    func publishWidgets() async {
+        let tracked = await flights.trackedFlights()
+        widgets.publish(flights: tracked.map(\.flight), now: clock.now())
+        // P3 B9: the Apple Watch gets the same flights.
+        p3.watch.publish(flights: tracked.map(\.flight), now: clock.now())
+    }
+
     /// Re-plans pending "time to leave" reminders from the cache (P2 wave 2 section 5).
     func resyncLeaveReminders() async {
+        // P3 B12: crew mode mutes when-to-leave.
+        if p3.crewMode {
+            await cancelAllLeaveReminders()
+            return
+        }
         await leaveReminders.resync(flights: flights, travel: travelTimes, pro: await pro.service.proState())
     }
 
@@ -328,6 +393,25 @@ enum Route: Hashable {
     /// The accept screen, with the code from an invite link when there is one.
     case acceptInvite(String?)
     case forwarding
+    /// P3 B4: the connection assistant.
+    case connections
+    /// P3 B7: delay trends at one airport (IATA).
+    case airportTrends(String)
+    /// P3 A3: flights found in the device calendar.
+    case calendarImport
+    /// P3 B10: "You vs {friend}" (friend id, name from the friends list).
+    case friendCompare(String, String?)
+    /// P3 B13: family sharing, with the code from an invite link when there is one.
+    case family(String?)
+    /// P4 section 1: ground radar at an airport, planes near me, or planes near a flight.
+    case radar(RadarTarget)
+    /// P4 section 4: an airport's terminal map, with the gate / belt / terminal to highlight.
+    case terminalMap(TerminalMapRequest)
+    /// P4 section 3: "Redeem a gift code", with the code from a gift link when there is one.
+    case redeemGift(String?)
+    case myGifts
+    /// P4 section 3: the paywall on its Gift Pro tab.
+    case giftPro
 }
 
 struct RootView: View {
@@ -361,6 +445,26 @@ struct RootView: View {
                         AcceptInviteScreen(shell: shell, prefill: code)
                     case .forwarding:
                         ForwardingScreen(shell: shell)
+                    case .connections:
+                        ConnectionsScreen(shell: shell)
+                    case .airportTrends(let iata):
+                        AirportTrendsScreen(shell: shell, iata: iata)
+                    case .calendarImport:
+                        CalendarImportScreen(shell: shell)
+                    case .friendCompare(let id, let name):
+                        FriendCompareScreen(shell: shell, friendId: id, friendName: name)
+                    case .family(let code):
+                        FamilyScreen(shell: shell, prefillCode: code)
+                    case .radar(let target):
+                        RadarScreen(shell: shell, target: target)
+                    case .terminalMap(let request):
+                        TerminalMapScreen(shell: shell, request: request)
+                    case .redeemGift(let code):
+                        RedeemGiftScreen(shell: shell, prefill: code)
+                    case .myGifts:
+                        MyGiftsScreen(shell: shell)
+                    case .giftPro:
+                        PaywallScreen(shell: shell, initialTab: .gift)
                     }
                 }
         }

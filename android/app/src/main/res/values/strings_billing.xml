@@ -11,8 +11,6 @@
     <string name="billing_benefit_late_body">A push when the incoming plane will make your flight late, often before the airline says so.</string>
     <string name="billing_benefit_live_title">Live notification</string>
     <string name="billing_benefit_live_body">Your flight on the lock screen, from check-in to the baggage belt.</string>
-    <string name="billing_benefit_limit_title">More flights at once</string>
-    <string name="billing_benefit_limit_body">Track up to %1$d flights at the same time (free: %2$d).</string>
 
     <string name="billing_section_plans">Choose a plan</string>
     <string name="billing_plan_annual">Yearly</string>
@@ -70,6 +68,7 @@
 
     <!-- Settings -->
     <string name="billing_settings_section">FlyTrack Pro</string>
-    <string name="billing_settings_free">Free plan: up to %1$d flights at once. Pro adds inbound-aircraft predictions, late-aircraft alerts and the live notification.</string>
     <string name="billing_settings_go_pro">Go Pro</string>
+    <!-- P3 A1: tracking is unlimited for everyone, so the free plan is described by what Pro adds, never by a count. -->
+    <string name="billing_settings_free_unlimited">Free plan: track as many flights as you like. Pro adds inbound-aircraft predictions, late-aircraft alerts and the live notification.</string>
 </resources>

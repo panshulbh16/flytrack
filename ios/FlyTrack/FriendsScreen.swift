@@ -161,7 +161,8 @@ struct FriendsScreen: View {
                         friend: friend,
                         busy: store.state.busy.contains(friend.id),
                         setAlerts: { enabled in Task { await store.setAlerts(friend.id, enabled: enabled) } },
-                        remove: { removing = friend }
+                        remove: { removing = friend },
+                        compare: { shell.path.append(Route.friendCompare(friend.id, friend.displayName)) }
                     )
                 }
             }
@@ -188,6 +189,8 @@ private struct FriendRowView: View {
     var busy: Bool
     var setAlerts: (Bool) -> Void
     var remove: () -> Void
+    /// P3 B10: "You vs {friend}".
+    var compare: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -208,6 +211,9 @@ private struct FriendRowView: View {
             }
             Toggle(String(localized: "Alerts for their flights"), isOn: Binding(get: { friend.alertsEnabled }, set: setAlerts))
                 .disabled(busy)
+                .hitTarget()
+            Button(String(localized: "Compare Passports"), systemImage: "globe.asia.australia", action: compare)
+                .buttonStyle(.borderless)
                 .hitTarget()
         }
         .padding(.vertical, 4)

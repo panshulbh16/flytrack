@@ -794,3 +794,68 @@ disable "Link Google account" then.
   deep links are untested on hardware.
 * Default alert toggles in Settings apply to flights tracked afterwards. They do not rewrite
   alerts on flights the user already changed.
+
+## 21. P3 search and social (android-search-social)
+
+Contracts other features can rely on (docs/P3_CONTRACTS.md A1, A3, B5, B6, B10, B12, B13):
+
+* **Tracking cap (A1).** `UserProfile.FREE_TRACKING_LIMIT = 100`, `PRO_TRACKING_LIMIT = 300` (the server's
+  anti-abuse `tracking_cap`). Nothing in the app sells Pro against a flight count any more;
+  `TrackProblem.LimitReached(limit)` only says "archive some flights".
+* **Searches.** `FlightRepository.searchPast(flightText, date)` (search-flight `mode: "past"`,
+  `PastSearchWindow`) and `searchRoute(RouteSearchQuery)` (search-route, `RouteSearchWindow`) return the
+  same `SearchResult` as `search`. `TrackExtras(archived = true)` inserts a past flight with
+  `archived_at = now()` and never touches an existing row.
+* **Bundled airports.** `assets/airports.json` (4,000 scheduled airports, compact rows
+  `[iata, name, city, country, lat, lon, tz]`, HeyTurbulence's catalog). Inject
+  `feature.airports.AirportCatalog`; `AirportList.search(query)` ranks code, city, name.
+* **Calendar import (A3).** `feature.calendarimport.CalendarFlightParser` is the Kotlin port of
+  HeyTurbulence `calendar-parser.js`; its fixtures `src/test/resources/fixtures/calendar_events.json` are
+  shared with iOS. READ_CALENDAR is requested only from the import screen's "Scan my calendar".
+* **Crew mode (B12).** `feature.social.ProfileFlagsRepository.crewMode: Flow<Boolean>` (device-cached
+  `profiles.crew_mode`). In Compose: `LocalCrewMode` (crew wording: block times, block hours) and
+  `LocalUpsellsHidden` (every Pro teaser or "See plans" returns early when true). Both are provided by
+  `ProStateProvider`. New upsell composables must check `LocalUpsellsHidden`.
+* **Family (B13).** `ProState.source == ProSource.FAMILY` / `isViaFamily` / `familyOwnerName`; show
+  `familyProText(ownerName)` ("Pro via Asha's family"). The grant is cached from `my_family()` and from
+  `sync-entitlement`'s `via_family`.
+* Routes: `CalendarImport`, `FriendPassport(friendId, friendName)`, `Family(prefillCode)`;
+  `AddFlight(prefillFrom, prefillTo)` opens the "By route" tab. Navigator: `openCalendarImport`,
+  `openAddFlightFromCalendar`, `openFriendPassport`, `openFamily`.
+
+## 22. P3 Wear OS (android-wear, contract B9)
+
+* **Module `:wear`** (`android/wear`, Kotlin package `app.flytrack.wear`, minSdk 30). The `applicationId` is `app.flytrack`, the same as the phone: the Wearable Data Layer only connects apps with the same package name and signing key, and Play pairs the watch build with the phone listing by package. Watch `versionCode`s live in the `1xxxxx` range so they never collide with the phone's.
+* **Phone side:** `feature/wear/WearNextFlight` (the payload: the sync push's compact keys plus `dtz`/`atz`, the widget's status word `sw`, delay `dm`, `tone`, `est`) and `NextFlightPublisher` (`DataLayerNextFlightPublisher`, Hilt-bound). `LiveCoordinator.apply` calls it after the widget, so Room changes, FCM syncs and the tick all reach the watch. The flight is the widget's (`LiveFlightSelector.selectWidget`); `WearPublishGate` writes only when the payload changes, and an empty state deletes the item. The logic lives in `WearNextFlightSync` over a `WearDataWriter` (Play services: `DataLayerWearWriter`), unit-tested with a fake: every write is bounded with `withTimeoutOrNull` (10 s) because a `withTimeout` failure is a `CancellationException` and, rethrown, would silently end `LiveCoordinator`'s Room collector; failures are logged and retried on the next update.
+* **Watch side:** `data/NextFlightRepository` reads `/next_flight` from the local Data Layer store; `ui/WatchFlightFormatter` (pure, tested) builds what is drawn and drops a stale flight with the phone's own relevance rule; `tile/NextFlightTileService` (protolayout Material 3), `complication/NextFlightComplicationService` (SHORT_TEXT, LONG_TEXT), `sync/NextFlightListenerService` (redraw requests on change) and `NextFlightActivity` (plain views).
+* The payload's JSON is pinned on both sides by the same golden string (`WearNextFlightTest.GOLDEN_JSON`, `NextFlightPayloadTest.PHONE_JSON`): change both together.
+
+## 23. P4: radar, TripIt, Gift Pro, terminal maps (android-p4, docs/P4_CONTRACTS.md 1–4)
+
+* **Routes / navigator.** `Radar(iata?, lat?, lon?)` (lat/lon are decimal strings), `TerminalMap(iata, gate?, belt?, flightId?)`,
+  `RedeemGift(prefillCode?)`, `MyGifts`; `AppNavigator.openRadar`, `openTerminalMap`, `openRedeemGift`, `openMyGifts`.
+* **Radar (`feature/radar`).** `RadarRepository.nearby(RadarQuery)` → `RadarResult` (GET `radar` through supabase-kt Functions with
+  `method = Get`; `BackendApi.invokeFunction` only POSTs). `RadarViewModel` refreshes every 10 s only between `setVisible(true/false)`
+  (screen lifecycle), waits 60 s after `rate_limited`, stops on `feed_unavailable`/`feed_unlicensed` ("Radar is coming soon"),
+  and keeps the last planes with a notice on offline/feed errors. Proximity points are rounded to 0.05° on the phone
+  (`RadarQuery.around`). Entry points: "Ground radar" (`AirportMapButtons`), Settings / flight list "Planes near me", and
+  "Planes around your flight" in the in-air map sheet (`PlanesAroundFlightButton`, the plane's live/estimated point). Location: `CoarseLocationProvider` (LocationManager network/passive provider, no Play services
+  location), permission `ACCESS_COARSE_LOCATION` asked on tap; FINE stays removed in the manifest. The map is
+  `RadarMapStyle` = `FlightMapStyle.style()` plus range/center/plane/label layers. **Labels are bitmaps**
+  (`MapLabelBitmaps`): the offline styles have no glyphs, so `text-field` cannot render; use `icon-image` with images.
+* **TripIt (`feature/tripit`).** `TripItSettingsSection()` in Settings → travel section. Connect opens `authorize_url` (only https
+  `*.tripit.com`) in a Custom Tab built by hand (`openInCustomTab`; androidx.browser is not in the dependency set).
+  The manifest routes `heygate://tripit/*` to MainActivity, which calls `TripItDeepLinks.offer(intent.dataString)`; the NavHost
+  then opens Settings and the section consumes the link (Connected → status refresh, flights refreshed after the server's
+  first background sync). Hidden on `not_configured`. Flights added by the server have `TrackSource.TRIPIT`.
+* **Gift Pro (`feature/gift`).** `GiftStore` (`RevenueCatGiftStore` fetches `heygate_gift_year`/`heygate_gift_trip` by product id,
+  INAPP, after logging RevenueCat in as the Supabase user; `NoopGiftStore` without a key). The paywall shows a "Get Pro | Gift Pro"
+  tab row (`PaywallScreen(giftTab = …)`, hidden in crew mode; `GiftTabRequest.request()` opens it on the gift tab). After a
+  purchase `GiftRepository.awaitNewCode` polls `my_gifts()` (~25 s) for the webhook's code, then `GiftCodeCard` offers
+  WhatsApp / Share / Copy (Hinglish + English text). `redeem_gift` normalises like the server and refreshes the profile on success.
+* **Terminal maps (`feature/terminalmap`).** `TerminalMapRepository` reads `assets/terminal-maps/{IATA}.geojson` (parsed once per
+  process); the style reads the asset directly (`asset://terminal-maps/…`). `AirportMapButtons` under the departure and arrival
+  blocks of flight detail ("Terminal map" for airports with a file or in `PLANNED_AIRPORTS`, "Ground radar"). The user's gate
+  (`dep_gate`, matched by `TerminalMapLogic.normalizeRef`: "Gate 07" = "7") and the belt area are highlighted; the POI list
+  sorts by distance from the gate when it is known. "© OpenStreetMap contributors (ODbL)" is drawn over the map and must stay.
+* Tests: `src/test/kotlin/app/flytrack/feature/{radar,terminalmap,tripit,gift}`; fixtures in `src/test/resources/fixtures/p4/`.

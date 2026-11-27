@@ -5,7 +5,10 @@ import SwiftUI
 /// key (or with no products yet) the screen says "Pro coming soon" and the rest of the app keeps working.
 struct PaywallScreen: View {
     @ObservedObject var shell: AppShell
+    /// P4 section 3: Settings → "Gift Pro to someone" opens the Gift Pro tab.
+    var initialTab: PaywallTab = .forMe
     @State private var store: PaywallStore?
+    @State private var tab: PaywallTab?
     @Environment(\.openURL) private var openURL
 
     var body: some View {
@@ -17,7 +20,15 @@ struct PaywallScreen: View {
                         .accessibilityAddTraits(.isHeader)
                     Text(String(localized: "Know before the airline tells you."))
                         .font(FlyFont.serifItalic(20, relativeTo: .title3))
-                    if let store {
+                    // P4 section 3: buy Pro for yourself, or a gift code for someone else.
+                    Picker(String(localized: "Pro for"), selection: Binding(get: { tab ?? initialTab }, set: { tab = $0 })) {
+                        Text(String(localized: "Pro for me")).tag(PaywallTab.forMe)
+                        Text(String(localized: "Gift Pro")).tag(PaywallTab.gift)
+                    }
+                    .pickerStyle(.segmented)
+                    if (tab ?? initialTab) == .gift {
+                        GiftProTab(shell: shell)
+                    } else if let store {
                         if store.state.pro.isPro { ProStatusView(state: store.state.pro) }
                         benefits
                         content(store)
@@ -45,8 +56,8 @@ struct PaywallScreen: View {
                     String(localized: "A push when the incoming plane will make your flight late, often before the airline says so."))
             benefit("lock.iphone", String(localized: "Live Activity"),
                     String(localized: "Your flight on the Lock Screen, from check-in to the baggage belt."))
-            benefit("list.bullet", String(localized: "More flights at once"),
-                    String(localized: "Track up to \(UserProfile.proTrackingLimit) flights at the same time (free: \(UserProfile.freeTrackingLimit))."))
+            benefit("person.3", String(localized: "Family sharing"),
+                    String(localized: "On a yearly plan, share Pro with up to five family members."))
         }
     }
 
@@ -216,6 +227,11 @@ struct ProStatusView: View {
 }
 
 func proUntilText(_ state: ProState) -> String {
+    // P3 B13: a family's Pro runs as long as the owner's plan.
+    if state.isViaFamily {
+        guard let owner = state.familyOwnerName else { return String(localized: "Pro via your family") }
+        return String(localized: "Pro via \(owner)'s family")
+    }
     guard let until = state.proUntil else { return String(localized: "Pro, with no end date") }
     let date = until.formatted(date: .abbreviated, time: .shortened)
     return state.source == .tripPass ? String(localized: "Trip pass until \(date)") : String(localized: "Pro until \(date)")

@@ -57,6 +57,9 @@ import app.flytrack.feature.flights.ui.FlightCard
 import app.flytrack.feature.flights.ui.NextFlightCard
 import app.flytrack.feature.flights.ui.PreviewFlights
 import app.flytrack.feature.friends.FriendsFlightsUiState
+import app.flytrack.feature.intel.ConnectionsUiState
+import app.flytrack.feature.intel.connectionsItems
+import app.flytrack.feature.intel.rememberConnections
 import app.flytrack.feature.friends.friendsFlightsItems
 import app.flytrack.feature.friends.rememberFriendsFlights
 import app.flytrack.feature.gmailimport.GmailSuggestion
@@ -68,6 +71,7 @@ import app.flytrack.ui.components.BackendNotConfiguredState
 import app.flytrack.ui.components.EmptyState
 import app.flytrack.ui.components.FlyTrackTopBar
 import app.flytrack.ui.components.IconAction
+import app.flytrack.feature.billing.ui.LocalProState
 import app.flytrack.ui.components.LoadingState
 import app.flytrack.ui.components.PrimaryButton
 import app.flytrack.ui.components.SecondaryButton
@@ -90,6 +94,8 @@ fun FlightsRoute(
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.onScreenResumed() }
     // P2 wave 2: flights friends share with the user; refreshed on resume and pull-to-refresh.
     val friends = rememberFriendsFlights()
+    // P3: connection assistant (Pro; a teaser for free users who track a connecting trip).
+    val connections = rememberConnections()
 
     if (choosingImport) {
         ImportChooserSheet(
@@ -109,6 +115,7 @@ fun FlightsRoute(
         onRefresh = {
             viewModel.refresh()
             friends.refresh()
+            connections.refresh()
         },
         onArchive = viewModel::archive,
         onUntrack = viewModel::untrack,
@@ -118,6 +125,7 @@ fun FlightsRoute(
         onDismissGmailSuggestion = viewModel::dismissGmailSuggestion,
         topContent = { NotificationPermissionPrompt() },
         friendsFlights = friends.state.value,
+        connections = connections.state.value,
     )
 }
 
@@ -138,6 +146,7 @@ fun FlightsScreen(
     onDismissGmailSuggestion: (suggestionId: String) -> Unit = {},
     topContent: @Composable () -> Unit = {},
     friendsFlights: FriendsFlightsUiState = FriendsFlightsUiState(),
+    connections: ConnectionsUiState = ConnectionsUiState.Hidden,
 ) {
     val snackbars = remember { SnackbarHostState() }
     FlightsSnackbar(state.message, snackbars, onUndo, onMessageShown)
@@ -149,6 +158,15 @@ fun FlightsScreen(
             FlyTrackTopBar(
                 title = stringResource(R.string.flights_title),
                 actions = {
+                    // P4: "Planes near me" for Pro users (free users find it in Settings, with the Pro note).
+                    if (LocalProState.current.isPro) {
+                        val navigator = LocalAppNavigator.current
+                        IconAction(
+                            icon = painterResource(R.drawable.ic_radar),
+                            contentDescription = stringResource(R.string.radar_action_near_me),
+                            onClick = { navigator.openRadar(iata = null) },
+                        )
+                    }
                     IconAction(
                         icon = painterResource(R.drawable.ic_ticket),
                         contentDescription = stringResource(R.string.flights_action_import_ticket),
@@ -189,7 +207,7 @@ fun FlightsScreen(
             when {
                 state.isLoading -> LoadingState(modifier = Modifier.fillMaxSize())
                 showEmpty -> EmptyFlights(state.isBackendConfigured, onAddFlight, onImportTicket)
-                else -> FlightList(state, onOpenFlight, onArchive, onUntrack, friendsFlights)
+                else -> FlightList(state, onOpenFlight, onArchive, onUntrack, friendsFlights, connections)
             }
             }
         }
@@ -262,6 +280,7 @@ private fun FlightList(
     onArchive: (String) -> Unit,
     onUntrack: (String) -> Unit,
     friendsFlights: FriendsFlightsUiState = FriendsFlightsUiState(),
+    connections: ConnectionsUiState = ConnectionsUiState.Hidden,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -274,6 +293,8 @@ private fun FlightList(
                 NextFlightCard(model = next, onClick = { onOpenFlight(next.card.flightId) })
             }
         }
+        // P3: connections between the tracked flights, right under the next flight.
+        connectionsItems(connections, onOpenFlight)
         if (state.upcoming.isNotEmpty()) {
             item(key = "upcoming-header", contentType = "header") {
                 SectionCaption(text = stringResource(R.string.flights_section_upcoming), modifier = Modifier.padding(top = 8.dp))

@@ -65,6 +65,10 @@ import app.flytrack.feature.airporthealth.AirportHealthBlock
 import app.flytrack.feature.checkin.CheckinCard
 import app.flytrack.feature.calendar.AddToCalendarButton
 import app.flytrack.feature.forecast.ForecastBlock
+import app.flytrack.feature.intel.FlightAircraftBlock
+import app.flytrack.feature.intel.FlightConnectionsBlock
+import app.flytrack.feature.intel.FlightPredictionBlock
+import app.flytrack.feature.intel.FlightTimelineBlock
 import app.flytrack.feature.friends.ShareWithFriendsRow
 import app.flytrack.feature.leave.WhenToLeaveCard
 import app.flytrack.feature.share.ShareRequest
@@ -92,6 +96,8 @@ import app.flytrack.feature.flights.ui.flightDateText
 import app.flytrack.feature.flights.ui.flightInfoLabel
 import app.flytrack.feature.flights.ui.minutesAmountText
 import app.flytrack.feature.map.FlightMapButton
+import app.flytrack.feature.flights.presentation.FlightField
+import app.flytrack.feature.terminalmap.AirportMapButtons
 import app.flytrack.feature.map.ProgressSourceRow
 import app.flytrack.ui.components.ErrorState
 import app.flytrack.ui.components.FlyTrackTopBar
@@ -262,14 +268,41 @@ private fun DetailContent(
             LittleNumbers(detail)
         }
         Section { FlightMapButton(detail.card.flightId) } // map: opens the offline map sheet
-        Section { EndpointBlock(stringResource(R.string.flights_departure), detail.departure) }
-        Section { EndpointBlock(stringResource(R.string.flights_arrival), detail.arrival) }
+        Section {
+            EndpointBlock(stringResource(R.string.flights_departure), detail.departure)
+            // P4: terminal map (gate highlighted) and ground radar of the departure airport.
+            AirportMapButtons(
+                iata = detail.departure.code,
+                gate = detail.departure.info.firstOrNull { it.field == FlightField.DEP_GATE }?.value,
+                belt = null,
+                flightId = detail.card.flightId,
+                showGroundRadar = true,
+                modifier = Modifier.padding(top = 12.dp),
+            )
+        }
+        Section {
+            EndpointBlock(stringResource(R.string.flights_arrival), detail.arrival)
+            AirportMapButtons(
+                iata = detail.arrival.code,
+                gate = detail.arrival.info.firstOrNull { it.field == FlightField.ARR_GATE }?.value,
+                belt = detail.arrival.info.firstOrNull { it.field == FlightField.BAGGAGE_BELT }?.value,
+                flightId = detail.card.flightId,
+                showGroundRadar = true,
+                modifier = Modifier.padding(top = 12.dp),
+            )
+        }
+        // P3 intelligence: delay prediction / usual gate / taxi times (Pro), connections (Pro) and the
+        // timeline. Each draws its own hairline, and nothing when it has nothing to show.
+        FlightPredictionBlock(detail.card.flightId)
+        FlightConnectionsBlock(detail.card.flightId)
+        FlightTimelineBlock(detail.card.flightId)
         // P2 Airport Health: draws its own hairline, and nothing once the flight has landed.
         AirportHealthBlock(depIata = detail.card.depCode, arrIata = detail.card.arrCode, phase = detail.card.phase)
         // P2 wave 2: when to leave (Pro, tracked upcoming flights) and the arrival forecast. Both draw their own hairline.
         WhenToLeaveCard(detail.card.flightId)
         ForecastBlock(detail.card.flightId)
-        Section { AircraftBlock(detail) }
+        // P3: type for everyone, ICAO type, and for Pro the age and the swap history.
+        Section { FlightAircraftBlock(detail.card.flightId, detail.aircraftModel, detail.aircraftReg) }
         if (detail.proInsight != ProInsightUiModel.None) {
             Section { ProInsightBlock(detail.proInsight) }
         }
@@ -519,15 +552,6 @@ private fun LabelledRow(label: String, value: String?, placeholder: String) {
             textAlign = TextAlign.End,
         )
     }
-}
-
-@Composable
-private fun AircraftBlock(detail: FlightDetailUiModel) {
-    val unknown = stringResource(R.string.flights_detail_aircraft_unknown)
-    SectionCaption(text = stringResource(R.string.flights_detail_aircraft))
-    Spacer(Modifier.height(4.dp))
-    LabelledRow(stringResource(R.string.flights_detail_aircraft_type), detail.aircraftModel, unknown)
-    LabelledRow(stringResource(R.string.flights_detail_aircraft_reg), detail.aircraftReg, unknown)
 }
 
 @Composable

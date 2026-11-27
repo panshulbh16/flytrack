@@ -3,6 +3,8 @@ package app.flytrack.feature.addflight
 import app.flytrack.core.flightnumber.parseFlightNumber
 import app.flytrack.core.model.TrackExtras
 import app.flytrack.core.model.normalizePnr
+import app.flytrack.core.time.PastSearchWindow
+import app.flytrack.core.time.RouteSearchWindow
 import app.flytrack.core.time.SearchWindow
 import kotlinx.datetime.LocalDate
 import java.time.ZoneId
@@ -72,6 +74,28 @@ fun selectableDates(today: LocalDate, now: Instant): ClosedRange<LocalDate> {
     val first = maxOf(today.plusDays(-1), server.start)
     return first..maxOf(first, server.endInclusive)
 }
+
+/**
+ * P3 B6: the dates of a past flight: up to a year before today (on this phone) and at most today, clipped to
+ * what the server's past search accepts (365 days back in UTC).
+ */
+fun pastSelectableDates(today: LocalDate, now: Instant): ClosedRange<LocalDate> {
+    val server = PastSearchWindow.dates(now)
+    val first = maxOf(today.plusDays(-PastSearchWindow.MAX_DAYS_BACK), server.start)
+    val last = minOf(today, server.endInclusive)
+    return first..maxOf(first, last)
+}
+
+/** P3 B5: route search covers yesterday (on this phone) to 30 days ahead, clipped to the server's window. */
+fun routeSelectableDates(today: LocalDate, now: Instant): ClosedRange<LocalDate> {
+    val server = RouteSearchWindow.dates(now)
+    val first = maxOf(today.plusDays(-1), server.start)
+    val last = minOf(today.plusDays(RouteSearchWindow.MAX_DAYS_AHEAD), server.endInclusive)
+    return first..maxOf(first, last)
+}
+
+/** The airline field of the route form: empty, or a complete two-character code. */
+fun isAirlineInputAcceptable(input: String): Boolean = input.isEmpty() || input.length == 2
 
 private const val MILLIS_PER_DAY = 86_400_000L
 

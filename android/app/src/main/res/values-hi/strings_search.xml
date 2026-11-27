@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hindi translation of values/strings_search.xml. -->
+<resources>
+    <!-- Tabs -->
+    <string name="search_tab_flight_number">फ़्लाइट नंबर</string>
+    <string name="search_tab_route">रूट से</string>
+
+    <!-- Route search (B5) -->
+    <string name="search_route_intro">फ़्लाइट नंबर नहीं पता? एयरपोर्ट और दिन चुनें, हम उस दिन की रवानगियाँ दिखा देंगे।</string>
+    <string name="search_route_from">कहाँ से</string>
+    <string name="search_route_to">कहाँ तक</string>
+    <string name="search_route_choose">एयरपोर्ट चुनें</string>
+    <string name="search_route_any_destination">कोई भी मंज़िल</string>
+    <string name="search_route_swap">एयरपोर्ट अदला-बदली करें</string>
+    <string name="search_route_clear_to">मंज़िल हटाएँ</string>
+    <!-- %1$d is how many days ahead a route can be searched -->
+    <string name="search_route_date_hint">रवानगी वाले एयरपोर्ट की स्थानीय तारीख। रूट से खोज अगले %1$d दिनों तक की जा सकती है।</string>
+    <string name="search_route_airline">एयरलाइन कोड (वैकल्पिक)</string>
+    <string name="search_route_airline_hint">दो अक्षर, जैसे IndiGo के लिए 6E या Air India के लिए AI।</string>
+    <string name="search_route_search">रवानगियाँ खोजें</string>
+    <string name="search_route_cost_note">रूट से एक खोज आपकी रोज़ की सीमा में दो फ़्लाइट खोजों के बराबर गिनी जाती है।</string>
+    <string name="search_route_error_from">वह एयरपोर्ट चुनें जहाँ से आप उड़ान भर रहे हैं।</string>
+    <string name="search_route_error_same">दो अलग-अलग एयरपोर्ट चुनें।</string>
+    <string name="search_route_error_airline">एयरलाइन कोड में दो अक्षर होते हैं, जैसे 6E।</string>
+    <!-- Caption of a route search without a destination. %1$s is an airport code -->
+    <string name="search_route_label_from">%1$s से रवानगियाँ</string>
+    <!-- %1$s is the route caption, %2$s the airline code -->
+    <string name="search_route_label_airline">%1$s · %2$s</string>
+    <!-- %1$d is the number of flights, %2$s is search_route_headline_key in italics -->
+    <plurals name="search_route_headline">
+        <item quantity="one">उस दिन %1$d फ़्लाइट। %2$s चुनें।</item>
+        <item quantity="other">उस दिन %1$d फ़्लाइट्स। %2$s चुनें।</item>
+    </plurals>
+    <string name="search_route_headline_key">अपनी फ़्लाइट</string>
+    <string name="search_route_not_found_message">कोई रवानगी नहीं मिली। तारीख जाँचें (रवानगी वाले एयरपोर्ट का स्थानीय समय), या ज़्यादा फ़्लाइट्स देखने के लिए मंज़िल या एयरलाइन हटा दें।</string>
+
+    <!-- Airport picker -->
+    <!-- %1$s airport code, %2$s city -->
+    <string name="search_airport_value">%1$s · %2$s</string>
+    <string name="search_airport_query">एयरपोर्ट खोजें</string>
+    <string name="search_airport_query_hint">शहर, एयरपोर्ट या कोड, जैसे Delhi या BOM</string>
+    <string name="search_airport_none">कोई एयरपोर्ट नहीं मिला। शहर का नाम या तीन अक्षरों वाला कोड लिखकर देखें।</string>
+    <!-- %1$s city, %2$s country -->
+    <string name="search_airport_city_country">%1$s, %2$s</string>
+
+    <!-- Past flights (B6) -->
+    <string name="search_past_title">पुरानी फ़्लाइट जोड़ें (पासपोर्ट के लिए)</string>
+    <string name="search_past_message">पिछले 12 महीनों की फ़्लाइट्स खोजें। ये बिना अलर्ट के सीधे आपके पासपोर्ट में जुड़ जाती हैं।</string>
+    <string name="search_past_add">पासपोर्ट में जोड़ें</string>
+    <!-- Accessibility label. %1$s flight number, %2$s and %3$s cities -->
+    <string name="search_past_add_description">%2$s से %3$s की %1$s अपने पासपोर्ट में जोड़ें</string>
+    <string name="search_past_not_found_message">तारीख जाँचें: यह वह दिन है जिस दिन फ़्लाइट ने उड़ान भरी, रवानगी वाले एयरपोर्ट के स्थानीय समय के हिसाब से। फिर एयरलाइन कोड जाँचें, जैसे IndiGo के लिए 6E और Air India के लिए AI।</string>
+
+    <!-- Calendar suggestions opening add-flight (A3) -->
+    <string name="search_prefill_calendar">आपके कैलेंडर से भरा गया है। ट्रैक करने से पहले जानकारी जाँच लें।</string>
+    <!-- %1$s is the event's date, %2$s the last date route search covers -->
+    <string name="search_prefill_route_too_far">आपके कैलेंडर में %1$s लिखा है, लेकिन रूट से खोज सिर्फ़ %2$s तक हो सकती है। उस दिन के क़रीब फिर आएँ, या फ़्लाइट नंबर से खोजें।</string>
+
+    <!-- The anti-abuse cap (A1). %1$d is the number of active flights allowed -->
+    <plurals name="search_limit_message">
+        <item quantity="one">आप अभी %1$d फ़्लाइट फ़ॉलो कर रहे हैं, जो एक खाते से एक साथ फ़ॉलो की जा सकने वाली सबसे ज़्यादा संख्या है। जिस फ़्लाइट की अब ज़रूरत नहीं, उसे आर्काइव करें या हटाएँ, फिर इसे ट्रैक करें।</item>
+        <item quantity="other">आप अभी %1$d फ़्लाइट्स फ़ॉलो कर रहे हैं, जो एक खाते से एक साथ फ़ॉलो की जा सकने वाली सबसे ज़्यादा संख्या है। जिन फ़्लाइट्स की अब ज़रूरत नहीं, उन्हें आर्काइव करें या हटाएँ, फिर इसे ट्रैक करें।</item>
+    </plurals>
+</resources>

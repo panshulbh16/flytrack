@@ -47,6 +47,14 @@ targets:
         excludes:
           - FlyTrack.entitlements
           - Info.plist
+          - Resources/TerminalMaps
+          - Resources/TerminalMaps/**
+      # P4 §4: bundled OSM terminal maps as a folder reference, so they load with
+      # Bundle.main.url(forResource: "DEL", withExtension: "geojson", subdirectory: "TerminalMaps").
+      - path: FlyTrack/Resources/TerminalMaps
+        type: folder
+        buildPhase: resources
+        optional: true
       - path: FlightActivity/FlightActivityAttributes.swift
     dependencies:
       - package: FlyTrackCore
@@ -65,6 +73,14 @@ targets:
         embed: true
       - target: FlightActivity
         embed: true
+      - target: FlyTrackWidget
+        embed: true
+      # P3 B9: the Apple Watch app, embedded in the iPhone app's Watch folder.
+      - target: FlyTrackWatch
+        embed: true
+        copy:
+          destination: productsDirectory
+          subpath: $(CONTENTS_FOLDER_PATH)/Watch
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: $(FLYTRACK_BUNDLE_ID)
@@ -89,6 +105,11 @@ targets:
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         ITSAppUsesNonExemptEncryption: false
         NSCameraUsageDescription: HeyGate reads the barcode on your boarding pass to add the flight.
+        # P3 A3: asked only when the user taps "Scan my calendar"; read-only.
+        NSCalendarsFullAccessUsageDescription: HeyGate looks through your calendar for flights so you can add them in one tap. Nothing is uploaded or changed.
+        # P4 section 1: "Planes near me" asks only on tap; approximate (reduced accuracy) location is enough.
+        NSLocationWhenInUseUsageDescription: HeyGate uses your approximate location only while the radar screen is open, to show the planes near you. It is never stored.
+        NSLocationDefaultAccuracyReduced: true
         UIBackgroundModes:
           - remote-notification
           - fetch
@@ -125,6 +146,8 @@ targets:
         com.apple.developer.usernotifications.time-sensitive: true
         com.apple.security.application-groups:
           - group.app.heygate.flytrack
+          # P3 A4: the widget snapshot (WidgetContract.appGroup), shared with FlyTrackWidget.
+          - group.app.flytrack
   ShareExtension:
     type: app-extension
     platform: iOS
@@ -185,6 +208,139 @@ targets:
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
+  # P3 A4: Home Screen (small, medium) and Lock Screen (rectangular, inline) widgets. Reads the snapshot the app
+  # writes into the App Group group.app.flytrack; no network. Theme.swift and the fonts are shared with the app.
+  FlyTrackWidget:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: FlyTrackWidget
+        excludes:
+          - Info.plist
+          - FlyTrackWidget.entitlements
+      - path: FlyTrack/Theme.swift
+      - path: FlyTrack/Fonts
+        buildPhase: resources
+        excludes:
+          - "*.txt"
+    dependencies:
+      - package: FlyTrackCore
+        product: FlyTrackCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(FLYTRACK_BUNDLE_ID).widget
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        GENERATE_INFOPLIST_FILE: YES
+        CODE_SIGN_ENTITLEMENTS: FlyTrackWidget/FlyTrackWidget.entitlements
+        SKIP_INSTALL: YES
+    info:
+      path: FlyTrackWidget/Info.plist
+      properties:
+        CFBundleDisplayName: HeyGate
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleLocalizations:
+          - en
+          - hi
+        UIAppFonts:
+          - InstrumentSerif-Regular.ttf
+          - InstrumentSerif-Italic.ttf
+          - DMSans.ttf
+          - DMSans-Italic.ttf
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: FlyTrackWidget/FlyTrackWidget.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.app.flytrack
+  # P3 B9: Apple Watch app (next flight over WatchConnectivity) and its WidgetKit complication.
+  FlyTrackWatch:
+    type: application
+    platform: watchOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: FlyTrackWatch
+        excludes:
+          - Info.plist
+          - FlyTrackWatch.entitlements
+    dependencies:
+      - package: FlyTrackCore
+        product: FlyTrackCore
+      - target: FlyTrackWatchComplication
+        embed: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(FLYTRACK_BUNDLE_ID).watchkitapp
+        SDKROOT: watchos
+        TARGETED_DEVICE_FAMILY: "4"
+        WATCHOS_DEPLOYMENT_TARGET: "26.0"
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: HeyGate
+        INFOPLIST_KEY_WKCompanionAppBundleIdentifier: $(FLYTRACK_BUNDLE_ID)
+        INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp: NO
+        CODE_SIGN_ENTITLEMENTS: FlyTrackWatch/FlyTrackWatch.entitlements
+        SKIP_INSTALL: YES
+    info:
+      path: FlyTrackWatch/Info.plist
+      properties:
+        CFBundleDisplayName: HeyGate
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleLocalizations:
+          - en
+          - hi
+        WKApplication: true
+        WKCompanionAppBundleIdentifier: $(FLYTRACK_BUNDLE_ID)
+    entitlements:
+      path: FlyTrackWatch/FlyTrackWatch.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.app.flytrack
+  FlyTrackWatchComplication:
+    type: app-extension
+    platform: watchOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: FlyTrackWatchComplication
+        excludes:
+          - Info.plist
+          - FlyTrackWatchComplication.entitlements
+      - path: FlyTrackWatch/WatchWording.swift
+    dependencies:
+      - package: FlyTrackCore
+        product: FlyTrackCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(FLYTRACK_BUNDLE_ID).watchkitapp.complication
+        SDKROOT: watchos
+        TARGETED_DEVICE_FAMILY: "4"
+        WATCHOS_DEPLOYMENT_TARGET: "26.0"
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        GENERATE_INFOPLIST_FILE: YES
+        CODE_SIGN_ENTITLEMENTS: FlyTrackWatchComplication/FlyTrackWatchComplication.entitlements
+        SKIP_INSTALL: YES
+    info:
+      path: FlyTrackWatchComplication/Info.plist
+      properties:
+        CFBundleDisplayName: HeyGate
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleLocalizations:
+          - en
+          - hi
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: FlyTrackWatchComplication/FlyTrackWatchComplication.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.app.flytrack
 schemes:
   FlyTrack:
     build:
@@ -192,11 +348,22 @@ schemes:
         FlyTrack: all
         ShareExtension: all
         FlightActivity: all
+        FlyTrackWidget: all
     run:
       config: Debug
     test:
       config: Debug
       targets:
         - package: FlyTrackCore/FlyTrackCoreTests
+    archive:
+      config: Release
+  # P3 B9: run the watch app on a paired watch simulator.
+  FlyTrackWatch:
+    build:
+      targets:
+        FlyTrackWatch: all
+        FlyTrackWatchComplication: all
+    run:
+      config: Debug
     archive:
       config: Release

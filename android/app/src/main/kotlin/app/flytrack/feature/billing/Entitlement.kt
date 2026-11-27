@@ -1,6 +1,7 @@
 package app.flytrack.feature.billing
 
 import app.flytrack.core.model.UserProfile
+import app.flytrack.feature.social.FamilyGrant
 import kotlin.time.Instant
 
 /**
@@ -35,6 +36,9 @@ enum class ProSource {
 
     /** A trip pass bought less than seven days ago. */
     TRIP_PASS,
+
+    /** P3 B13: a member of a family whose owner is Pro ("Pro via {owner}'s family"). Never passed on further. */
+    FAMILY,
 }
 
 /**
@@ -57,7 +61,12 @@ data class ProState(
     val confirmedByServer: Boolean,
     val trialFlightId: String?,
     val subscriptionActive: Boolean = false,
+    /** P3 B13: the family owner's name while [source] is [ProSource.FAMILY] (null when they set none). */
+    val familyOwnerName: String? = null,
 ) {
+    /** "Pro via {owner}'s family" applies. */
+    val isViaFamily: Boolean get() = isPro && source == ProSource.FAMILY
+
     /** Pro access on one flight: everyone on Pro, or the trial flight for free users. */
     fun accessFor(flightId: String): FlightProAccess = when {
         isPro -> FlightProAccess.PRO
@@ -82,7 +91,13 @@ object EntitlementRules {
      * A store snapshot for another RevenueCat user (the moment between a sign-in switch and
      * `logIn` finishing) is ignored, so one account's purchase never shows on another.
      */
-    fun resolve(profile: UserProfile?, store: StoreEntitlement?, currentUserId: String?, now: Instant): ProState {
+    fun resolve(
+        profile: UserProfile?,
+        store: StoreEntitlement?,
+        currentUserId: String?,
+        now: Instant,
+        family: FamilyGrant? = null,
+    ): ProState {
         val ownStore = store?.takeIf { currentUserId != null && it.appUserId == currentUserId }
         val subscriptionActive = ownStore != null && ownStore.proEntitlementActive &&
             (ownStore.proExpiresAt == null || ownStore.proExpiresAt > now)
@@ -94,7 +109,23 @@ object EntitlementRules {
             }
         }
         val trial = profile?.trialFlightId
-        if (grants.isEmpty()) return ProState.Free.copy(trialFlightId = trial)
+        if (grants.isEmpty()) {
+            // Own Pro always wins; a family's Pro (cached from my_family / sync-entitlement) only fills the gap.
+            // The server checks family Pro itself (is_pro), so this only decides what the app shows.
+            val ownFamily = family?.takeIf { currentUserId != null && it.userId == currentUserId }
+            return if (ownFamily != null) {
+                ProState(
+                    isPro = true,
+                    proUntil = null,
+                    source = ProSource.FAMILY,
+                    confirmedByServer = true,
+                    trialFlightId = trial,
+                    familyOwnerName = ownFamily.ownerName,
+                )
+            } else {
+                ProState.Free.copy(trialFlightId = trial)
+            }
+        }
 
         // The grant that lasts longest wins; null (no end) beats any date. Ties prefer the server.
         val best = grants.maxWith(compareBy<Grant> { it.until == null }.thenBy { it.until }.thenBy { it.source == ProSource.SERVER })

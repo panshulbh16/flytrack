@@ -3,6 +3,7 @@ package app.flytrack.testing
 import app.flytrack.core.model.Airport
 import app.flytrack.core.model.AlertType
 import app.flytrack.core.model.Flight
+import app.flytrack.core.model.RouteSearchQuery
 import app.flytrack.core.model.TrackExtras
 import app.flytrack.core.model.TrackedFlightDetails
 import app.flytrack.core.model.UserProfile
@@ -138,17 +139,38 @@ class FakeFlightRepository : FlightRepository {
         return result
     }
 
+    /** Result of [searchPast] and [searchRoute]; null = the same as [searchResult]. */
+    var pastSearchResult: SearchResult? = null
+    var routeSearchResult: SearchResult? = null
+    val pastSearches = mutableListOf<Pair<String, LocalDate>>()
+    val routeSearches = mutableListOf<RouteSearchQuery>()
+
+    override suspend fun searchPast(flightText: String, date: LocalDate): SearchResult {
+        pastSearches += flightText to date
+        return cacheFound(pastSearchResult ?: searchResult)
+    }
+
+    override suspend fun searchRoute(query: RouteSearchQuery): SearchResult {
+        routeSearches += query
+        return cacheFound(routeSearchResult ?: searchResult)
+    }
+
+    private fun cacheFound(result: SearchResult): SearchResult {
+        if (result is SearchResult.Found) cachedFlights.update { cache -> cache + result.legs.associateBy { it.id } }
+        return result
+    }
+
     override suspend fun track(flightId: String, extras: TrackExtras): TrackResult {
         trackCalls += flightId to extras
         trackResult?.let { return it }
-        tracked.value.firstOrNull { it.flight.id == flightId && !it.tracking.isArchived }
+        tracked.value.firstOrNull { it.flight.id == flightId && (!it.tracking.isArchived || extras.archived) }
             ?.let { return TrackResult.AlreadyTracked(it.tracking) }
         val flight = cachedFlights.value[flightId] ?: tracked.value.firstOrNull { it.flight.id == flightId }?.flight
             ?: return TrackResult.FlightNotFound
         val tracking = TestData.tracking(
             flightId = flightId, pnr = extras.pnr, seat = extras.seat, cabin = extras.cabin,
             source = extras.source, note = extras.note,
-        )
+        ).let { if (extras.archived) it.copy(archivedAt = TestData.NOW) else it }
         tracked.update { list -> list.filterNot { it.flight.id == flightId } + TrackedFlightDetails(tracking, flight) }
         return TrackResult.Tracked(tracking)
     }

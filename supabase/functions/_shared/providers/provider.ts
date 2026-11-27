@@ -19,6 +19,18 @@ export interface ProviderCallInfo {
   durationMs: number;
 }
 
+/** One aircraft (table public.aircraft, docs/P3_CONTRACTS.md A5). Dates are "YYYY-MM-DD". */
+export interface AircraftInfo {
+  reg: string;
+  model: string | null;
+  icaoType: string | null;
+  firstFlightDate: string | null;
+  deliveryDate: string | null;
+  ageYears: number | null; // one decimal
+  airlineIata: string | null;
+  seatConfig: string | null;
+}
+
 export interface WebhookSubscription {
   id: string;
   expiresAt: string | null;
@@ -36,6 +48,15 @@ export interface FlightDataProvider {
 
   /** All legs flown by an aircraft (tail) on a local date — used for "Where's my plane". */
   getFlightsByRegistration(reg: string, date: string): Promise<FlightSnapshot[]>;
+
+  /**
+   * Departures from an airport between two airport-LOCAL times "YYYY-MM-DDTHH:mm" (search by route, B5).
+   * Adapters split long ranges into windows the provider accepts; codeshare duplicates are removed.
+   */
+  getAirportDepartures(iata: string, fromLocal: string, toLocal: string): Promise<FlightSnapshot[]>;
+
+  /** Aircraft details by registration (age, type). Null when the provider doesn't know the tail. */
+  getAircraft?(reg: string): Promise<AircraftInfo | null>;
 
   /** Optional push support. If present, the poller subscribes and polls less often. */
   readonly supportsWebhooks: boolean;

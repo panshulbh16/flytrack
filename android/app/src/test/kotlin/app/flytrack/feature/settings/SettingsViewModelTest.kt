@@ -28,6 +28,8 @@ import app.flytrack.testing.MainDispatcherRule
 import app.flytrack.testing.TestData
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -159,9 +161,38 @@ class SettingsViewModelTest {
         )
         vm.uiState.value
         vm.setAlertGroup(app.flytrack.feature.flights.presentation.AlertGroup.BOARDING, enabled = false)
-        assertEquals(setOf(AlertType.BOARDING), alerts.muted.value)
+        // P3: the boarding switch also covers "gate closed".
+        assertEquals(setOf(AlertType.BOARDING, AlertType.GATE_CLOSED), alerts.muted.value)
         vm.setAlertGroup(app.flytrack.feature.flights.presentation.AlertGroup.INBOUND_AIRCRAFT, enabled = false)
-        assertEquals(setOf(AlertType.BOARDING), alerts.muted.value)
+        assertEquals(setOf(AlertType.BOARDING, AlertType.GATE_CLOSED), alerts.muted.value)
+    }
+
+    @Test
+    fun `a family member's Pro alert groups are unlocked`() = runTest {
+        val social = app.flytrack.feature.social.InMemorySocialStore()
+        val vm = SettingsViewModel(
+            auth = auth,
+            profiles = FakeProfileRepository(),
+            settings = settings,
+            defaultAlerts = MemoryAlerts(),
+            healthSource = health,
+            push = push,
+            config = BackendConfig("https://example.supabase.co", "anon", "web"),
+            clock = FakeClock(),
+            gmailConnection = gmailConnection,
+            gmailWork = gmailWork,
+            version = version,
+            social = social,
+        )
+        backgroundScope.launch(kotlinx.coroutines.test.UnconfinedTestDispatcher(testScheduler)) { vm.uiState.collect {} }
+        val inbound = app.flytrack.feature.flights.presentation.AlertGroup.INBOUND_AIRCRAFT
+        fun locked() = vm.uiState.value.alerts.single { it.group == inbound }.locked
+        runCurrent()
+        assertTrue(locked())
+
+        social.family.value = app.flytrack.feature.social.FamilyGrant(TestData.USER_ID, "Asha")
+        runCurrent()
+        assertFalse(locked())
     }
 
     // ---- Gmail --------------------------------------------------------------------------------

@@ -117,6 +117,8 @@ data class UserFlightInsertDto(
     val cabin: String? = null,
     val source: String = "manual",
     val note: String? = null,
+    /** P3 B6: set (now) for a past flight added straight to Passport; omitted otherwise. */
+    @SerialName("archived_at") val archivedAt: String? = null,
 )
 
 /** One row of `public.airports`. */
@@ -148,6 +150,18 @@ data class SearchFlightRequest(
     val flight: String,
     /** "YYYY-MM-DD": local departure date. */
     val date: String,
+    /** P3 B6: "past" for dates up to 365 days back; omitted for the normal search. */
+    val mode: String? = null,
+)
+
+/** Body of `POST /functions/v1/search-route` (P3 B5). */
+@Serializable
+data class SearchRouteRequest(
+    val dep: String,
+    val arr: String? = null,
+    /** "YYYY-MM-DD": local departure date at [dep]. */
+    val date: String,
+    val airline: String? = null,
 )
 
 /** 200 response of `search-flight`. */

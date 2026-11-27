@@ -36,6 +36,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import app.flytrack.R
 import app.flytrack.core.model.TrackSource
+import app.flytrack.feature.airports.CatalogAirport
 import app.flytrack.ui.components.FlyTrackTopBar
 import app.flytrack.ui.components.HairlineDivider
 import app.flytrack.ui.nav.LocalAppNavigator
@@ -61,6 +62,8 @@ fun AddFlightRoute(
     prefillSource: String? = null,
     prefillSeat: String? = null,
     prefillGmailSuggestionId: String? = null,
+    prefillFrom: String? = null,
+    prefillTo: String? = null,
 ) {
     val prefill = AddFlightPrefill(
         flight = prefillFlight,
@@ -69,6 +72,8 @@ fun AddFlightRoute(
         source = prefillSource?.let { raw -> TrackSource.entries.firstOrNull { it.wire == raw } },
         seat = prefillSeat,
         gmailSuggestionId = prefillGmailSuggestionId,
+        routeFrom = prefillFrom,
+        routeTo = prefillTo,
     )
     val viewModel = hiltViewModel<AddFlightViewModel, AddFlightViewModel.Factory>(
         creationCallback = { factory -> factory.create(prefill) },
@@ -102,6 +107,14 @@ fun AddFlightRoute(
         onOpenSettings = navigator::openSettings,
         onShowMyFlights = { onDone(null) },
         onBack = onBack,
+        onModeChange = viewModel::onModeChange,
+        onPastFlightChange = viewModel::onPastFlightChange,
+        onRouteFromChange = viewModel::onRouteFromChange,
+        onRouteToChange = viewModel::onRouteToChange,
+        onRouteSwap = viewModel::onRouteSwap,
+        onRouteAirlineChange = viewModel::onRouteAirlineChange,
+        onRouteDateChange = viewModel::onRouteDateChange,
+        onImportCalendar = navigator::openCalendarImport,
     )
 }
 
@@ -121,6 +134,14 @@ fun AddFlightScreen(
     onShowMyFlights: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    onModeChange: (AddFlightMode) -> Unit = {},
+    onPastFlightChange: ((Boolean) -> Unit)? = null,
+    onRouteFromChange: (CatalogAirport) -> Unit = {},
+    onRouteToChange: (CatalogAirport?) -> Unit = {},
+    onRouteSwap: () -> Unit = {},
+    onRouteAirlineChange: (String) -> Unit = {},
+    onRouteDateChange: (LocalDate) -> Unit = {},
+    onImportCalendar: (() -> Unit)? = null,
 ) {
     var showDatePicker by rememberSaveable { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
@@ -163,15 +184,34 @@ fun AddFlightScreen(
             )
             Spacer(Modifier.height(20.dp))
 
-            AddFlightForm(
-                state = state,
-                onFlightInputChange = onFlightInputChange,
-                onDateChange = onDateChange,
-                onPickDate = { showDatePicker = true },
-                onPnrInputChange = onPnrInputChange,
-                onSeatInputChange = onSeatInputChange,
-                onSearch = submit,
-            )
+            val route = state.route
+            if (route != null) {
+                AddFlightModeTabs(state.mode, enabled = !state.isTracking, onModeChange = onModeChange)
+                Spacer(Modifier.height(20.dp))
+            }
+            if (route != null && state.mode == AddFlightMode.ROUTE) {
+                RouteSearchForm(
+                    state = state,
+                    route = route,
+                    onFromChange = onRouteFromChange,
+                    onToChange = onRouteToChange,
+                    onSwap = onRouteSwap,
+                    onAirlineChange = onRouteAirlineChange,
+                    onDateChange = onRouteDateChange,
+                    onSearch = submit,
+                )
+            } else {
+                AddFlightForm(
+                    state = state,
+                    onFlightInputChange = onFlightInputChange,
+                    onDateChange = onDateChange,
+                    onPickDate = { showDatePicker = true },
+                    onPnrInputChange = onPnrInputChange,
+                    onSeatInputChange = onSeatInputChange,
+                    onSearch = submit,
+                    onPastFlightChange = onPastFlightChange,
+                )
+            }
 
             Spacer(Modifier.height(24.dp))
             HairlineDivider()
@@ -186,6 +226,7 @@ fun AddFlightScreen(
                 onOpenSettings = onOpenSettings,
                 onShowMyFlights = onShowMyFlights,
                 modifier = Modifier.bringIntoViewRequester(outcomeRequester),
+                onImportCalendar = onImportCalendar,
             )
             Spacer(Modifier.height(24.dp))
         }
