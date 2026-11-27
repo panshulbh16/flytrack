@@ -67,7 +67,10 @@ verify_jwt = true # P4 section 1: Pro only; RADAR_FEED (none|opensky|adsbx) + RA
 verify_jwt = true # P4 section 2: Pro; returns the TripIt authorize_url (TRIPIT_CONSUMER_KEY / TRIPIT_CONSUMER_SECRET)
 
 [functions.tripit-callback]
-verify_jwt = false # TripIt redirects the browser here: the single-use, 30-minute request token is the only key
+verify_jwt = false # TripIt redirects the browser here. Never exchanges: issues a one-time code for the app (migration 35)
+
+[functions.tripit-complete]
+verify_jwt = true # redeems the callback code; exchanges only for the user who started tripit-connect (login CSRF fix)
 
 [functions.tripit-sync]
 verify_jwt = false # checked in the function: user JWT ("Sync now", Pro) or x-cron-secret (hourly pg_cron)

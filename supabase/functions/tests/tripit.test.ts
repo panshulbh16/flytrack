@@ -2,12 +2,17 @@ import { assert, assertEquals, assertMatch, assertNotEquals, assertRejects } fro
 import listTrips from "./fixtures/tripit/list-trip-upcoming.json" with { type: "json" };
 import { hmacSha1Base64 } from "../_shared/oauth1.ts";
 import {
-  APP_CONNECTED_URL,
   authorizeUrl,
+  CALLBACK_CODE_TTL_MS,
+  callbackPage,
+  callbackTripIt,
+  type ClaimedRequest,
   completeTripIt,
   connectTripIt,
   cronSyncTripIt,
   disconnectTripIt,
+  hashCallbackCode,
+  MANUAL_SYNC_COOLDOWN_MS,
   MAX_SEGMENTS_PER_SYNC,
   type OAuthToken,
   parseSegments,
@@ -31,8 +36,14 @@ const U = "11111111-2222-4333-8444-555555555555";
 const KEY_HEX = "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff";
 const CALLBACK = "https://proj.supabase.co/functions/v1/tripit-callback";
 
+type MemoryRow = TripItConnection & {
+  lastError?: string | null;
+  callbackCodeExpiresAt?: number | null;
+  lastManualSyncAt?: number | null;
+};
+
 class MemoryTripItStore implements TripItStore {
-  rows = new Map<string, TripItConnection & { lastError?: string | null }>();
+  rows = new Map<string, MemoryRow>();
   segments = new Map<string, Map<string, SeenSegment & { flightId: string | null }>>();
 
   get(userId: string) {
@@ -53,8 +64,56 @@ class MemoryTripItStore implements TripItStore {
       requestToken,
       requestSecret: sealedSecret,
       requestedAt: at.toISOString(),
+      callbackCodeHash: null,
+      callbackCodeExpiresAt: null,
     });
     return Promise.resolve();
+  }
+  issueCallbackCode(requestToken: string, codeHash: string, expiresAt: Date) {
+    const r = [...this.rows.values()].find((x) => x.requestToken === requestToken && !x.callbackCodeHash);
+    if (!r) return Promise.resolve(false);
+    r.callbackCodeHash = codeHash;
+    r.callbackCodeExpiresAt = expiresAt.getTime();
+    return Promise.resolve(true);
+  }
+  claimCallbackCode(codeHash: string, now: Date): Promise<ClaimedRequest | null> {
+    const r = [...this.rows.values()].find((x) => x.callbackCodeHash === codeHash);
+    if (!r) return Promise.resolve(null);
+    const fresh = (r.callbackCodeExpiresAt ?? 0) > now.getTime() && r.requestToken && r.requestSecret;
+    const out = fresh
+      ? { userId: r.userId, requestToken: r.requestToken!, requestSecret: r.requestSecret!, requestedAt: r.requestedAt }
+      : null;
+    Object.assign(r, {
+      requestToken: null,
+      requestSecret: null,
+      requestedAt: null,
+      callbackCodeHash: null,
+      callbackCodeExpiresAt: null,
+    });
+    return Promise.resolve(out);
+  }
+  clearPending(userId: string, requestToken: string) {
+    const r = this.rows.get(userId);
+    if (r && r.requestToken === requestToken) {
+      Object.assign(r, {
+        requestToken: null,
+        requestSecret: null,
+        requestedAt: null,
+        callbackCodeHash: null,
+        callbackCodeExpiresAt: null,
+      });
+    }
+    return Promise.resolve();
+  }
+  claimManualSync(userId: string, now: Date, cooldownMs: number) {
+    const r = this.rows.get(userId);
+    if (!r?.accessToken) return Promise.resolve(0);
+    const last = r.lastManualSyncAt;
+    if (last == null || now.getTime() - last >= cooldownMs) {
+      r.lastManualSyncAt = now.getTime();
+      return Promise.resolve(0);
+    }
+    return Promise.resolve(Math.max(1, Math.ceil((last + cooldownMs - now.getTime()) / 1000)));
   }
   saveConnected(userId: string, sealedToken: string, sealedSecret: string) {
     const r = this.rows.get(userId)!;
@@ -63,6 +122,8 @@ class MemoryTripItStore implements TripItStore {
       requestToken: null,
       requestSecret: null,
       requestedAt: null,
+      callbackCodeHash: null,
+      callbackCodeExpiresAt: null,
       accessToken: sealedToken,
       accessSecret: sealedSecret,
       lastError: null,
@@ -152,10 +213,18 @@ async function harness(opts: { pro?: boolean; key?: boolean } = {}) {
   return { store, api, deps, searches, tracked, logs, results, advance: (ms: number) => (t += ms) };
 }
 
+/** tripit-callback for the pending request token: the one-time code from the app deep link. */
+async function callbackCode(h: Awaited<ReturnType<typeof harness>>, token = "req-tok"): Promise<string> {
+  const r = await callbackTripIt(h.deps, new URLSearchParams({ oauth_token: token }));
+  const m = /^heygate:\/\/tripit\/callback\?code=([A-Za-z0-9_-]{43})$/.exec(r.redirect);
+  assert(m, r.redirect);
+  return m[1];
+}
+
 async function connected(h: Awaited<ReturnType<typeof harness>>) {
   await connectTripIt(h.deps, U, CALLBACK);
-  const r = await completeTripIt(h.deps, new URLSearchParams({ oauth_token: "req-tok" }));
-  assertEquals(r.redirect, APP_CONNECTED_URL);
+  const r = await completeTripIt(h.deps, U, await callbackCode(h));
+  assertEquals([r.status, r.body], [200, { connected: true }]);
 }
 
 // ---------- parsing ----------
@@ -307,46 +376,164 @@ Deno.test("tripit: connect needs Pro and configuration; stores the sealed reques
   assertEquals(row.accessToken, null);
 });
 
-Deno.test("tripit: callback exchanges the token once and redirects to the app", async () => {
+const V = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"; // a second account (the victim in the CSRF tests)
+
+function accessCalls(h: Awaited<ReturnType<typeof harness>>): string[] {
+  return h.api.calls.filter((c) => c.startsWith("access:"));
+}
+
+Deno.test("tripit: callback never exchanges; it hands the app a one-time code and stores only its hash", async () => {
   const h = await harness();
   await connectTripIt(h.deps, U, CALLBACK);
-  const r = await completeTripIt(h.deps, new URLSearchParams({ oauth_token: "req-tok", oauth_verifier: "v1" }));
-  assertEquals(r, { redirect: "heygate://tripit/connected", userId: U });
-  assertEquals(h.api.calls.at(-1), "access:req-tok:req-secret:v1");
+  const r = await callbackTripIt(h.deps, new URLSearchParams({ oauth_token: "req-tok", oauth_verifier: "v1" }));
+  const code = new URL(r.redirect.replace("heygate://", "https://")).searchParams.get("code")!;
+  assertMatch(r.redirect, /^heygate:\/\/tripit\/callback\?code=[A-Za-z0-9_-]{43}$/);
+  assertEquals(accessCalls(h), [], "no token exchange in the callback");
   const row = h.store.rows.get(U)!;
-  assertEquals([row.requestToken, row.requestSecret], [null, null]);
+  assertEquals(row.callbackCodeHash, await hashCallbackCode(code));
+  assert(!JSON.stringify(row).includes(code), "the plain code is not stored");
+  assertEquals(row.callbackCodeExpiresAt, NOW + CALLBACK_CODE_TTL_MS);
+  assertEquals([row.requestToken, row.accessToken], ["req-tok", null], "still pending, not connected");
+  // codes are random
+  const h2 = await harness();
+  await connectTripIt(h2.deps, U, CALLBACK);
+  assertNotEquals(await callbackCode(h2), code);
+});
+
+Deno.test("tripit: complete by the right user exchanges once and connects", async () => {
+  const h = await harness();
+  await connectTripIt(h.deps, U, CALLBACK);
+  const code = await callbackCode(h);
+  const r = await completeTripIt(h.deps, U, code);
+  assertEquals([r.status, r.body], [200, { connected: true }]);
+  assertEquals(accessCalls(h), ["access:req-tok:req-secret:"]);
+  const row = h.store.rows.get(U)!;
+  assertEquals([row.requestToken, row.requestSecret, row.callbackCodeHash], [null, null, null]);
   assertMatch(row.accessToken!, /^v1:/);
   assert(!row.accessToken!.includes("acc-tok") && !row.accessSecret!.includes("acc-secret"));
-  // single use
-  const again = await completeTripIt(h.deps, new URLSearchParams({ oauth_token: "req-tok" }));
-  assertEquals(again.redirect, "heygate://tripit/failed?error=expired");
+  // single use: the same code again, by the same user
+  const again = await completeTripIt(h.deps, U, code);
+  assertEquals([again.status, again.body], [410, { error: "expired" }]);
+  assertEquals(accessCalls(h).length, 1, "exchanged once");
+  // and the request token cannot produce a new code
+  assertEquals(
+    (await callbackTripIt(h.deps, new URLSearchParams({ oauth_token: "req-tok" }))).redirect,
+    "heygate://tripit/failed?error=expired",
+  );
+});
+
+Deno.test("tripit: login CSRF — complete by another account is 403 and destroys the pending link", async () => {
+  // The attacker (U) starts a connect and gets a victim (V) to approve; TripIt sends the VICTIM's browser to the
+  // callback, so the code lands in the victim's app, signed in as V.
+  const h = await harness();
+  await connectTripIt(h.deps, U, CALLBACK);
+  const code = await callbackCode(h);
+  const r = await completeTripIt(h.deps, V, code);
+  assertEquals([r.status, r.body], [403, { error: "not_your_link" }]);
+  assertEquals(accessCalls(h), [], "nothing exchanged");
+  const row = h.store.rows.get(U)!;
+  assertEquals([row.requestToken, row.requestSecret, row.callbackCodeHash, row.accessToken], [null, null, null, null]);
+  // the attacker cannot finish with the same code, nor get a new one from the callback
+  assertEquals((await completeTripIt(h.deps, U, code)).body, { error: "expired" });
+  assertEquals(
+    (await callbackTripIt(h.deps, new URLSearchParams({ oauth_token: "req-tok" }))).redirect,
+    "heygate://tripit/failed?error=expired",
+  );
+  assertEquals(accessCalls(h), []);
+  assertEquals((await syncTripIt(h.deps, U)).body, { error: "not_connected" });
+});
+
+Deno.test("tripit: login CSRF — the link's creator replaying the callback destroys the pending link", async () => {
+  // The request token is in the authorize URL, so its creator can call the callback himself. Only the first
+  // callback gets a code; any second one kills the link, whichever comes first.
+  const h = await harness();
+  await connectTripIt(h.deps, U, CALLBACK);
+  const victimsCode = await callbackCode(h); // the victim approved; their browser got the code
+  assertEquals(
+    (await callbackTripIt(h.deps, new URLSearchParams({ oauth_token: "req-tok" }))).redirect,
+    "heygate://tripit/failed?error=expired",
+  );
+  assertEquals(h.store.rows.get(U)!.requestToken, null);
+  assertEquals((await completeTripIt(h.deps, U, victimsCode)).body, { error: "expired" });
+  assertEquals(accessCalls(h), []);
+});
+
+Deno.test("tripit: an expired code is rejected and kills the pending link; bad codes are refused", async () => {
+  const h = await harness();
+  await connectTripIt(h.deps, U, CALLBACK);
+  const code = await callbackCode(h);
+  h.advance(CALLBACK_CODE_TTL_MS + 1000);
+  assertEquals((await completeTripIt(h.deps, U, code)).body, { error: "expired" });
+  assertEquals(h.store.rows.get(U)!.requestToken, null);
+  assertEquals(accessCalls(h), []);
+  for (const bad of [undefined, null, 42, "", "short", "x".repeat(43) + "!", "a".repeat(44)]) {
+    assertEquals((await completeTripIt(h.deps, U, bad)).status, 400, String(bad));
+  }
+  assertEquals((await completeTripIt(h.deps, U, "A".repeat(43))).body, { error: "expired" }, "unknown code");
+  const unconf = await harness();
+  unconf.deps.api = null;
+  assertEquals((await completeTripIt(unconf.deps, U, code)).status, 503);
 });
 
 Deno.test("tripit: callback failures redirect with a reason", async () => {
   const h = await harness();
-  assertEquals((await completeTripIt(h.deps, new URLSearchParams())).redirect, "heygate://tripit/failed?error=denied");
+  assertEquals((await callbackTripIt(h.deps, new URLSearchParams())).redirect, "heygate://tripit/failed?error=denied");
   assertEquals(
-    (await completeTripIt(h.deps, new URLSearchParams({ oauth_token: "unknown" }))).redirect,
+    (await callbackTripIt(h.deps, new URLSearchParams({ oauth_token: "unknown" }))).redirect,
     "heygate://tripit/failed?error=expired",
   );
   await connectTripIt(h.deps, U, CALLBACK);
   h.advance(31 * 60_000);
   assertEquals(
-    (await completeTripIt(h.deps, new URLSearchParams({ oauth_token: "req-tok" }))).redirect,
+    (await callbackTripIt(h.deps, new URLSearchParams({ oauth_token: "req-tok" }))).redirect,
     "heygate://tripit/failed?error=expired",
   );
-  const h2 = await harness();
-  await connectTripIt(h2.deps, U, CALLBACK);
-  h2.api.accessError = new TripItApiError(401, "denied");
+  assertEquals(h.store.rows.get(U)!.requestToken, null, "an old request token is forgotten");
+  const unconf = await harness();
+  unconf.deps.api = null;
   assertEquals(
-    (await completeTripIt(h2.deps, new URLSearchParams({ oauth_token: "req-tok" }))).redirect,
-    "heygate://tripit/failed?error=denied",
+    (await callbackTripIt(unconf.deps, new URLSearchParams({ oauth_token: "x" }))).redirect,
+    "heygate://tripit/failed?error=not_configured",
   );
-  h2.api.accessError = new TripItApiError(500, "boom");
-  assertEquals(
-    (await completeTripIt(h2.deps, new URLSearchParams({ oauth_token: "req-tok" }))).redirect,
-    "heygate://tripit/failed?error=tripit_error",
-  );
+  assertEquals(accessCalls(h), []);
+});
+
+Deno.test("tripit: exchange failures in complete — denied and TripIt errors; the code is spent either way", async () => {
+  const h = await harness();
+  await connectTripIt(h.deps, U, CALLBACK);
+  h.api.accessError = new TripItApiError(401, "denied");
+  const code = await callbackCode(h);
+  assertEquals((await completeTripIt(h.deps, U, code)).body, { error: "denied" });
+  assertEquals((await completeTripIt(h.deps, U, code)).body, { error: "expired" });
+
+  await connectTripIt(h.deps, U, CALLBACK);
+  h.api.accessError = new TripItApiError(500, "boom");
+  const r = await completeTripIt(h.deps, U, await callbackCode(h));
+  assertEquals([r.status, r.body], [502, { error: "tripit_error" }]);
+  assertEquals(h.store.rows.get(U)!.accessToken, null);
+});
+
+Deno.test("tripit: a new connect replaces an unredeemed code; a connected user keeps the access token", async () => {
+  const h = await harness();
+  await connected(h);
+  await connectTripIt(h.deps, U, CALLBACK);
+  const stale = await callbackCode(h);
+  await connectTripIt(h.deps, U, CALLBACK); // started again before finishing
+  assertEquals(h.store.rows.get(U)!.callbackCodeHash, null);
+  assertEquals((await completeTripIt(h.deps, U, stale)).body, { error: "expired" });
+  // someone else's code attempt on a reconnect never touches the existing access token
+  const code = await callbackCode(h);
+  assertEquals((await completeTripIt(h.deps, V, code)).body, { error: "not_your_link" });
+  assertMatch(h.store.rows.get(U)!.accessToken!, /^v1:/);
+});
+
+Deno.test("tripit: the callback page carries the deep link as a button, escaped", () => {
+  const ok = callbackPage("heygate://tripit/callback?code=abc_DEF-123");
+  assert(ok.includes('href="heygate://tripit/callback?code=abc_DEF-123"'));
+  assert(ok.includes("Return to the HeyGate app"));
+  const failed = callbackPage('heygate://tripit/failed?error=x"><script>');
+  assert(!failed.includes("<script>") && failed.includes("&quot;&gt;&lt;script&gt;"));
+  assert(failed.includes("could not be connected"));
 });
 
 // ---------- sync ----------
@@ -428,7 +615,7 @@ Deno.test("tripit: sync errors — not Pro, not connected, revoked token, TripIt
   assertEquals((await syncTripIt(h.deps, U)).body, { error: "not_connected" });
   await connectTripIt(h.deps, U, CALLBACK); // pending only
   assertEquals((await syncTripIt(h.deps, U)).status, 409);
-  await completeTripIt(h.deps, new URLSearchParams({ oauth_token: "req-tok" }));
+  await completeTripIt(h.deps, U, await callbackCode(h));
   h.api.listError = new TripItApiError(401, "revoked");
   const r = await syncTripIt(h.deps, U);
   assertEquals([r.status, r.body], [409, { error: "tripit_revoked" }]);
@@ -450,7 +637,6 @@ Deno.test("tripit: works with plain-text token storage when TRIPIT_TOKEN_KEY is 
 Deno.test("tripit: cron syncs every due user; disconnect forgets the connection and segments", async () => {
   const h = await harness();
   await connected(h);
-  const V = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee";
   await h.store.savePending(V, "other", "x", new Date(NOW)); // not connected: not a target
   const out = await cronSyncTripIt(h.deps, 50_000);
   assertEquals(out, { users: 1, synced: 1, failed: 0, added: 4 });
@@ -464,4 +650,34 @@ Deno.test("tripit: cron syncs every due user; disconnect forgets the connection 
   const none = await harness();
   none.deps.api = null;
   assertEquals(await cronSyncTripIt(none.deps), { users: 0, synced: 0, failed: 0, added: 0 });
+});
+
+// ---------- manual sync cooldown ----------
+
+Deno.test("tripit: Sync now has a 60 s per-user cooldown; cron and the first sync are not limited", async () => {
+  const h = await harness();
+  await connected(h);
+  assertEquals((await syncTripIt(h.deps, U, { manual: true })).status, 200);
+  h.advance(20_000);
+  const r = await syncTripIt(h.deps, U, { manual: true });
+  assertEquals([r.status, r.body], [429, { error: "cooldown", retry_after_s: 40, message: "retry_after_s=40" }]);
+  assertEquals(h.api.calls.filter((c) => c === "list").length, 1, "no TripIt call while cooling down");
+  // the cron path and the background first sync ignore the cooldown
+  assertEquals((await syncTripIt(h.deps, U)).status, 200);
+  assertEquals((await cronSyncTripIt(h.deps)).synced, 1);
+  h.advance(39_500);
+  assertEquals(((await syncTripIt(h.deps, U, { manual: true })).body as { retry_after_s: number }).retry_after_s, 1);
+  h.advance(500);
+  assertEquals((await syncTripIt(h.deps, U, { manual: true })).status, 200, "60 s later");
+  assertEquals(MANUAL_SYNC_COOLDOWN_MS, 60_000);
+  // per user: another connected user is not affected
+  const other = await harness();
+  await connected(other);
+  assertEquals((await syncTripIt(other.deps, U, { manual: true })).status, 200);
+  // not connected / not Pro answer as before (no cooldown spent)
+  const none = await harness();
+  assertEquals((await syncTripIt(none.deps, U, { manual: true })).body, { error: "not_connected" });
+  assertEquals((await syncTripIt((await harness({ pro: false })).deps, U, { manual: true })).body, {
+    error: "pro_required",
+  });
 });

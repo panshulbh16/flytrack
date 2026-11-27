@@ -13,9 +13,15 @@ export const TRIPIT_AUTHORIZE_URL = "https://www.tripit.com/oauth/authorize";
 export const TRIPIT_LIST_PATH = "/v1/list/trip/traveler/true/past/false/include_objects/true/format/json";
 export const APP_CONNECTED_URL = "heygate://tripit/connected";
 export const APP_FAILED_URL = "heygate://tripit/failed";
+/** tripit-callback hands the one-time code to the app here; the app finishes with tripit-complete. */
+export const APP_CALLBACK_URL = "heygate://tripit/callback";
 
 /** A request token older than this can no longer be exchanged. */
 export const REQUEST_TOKEN_TTL_MS = 30 * 60_000;
+/** How long the one-time code from tripit-callback can be redeemed with tripit-complete. */
+export const CALLBACK_CODE_TTL_MS = 10 * 60_000;
+/** "Sync now": at most one manual sync per user in this window (the hourly cron is not limited). */
+export const MANUAL_SYNC_COOLDOWN_MS = 60_000;
 /** Segments handled per sync (each new one can cost a flight search). */
 export const MAX_SEGMENTS_PER_SYNC = 25;
 /** Searches a sync may start per user and day (shared with search-flight's quota). */
@@ -36,7 +42,11 @@ export type TripItErrorCode =
   | "not_connected"
   | "tripit_revoked"
   | "tripit_error"
-  | "bad_request";
+  | "bad_request"
+  | "expired"
+  | "not_your_link"
+  | "denied"
+  | "cooldown";
 
 export const TRIPIT_STATUS: Record<TripItErrorCode, number> = {
   unauthorized: 401,
@@ -46,6 +56,10 @@ export const TRIPIT_STATUS: Record<TripItErrorCode, number> = {
   tripit_revoked: 409,
   tripit_error: 502,
   bad_request: 400,
+  expired: 410,
+  not_your_link: 403,
+  denied: 409,
+  cooldown: 429,
 };
 
 export class TripItApiError extends Error {
@@ -54,9 +68,16 @@ export class TripItApiError extends Error {
   }
 }
 
+export interface TripItErrorBody {
+  error: TripItErrorCode;
+  /** cooldown only: seconds until "Sync now" works again (also in `message` as "retry_after_s=<n>"). */
+  retry_after_s?: number;
+  message?: string;
+}
+
 export interface HttpResult<T = Record<string, unknown>> {
   status: number;
-  body: T | { error: TripItErrorCode };
+  body: T | TripItErrorBody;
 }
 
 function fail(code: TripItErrorCode): HttpResult<never> {
@@ -284,6 +305,16 @@ export interface TripItConnection {
   accessToken: string | null;
   accessSecret: string | null;
   lastSyncAt: string | null;
+  /** sha256 hex of the one-time code tripit-callback issued for the pending request token, if any. */
+  callbackCodeHash: string | null;
+}
+
+/** The pending request a callback code stood for (tripit_claim_callback). */
+export interface ClaimedRequest {
+  userId: string;
+  requestToken: string;
+  requestSecret: string;
+  requestedAt: string | null;
 }
 
 export type SegmentOutcome = "added" | "exists" | "not_found" | "limit" | "error";
@@ -298,7 +329,21 @@ export interface TripItStore {
   findByRequestToken(token: string): Promise<TripItConnection | null>;
   /** Stores a new request token; an existing access token stays until the exchange succeeds. */
   savePending(userId: string, requestToken: string, sealedSecret: string, at: Date): Promise<void>;
+  /**
+   * Stores sha256(code) + expiry on the row whose pending request token is [requestToken], only while that row
+   * has no code yet. False when no row was changed (unknown token, or a code was already issued).
+   */
+  issueCallbackCode(requestToken: string, codeHash: string, expiresAt: Date): Promise<boolean>;
+  /**
+   * Atomically clears the pending request token and the code of the row holding [codeHash] (single use), and
+   * returns the pending request when the code had not expired at [now]; null otherwise.
+   */
+  claimCallbackCode(codeHash: string, now: Date): Promise<ClaimedRequest | null>;
+  /** Forgets the pending request token [requestToken] of [userId] (and its code); the access token stays. */
+  clearPending(userId: string, requestToken: string): Promise<void>;
   saveConnected(userId: string, sealedToken: string, sealedSecret: string, at: Date): Promise<void>;
+  /** "Sync now" cooldown: 0 = go (and the window starts now), else the seconds left. */
+  claimManualSync(userId: string, now: Date, cooldownMs: number): Promise<number>;
   recordSync(userId: string, at: Date, error: string | null): Promise<void>;
   seenSegments(userId: string): Promise<Map<string, SeenSegment>>;
   recordSegment(userId: string, key: string, flightId: string | null, outcome: SegmentOutcome, at: Date): Promise<void>;
@@ -342,11 +387,29 @@ export async function connectTripIt(
   return { status: 200, body: { authorize_url: authorizeUrl(req.token, callbackUrl) } };
 }
 
-/** tripit-callback: returns where to redirect the browser (the app's deep link). */
-export async function completeTripIt(
+// One-time code: 32 random bytes, base64url without padding (43 characters).
+const CODE_RE = /^[A-Za-z0-9_-]{43}$/;
+
+export function newCallbackCode(): string {
+  return b64(crypto.getRandomValues(new Uint8Array(32))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+export async function hashCallbackCode(code: string): Promise<string> {
+  const d = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(code)));
+  return [...d].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/**
+ * tripit-callback (public GET from the browser TripIt redirected). It NEVER exchanges the request token: TripIt
+ * sends no oauth_verifier, so this request proves nothing about who approved. It issues a one-time code for the
+ * pending row and sends the browser to the app (heygate://tripit/callback?code=...), where the signed-in user
+ * finishes with tripit-complete. A second callback for the same request token destroys the pending link (the
+ * token is in the authorize URL, so its creator could otherwise fetch a code after someone else approved).
+ */
+export async function callbackTripIt(
   deps: TripItDeps,
   params: URLSearchParams,
-): Promise<{ redirect: string; userId?: string }> {
+): Promise<{ redirect: string; code?: string }> {
   const failed = (reason: string) => ({ redirect: `${APP_FAILED_URL}?error=${encodeURIComponent(reason)}` });
   const token = params.get("oauth_token")?.trim();
   if (!deps.api) return failed("not_configured");
@@ -354,22 +417,82 @@ export async function completeTripIt(
   const row = await deps.store.findByRequestToken(token);
   if (!row || !row.requestSecret) return failed("expired");
   const at = row.requestedAt ? Date.parse(row.requestedAt) : NaN;
-  if (Number.isNaN(at) || deps.now().getTime() - at > REQUEST_TOKEN_TTL_MS) return failed("expired");
+  if (Number.isNaN(at) || deps.now().getTime() - at > REQUEST_TOKEN_TTL_MS) {
+    await deps.store.clearPending(row.userId, token);
+    return failed("expired");
+  }
+  if (row.callbackCodeHash) {
+    deps.log("tripit: second callback for a request token; pending link destroyed", { userId: row.userId });
+    await deps.store.clearPending(row.userId, token);
+    return failed("expired");
+  }
+  const code = newCallbackCode();
+  const issued = await deps.store.issueCallbackCode(
+    token,
+    await hashCallbackCode(code),
+    new Date(deps.now().getTime() + CALLBACK_CODE_TTL_MS),
+  );
+  if (!issued) {
+    // a parallel callback won the race: same rule as a second callback
+    await deps.store.clearPending(row.userId, token);
+    return failed("expired");
+  }
+  return { redirect: `${APP_CALLBACK_URL}?code=${code}`, code };
+}
+
+/**
+ * tripit-complete (POST {code}, user JWT): redeems the one-time code from tripit-callback. The code is claimed
+ * (and the pending request token destroyed) before anything else, so it works once whoever sends it. Only the
+ * user who started the connect gets the exchange; anyone else gets not_your_link and the link is gone.
+ */
+export async function completeTripIt(
+  deps: TripItDeps,
+  userId: string,
+  code: unknown,
+): Promise<HttpResult<{ connected: true }>> {
+  if (!deps.api) return fail("not_configured");
+  if (typeof code !== "string" || !CODE_RE.test(code)) return fail("bad_request");
+  const claimed = await deps.store.claimCallbackCode(await hashCallbackCode(code), deps.now());
+  if (!claimed) return fail("expired");
+  if (claimed.userId !== userId) {
+    deps.log("tripit: callback code redeemed by another account; pending link destroyed", {
+      owner: claimed.userId,
+      caller: userId,
+    });
+    return fail("not_your_link");
+  }
   let access: OAuthToken;
   try {
-    const secret = await deps.cipher.open(row.requestSecret);
-    access = await deps.api.accessToken({ token, secret }, params.get("oauth_verifier"));
+    const secret = await deps.cipher.open(claimed.requestSecret);
+    access = await deps.api.accessToken({ token: claimed.requestToken, secret }, null);
   } catch (e) {
     deps.log("tripit: access token failed", { error: errText(e) });
-    return failed(e instanceof TripItApiError && e.status === 401 ? "denied" : "tripit_error");
+    return fail(e instanceof TripItApiError && e.status === 401 ? "denied" : "tripit_error");
   }
   await deps.store.saveConnected(
-    row.userId,
+    userId,
     await deps.cipher.seal(access.token),
     await deps.cipher.seal(access.secret),
     deps.now(),
   );
-  return { redirect: APP_CONNECTED_URL, userId: row.userId };
+  return { status: 200, body: { connected: true } };
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+}
+
+/** The body of tripit-callback's 302: the same deep link as a button. */
+export function callbackPage(to: string): string {
+  const ok = to.startsWith("heygate://tripit/callback");
+  const href = escapeHtml(to);
+  const text = ok
+    ? "Return to the HeyGate app to finish connecting TripIt."
+    : "TripIt could not be connected. Return to the HeyGate app and try again.";
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">` +
+    `<title>HeyGate</title></head><body style="font-family:system-ui,sans-serif;text-align:center;padding:48px 16px">` +
+    `<p>${text}</p><p><a href="${href}" style="display:inline-block;padding:12px 20px;border-radius:8px;` +
+    `background:#1a56db;color:#fff;text-decoration:none">Open HeyGate</a></p></body></html>`;
 }
 
 export async function disconnectTripIt(deps: TripItDeps, userId: string): Promise<HttpResult<{ ok: true }>> {
@@ -407,12 +530,29 @@ export function pickLeg(legs: { id: string; dep_iata: string }[], dep: string): 
   return null;
 }
 
-export async function syncTripIt(deps: TripItDeps, userId: string): Promise<HttpResult<SyncStats>> {
+/**
+ * One user's sync. [opts.manual] ("Sync now" from the app) is limited to one per MANUAL_SYNC_COOLDOWN_MS:
+ * 429 cooldown with retry_after_s. The cron path and the first sync after connecting are not limited.
+ */
+export async function syncTripIt(
+  deps: TripItDeps,
+  userId: string,
+  opts: { manual?: boolean } = {},
+): Promise<HttpResult<SyncStats>> {
   if (!deps.api) return fail("not_configured");
   if (!await deps.isPro(userId)) return fail("pro_required");
   const row = await deps.store.get(userId);
   if (!row?.accessToken || !row.accessSecret) return fail("not_connected");
   const now = deps.now();
+  if (opts.manual) {
+    const wait = await deps.store.claimManualSync(userId, now, MANUAL_SYNC_COOLDOWN_MS);
+    if (wait > 0) {
+      return {
+        status: TRIPIT_STATUS.cooldown,
+        body: { error: "cooldown", retry_after_s: wait, message: `retry_after_s=${wait}` },
+      };
+    }
+  }
 
   let body: unknown;
   try {
@@ -512,9 +652,11 @@ interface ConnectionRow {
   access_token: string | null;
   access_secret: string | null;
   last_sync_at: string | null;
+  callback_code_hash: string | null;
 }
 
-const COLUMNS = "user_id, request_token, request_secret, requested_at, access_token, access_secret, last_sync_at";
+const COLUMNS =
+  "user_id, request_token, request_secret, requested_at, access_token, access_secret, last_sync_at, callback_code_hash";
 
 function toConnection(r: ConnectionRow | null): TripItConnection | null {
   return r
@@ -526,6 +668,7 @@ function toConnection(r: ConnectionRow | null): TripItConnection | null {
       accessToken: r.access_token,
       accessSecret: r.access_secret,
       lastSyncAt: r.last_sync_at,
+      callbackCodeHash: r.callback_code_hash ?? null,
     }
     : null;
 }
@@ -553,8 +696,59 @@ export class SupabaseTripItStore implements TripItStore {
       request_token: requestToken,
       request_secret: sealedSecret,
       requested_at: at.toISOString(),
+      callback_code_hash: null,
+      callback_code_expires_at: null,
     }, { onConflict: "user_id" });
     if (error) throw new Error(`tripit_connections pending: ${error.message}`);
+  }
+
+  async issueCallbackCode(requestToken: string, codeHash: string, expiresAt: Date) {
+    // One UPDATE: the "no code yet" condition and the write are atomic (a parallel callback changes 0 rows).
+    const { data, error } = await this.db.from("tripit_connections")
+      .update({ callback_code_hash: codeHash, callback_code_expires_at: expiresAt.toISOString() })
+      .eq("request_token", requestToken).is("callback_code_hash", null).select("user_id");
+    if (error) throw new Error(`tripit_connections code: ${error.message}`);
+    return (data ?? []).length > 0;
+  }
+
+  async claimCallbackCode(codeHash: string, _now: Date) {
+    // The database clock decides expiry (migration 35).
+    const { data, error } = await this.db.rpc("tripit_claim_callback", { p_code_hash: codeHash });
+    if (error) throw new Error(`tripit_claim_callback: ${error.message}`);
+    const r = ((data ?? []) as {
+      user_id: string;
+      request_token: string;
+      request_secret: string;
+      requested_at: string | null;
+    }[])[0];
+    return r
+      ? {
+        userId: r.user_id,
+        requestToken: r.request_token,
+        requestSecret: r.request_secret,
+        requestedAt: r.requested_at,
+      }
+      : null;
+  }
+
+  async clearPending(userId: string, requestToken: string) {
+    const { error } = await this.db.from("tripit_connections").update({
+      request_token: null,
+      request_secret: null,
+      requested_at: null,
+      callback_code_hash: null,
+      callback_code_expires_at: null,
+    }).eq("user_id", userId).eq("request_token", requestToken);
+    if (error) throw new Error(`tripit_connections clear pending: ${error.message}`);
+  }
+
+  async claimManualSync(userId: string, _now: Date, cooldownMs: number) {
+    const { data, error } = await this.db.rpc("tripit_claim_manual_sync", {
+      p_user: userId,
+      p_cooldown_s: Math.max(1, Math.round(cooldownMs / 1000)),
+    });
+    if (error) throw new Error(`tripit_claim_manual_sync: ${error.message}`);
+    return typeof data === "number" ? data : Number(data) || 0;
   }
 
   async saveConnected(userId: string, sealedToken: string, sealedSecret: string, at: Date) {
@@ -562,6 +756,8 @@ export class SupabaseTripItStore implements TripItStore {
       request_token: null,
       request_secret: null,
       requested_at: null,
+      callback_code_hash: null,
+      callback_code_expires_at: null,
       access_token: sealedToken,
       access_secret: sealedSecret,
       connected_at: at.toISOString(),
