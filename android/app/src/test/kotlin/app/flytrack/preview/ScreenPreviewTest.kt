@@ -451,6 +451,11 @@ class ScreenPreviewTest {
                 ShareWithFriendsViewModel::class.java to {
                     stub<ShareWithFriendsViewModel> { Mockito.`when`(it.uiState).thenReturn(MutableStateFlow(ShareWithFriendsUiState(share = true))) }
                 },
+                app.flytrack.feature.intel.FlightIntelViewModel::class.java to {
+                    stub<app.flytrack.feature.intel.FlightIntelViewModel> {
+                        Mockito.`when`(it.uiState).thenReturn(MutableStateFlow(app.flytrack.feature.intel.FlightIntelUiState()))
+                    }
+                },
                 AddToCalendarViewModel::class.java to {
                     stub<AddToCalendarViewModel> { Mockito.`when`(it.flight).thenReturn(MutableStateFlow(delayedFlight)) }
                 },
