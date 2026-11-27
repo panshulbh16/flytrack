@@ -71,6 +71,7 @@ import app.flytrack.ui.components.BackendNotConfiguredState
 import app.flytrack.ui.components.EmptyState
 import app.flytrack.ui.components.FlyTrackTopBar
 import app.flytrack.ui.components.IconAction
+import app.flytrack.feature.billing.ui.LocalProState
 import app.flytrack.ui.components.LoadingState
 import app.flytrack.ui.components.PrimaryButton
 import app.flytrack.ui.components.SecondaryButton
@@ -157,6 +158,15 @@ fun FlightsScreen(
             FlyTrackTopBar(
                 title = stringResource(R.string.flights_title),
                 actions = {
+                    // P4: "Planes near me" for Pro users (free users find it in Settings, with the Pro note).
+                    if (LocalProState.current.isPro) {
+                        val navigator = LocalAppNavigator.current
+                        IconAction(
+                            icon = painterResource(R.drawable.ic_radar),
+                            contentDescription = stringResource(R.string.radar_action_near_me),
+                            onClick = { navigator.openRadar(iata = null) },
+                        )
+                    }
                     IconAction(
                         icon = painterResource(R.drawable.ic_ticket),
                         contentDescription = stringResource(R.string.flights_action_import_ticket),

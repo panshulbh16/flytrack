@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- feature/tripit: TripIt sync in Settings (docs/P4_CONTRACTS.md section 2). -->
+    <string name="tripit_section">TripIt</string>
+    <string name="tripit_connect">Connect TripIt</string>
+    <string name="tripit_connect_message">Flights in your TripIt trips are added here automatically, every hour.</string>
+    <string name="tripit_connect_again">Connect again</string>
+    <string name="tripit_connected">Connected to TripIt</string>
+    <string name="tripit_last_sync">Last synced %1$s</string>
+    <string name="tripit_never_synced">First sync in progress…</string>
+    <string name="tripit_revoked_message">TripIt access was turned off. Connect again to keep your trips in sync.</string>
+    <string name="tripit_trouble_message">TripIt had a problem last time. We\'ll try again soon.</string>
+    <string name="tripit_sync_now">Sync now</string>
+    <string name="tripit_disconnect">Disconnect</string>
+    <string name="tripit_status_unknown">Couldn\'t check your TripIt connection.</string>
+    <string name="tripit_pro_note">TripIt sync is part of HeyGate Pro.</string>
+    <string name="tripit_no_browser">No browser found to open TripIt.</string>
+
+    <string name="tripit_msg_connected">TripIt is connected. Your trips are being added.</string>
+    <string name="tripit_msg_denied">TripIt wasn\'t connected.</string>
+    <string name="tripit_msg_expired">That took too long. Please connect again.</string>
+    <string name="tripit_msg_connect_failed">Couldn\'t connect TripIt. Please try again.</string>
+    <string name="tripit_msg_tripit_down">TripIt isn\'t responding right now. Try again later.</string>
+    <string name="tripit_msg_nothing_new">You\'re up to date. No new flights in TripIt.</string>
+    <string name="tripit_msg_offline">You\'re offline. Try again when you\'re connected.</string>
+    <string name="tripit_msg_failed">Something went wrong. Please try again.</string>
+    <string name="tripit_msg_disconnected">TripIt disconnected. Flights already added stay in your list.</string>
+    <string name="tripit_msg_revoked">TripIt access was turned off. Connect again to sync.</string>
+    <string name="tripit_msg_not_connected">TripIt isn\'t connected.</string>
+    <plurals name="tripit_msg_added">
+        <item quantity="one">%1$d flight added from TripIt</item>
+        <item quantity="other">%1$d flights added from TripIt</item>
+    </plurals>
+    <plurals name="tripit_msg_not_found">
+        <item quantity="one">%1$d flight couldn\'t be found</item>
+        <item quantity="other">%1$d flights couldn\'t be found</item>
+    </plurals>
+</resources>

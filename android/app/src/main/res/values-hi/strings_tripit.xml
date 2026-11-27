@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hindi translation of values/strings_tripit.xml. -->
+<resources>
+    <string name="tripit_section">TripIt</string>
+    <string name="tripit_connect">TripIt कनेक्ट करें</string>
+    <string name="tripit_connect_message">आपकी TripIt ट्रिप्स की फ़्लाइट्स हर घंटे अपने-आप यहाँ जुड़ जाती हैं।</string>
+    <string name="tripit_connect_again">फिर से कनेक्ट करें</string>
+    <string name="tripit_connected">TripIt से कनेक्ट है</string>
+    <string name="tripit_last_sync">आखिरी सिंक %1$s</string>
+    <string name="tripit_never_synced">पहला सिंक चल रहा है…</string>
+    <string name="tripit_revoked_message">TripIt की अनुमति बंद कर दी गई। अपनी ट्रिप्स सिंक रखने के लिए फिर से कनेक्ट करें।</string>
+    <string name="tripit_trouble_message">पिछली बार TripIt में दिक्कत थी। हम जल्द ही फिर से कोशिश करेंगे।</string>
+    <string name="tripit_sync_now">अभी सिंक करें</string>
+    <string name="tripit_disconnect">डिस्कनेक्ट करें</string>
+    <string name="tripit_status_unknown">आपका TripIt कनेक्शन जाँच नहीं पाए।</string>
+    <string name="tripit_pro_note">TripIt सिंक HeyGate Pro का हिस्सा है।</string>
+    <string name="tripit_no_browser">TripIt खोलने के लिए कोई ब्राउज़र नहीं मिला।</string>
+
+    <string name="tripit_msg_connected">TripIt कनेक्ट हो गया। आपकी ट्रिप्स जोड़ी जा रही हैं।</string>
+    <string name="tripit_msg_denied">TripIt कनेक्ट नहीं हुआ।</string>
+    <string name="tripit_msg_expired">बहुत देर हो गई। कृपया फिर से कनेक्ट करें।</string>
+    <string name="tripit_msg_connect_failed">TripIt कनेक्ट नहीं हो पाया। कृपया फिर से कोशिश करें।</string>
+    <string name="tripit_msg_tripit_down">TripIt अभी जवाब नहीं दे रहा है। बाद में फिर से कोशिश करें।</string>
+    <string name="tripit_msg_nothing_new">सब अप-टू-डेट है। TripIt में कोई नई फ़्लाइट नहीं।</string>
+    <string name="tripit_msg_offline">आप ऑफ़लाइन हैं। इंटरनेट से जुड़ें और फिर से कोशिश करें।</string>
+    <string name="tripit_msg_failed">कुछ गड़बड़ हो गई। कृपया फिर से कोशिश करें।</string>
+    <string name="tripit_msg_disconnected">TripIt डिस्कनेक्ट हो गया। पहले से जोड़ी गई फ़्लाइट्स आपकी लिस्ट में बनी रहेंगी।</string>
+    <string name="tripit_msg_revoked">TripIt की अनुमति बंद कर दी गई। सिंक करने के लिए फिर से कनेक्ट करें।</string>
+    <string name="tripit_msg_not_connected">TripIt कनेक्ट नहीं है।</string>
+    <plurals name="tripit_msg_added">
+        <item quantity="one">TripIt से %1$d फ़्लाइट जोड़ी गई</item>
+        <item quantity="other">TripIt से %1$d फ़्लाइट्स जोड़ी गईं</item>
+    </plurals>
+    <plurals name="tripit_msg_not_found">
+        <item quantity="one">%1$d फ़्लाइट नहीं मिली</item>
+        <item quantity="other">%1$d फ़्लाइट्स नहीं मिलीं</item>
+    </plurals>
+</resources>

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hindi translation of values/strings_gift.xml. Prices come from Google Play, never from here. -->
+<resources>
+    <string name="gift_tab_pro">Pro लें</string>
+    <string name="gift_tab_gift">Pro गिफ़्ट करें</string>
+    <string name="gift_title">HeyGate Pro गिफ़्ट करें</string>
+    <string name="gift_subtitle">किसी को लाइव अलर्ट, आने वाले विमान की ट्रैकिंग और भी बहुत कुछ दें। आपको एक कोड मिलेगा, जिसे आप उन्हें भेज सकते हैं।</string>
+    <string name="gift_section_options">गिफ़्ट चुनें</string>
+    <string name="gift_option_year">एक साल का Pro</string>
+    <string name="gift_option_trip">एक ट्रिप (7 दिन)</string>
+    <string name="gift_option_price_year">%1$s · 365 दिन, एक बार पेमेंट</string>
+    <string name="gift_option_price_trip">%1$s · 7 दिन, एक बार पेमेंट</string>
+    <string name="gift_action_buy">गिफ़्ट खरीदें</string>
+    <string name="gift_note">गिफ़्ट से आपका अपना प्लान नहीं बदलता। कोड इस्तेमाल होने तक कभी एक्सपायर नहीं होते।</string>
+    <string name="gift_coming_soon_title">गिफ़्ट जल्द आ रहे हैं</string>
+    <string name="gift_coming_soon_message">जल्द ही आप यहाँ से HeyGate Pro गिफ़्ट कर पाएँगे।</string>
+    <string name="gift_load_failed_title">गिफ़्ट लोड नहीं हो पाए</string>
+    <string name="gift_load_failed_message">कृपया थोड़ी देर में फिर से कोशिश करें।</string>
+
+    <string name="gift_waiting">पेमेंट हो गया। आपका गिफ़्ट कोड तैयार हो रहा है…</string>
+    <string name="gift_ready_title">आपका गिफ़्ट तैयार है</string>
+    <string name="gift_ready_message">यह कोड भेजें। वे इसे HeyGate में रिडीम करेंगे: सेटिंग्स, गिफ़्ट कोड रिडीम करें।</string>
+    <string name="gift_code_later_title">पेमेंट हो गया</string>
+    <string name="gift_code_later_message">आपका कोड आ रहा है। एक मिनट में यह मेरे गिफ़्ट में दिखेगा।</string>
+    <string name="gift_action_whatsapp">WhatsApp पर भेजें</string>
+    <string name="gift_action_share">इससे शेयर करें…</string>
+    <string name="gift_action_copy">कोड कॉपी करें</string>
+    <string name="gift_copied">कोड कॉपी हो गया</string>
+    <string name="gift_action_buy_another">एक और गिफ़्ट खरीदें</string>
+    <string name="gift_action_my_gifts">मेरे गिफ़्ट</string>
+    <string name="gift_cd_code">गिफ़्ट कोड %1$s</string>
+
+    <string name="gift_msg_pending">पेमेंट बाकी है। पूरा होते ही आपका कोड मेरे गिफ़्ट में दिखेगा।</string>
+    <string name="gift_msg_offline">आप ऑफ़लाइन हैं। इंटरनेट से जुड़ें और फिर से कोशिश करें।</string>
+    <string name="gift_msg_not_available">अभी गिफ़्ट उपलब्ध नहीं हैं।</string>
+    <string name="gift_msg_failed">खरीदारी पूरी नहीं हुई। आपसे कोई पैसा नहीं लिया गया है।</string>
+
+    <!-- Share text: Hindi first, then English, like flight sharing. %1$s = the code. -->
+    <string name="gift_share_hinglish">मैंने आपको HeyGate Pro गिफ़्ट किया है! कोड: %1$s</string>
+    <string name="gift_share_english">I\'ve gifted you HeyGate Pro! Code: %1$s. Open HeyGate, go to Settings, Redeem a gift code.</string>
+    <string name="gift_share_subject">आपके लिए HeyGate Pro का गिफ़्ट</string>
+    <string name="gift_share_chooser">अपना गिफ़्ट भेजें</string>
+    <string name="gift_share_no_app">इस फ़ोन में टेक्स्ट शेयर करने वाला कोई ऐप नहीं है।</string>
+
+    <string name="gift_settings_redeem">गिफ़्ट कोड रिडीम करें</string>
+    <string name="gift_settings_redeem_message">HeyGate Pro का गिफ़्ट मिला है? कोड यहाँ डालें।</string>
+    <string name="gift_settings_my_gifts">मेरे गिफ़्ट</string>
+    <string name="gift_settings_my_gifts_message">आपके खरीदे हुए कोड, और वे इस्तेमाल हुए या नहीं</string>
+    <string name="gift_settings_give">Pro गिफ़्ट करें</string>
+    <string name="gift_settings_give_message">किसी को HeyGate Pro दें</string>
+
+    <string name="gift_redeem_title">गिफ़्ट कोड रिडीम करें</string>
+    <string name="gift_redeem_label">गिफ़्ट कोड</string>
+    <string name="gift_redeem_hint">ABCD-EFGH-JKMN</string>
+    <string name="gift_redeem_message">आपको भेजा गया 12 अक्षरों का कोड डालें। आप पूरा मैसेज भी पेस्ट कर सकते हैं।</string>
+    <string name="gift_redeem_action">रिडीम करें</string>
+    <string name="gift_redeem_done_title">HeyGate Pro का मज़ा लें</string>
+    <plurals name="gift_redeem_done_days">
+        <item quantity="one">Pro का %1$d दिन जोड़ा गया।</item>
+        <item quantity="other">Pro के %1$d दिन जोड़े गए।</item>
+    </plurals>
+    <string name="gift_redeem_done_until">%1$s तक Pro</string>
+    <string name="gift_redeem_invalid">यह कोड मौजूद नहीं है। इसे जाँचें और फिर से कोशिश करें।</string>
+    <string name="gift_redeem_already">यह कोड पहले ही इस्तेमाल हो चुका है।</string>
+    <string name="gift_redeem_voided">इस गिफ़्ट का पैसा वापस हो गया है, इसलिए यह कोड अब काम नहीं करता।</string>
+    <string name="gift_redeem_own">यह आपका अपना गिफ़्ट है। इसे इस्तेमाल करने के लिए किसी और को भेजें।</string>
+    <string name="gift_redeem_rate_limited">बहुत ज़्यादा कोशिशें हो गईं। कृपया एक घंटा रुककर फिर से कोशिश करें।</string>
+    <string name="gift_redeem_lifetime">आपके पास पहले से बिना अंतिम तारीख वाला Pro है, इसलिए कोड अभी भी इस्तेमाल नहीं हुआ है। इसे किसी और को दे दें!</string>
+    <string name="gift_redeem_offline">आप ऑफ़लाइन हैं। इंटरनेट से जुड़ें और फिर से कोशिश करें।</string>
+    <string name="gift_redeem_failed">कुछ गड़बड़ हो गई। कृपया फिर से कोशिश करें।</string>
+
+    <string name="gift_my_title">मेरे गिफ़्ट</string>
+    <string name="gift_my_empty_title">अभी कोई गिफ़्ट नहीं</string>
+    <string name="gift_my_empty_message">पेवॉल के Pro गिफ़्ट करें टैब से परिवार और दोस्तों को HeyGate Pro गिफ़्ट करें।</string>
+    <string name="gift_status_unused">अभी इस्तेमाल नहीं हुआ</string>
+    <string name="gift_status_redeemed">%1$s को रिडीम हुआ</string>
+    <string name="gift_status_redeemed_plain">रिडीम हो गया</string>
+    <string name="gift_status_voided">पैसा वापस हुआ</string>
+    <string name="gift_bought_on">%1$s को खरीदा</string>
+    <string name="gift_kind_year">1 साल का Pro</string>
+    <plurals name="gift_kind_days">
+        <item quantity="one">Pro का %1$d दिन</item>
+        <item quantity="other">Pro के %1$d दिन</item>
+    </plurals>
+</resources>

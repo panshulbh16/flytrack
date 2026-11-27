@@ -64,6 +64,10 @@
 	<string>HeyGate looks through your calendar for flights so you can add them in one tap. Nothing is uploaded or changed.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>HeyGate reads the barcode on your boarding pass to add the flight.</string>
+	<key>NSLocationDefaultAccuracyReduced</key>
+	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>HeyGate uses your approximate location only while the radar screen is open, to show the planes near you. It is never stored.</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
 	<key>RevenueCatAPIKey</key>

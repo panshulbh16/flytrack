@@ -2,6 +2,9 @@ package app.flytrack.ui.nav
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.flow.filterNotNull
+import app.flytrack.feature.tripit.TripItDeepLinks
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -28,6 +31,10 @@ import app.flytrack.feature.gmailimport.GmailSuggestion
 import app.flytrack.feature.importticket.ImportTicketRoute
 import app.flytrack.feature.passport.PassportRoute
 import app.flytrack.feature.settings.SettingsRoute
+import app.flytrack.feature.gift.MyGiftsRoute
+import app.flytrack.feature.gift.RedeemGiftRoute
+import app.flytrack.feature.radar.RadarRoute
+import app.flytrack.feature.terminalmap.TerminalMapRoute
 
 /** [AppNavigator] on top of a NavController. Also used by MainActivity to act on incoming intents. */
 class NavControllerNavigator(private val navController: NavHostController) : AppNavigator {
@@ -105,6 +112,22 @@ class NavControllerNavigator(private val navController: NavHostController) : App
         navController.navigate(Family(prefillCode)) { launchSingleTop = true }
     }
 
+    override fun openRadar(iata: String?, lat: Double?, lon: Double?) {
+        navController.navigate(Radar(iata, lat?.toString(), lon?.toString())) { launchSingleTop = true }
+    }
+
+    override fun openTerminalMap(iata: String, gate: String?, belt: String?, flightId: String?) {
+        navController.navigate(TerminalMap(iata, gate, belt, flightId)) { launchSingleTop = true }
+    }
+
+    override fun openRedeemGift(prefillCode: String?) {
+        navController.navigate(RedeemGift(prefillCode)) { launchSingleTop = true }
+    }
+
+    override fun openMyGifts() {
+        navController.navigate(MyGifts) { launchSingleTop = true }
+    }
+
     override fun back() {
         navController.popBackStack()
     }
@@ -138,6 +161,10 @@ fun FlyTrackNavHost(
     navController: NavHostController = rememberNavController(),
     navigator: NavControllerNavigator = remember(navController) { NavControllerNavigator(navController) },
 ) {
+    // P4: a TripIt redirect (heygate://tripit/...) shows Settings, where the TripIt section reads it.
+    LaunchedEffect(navigator) {
+        TripItDeepLinks.pending.filterNotNull().collect { navigator.openSettings() }
+    }
     CompositionLocalProvider(LocalAppNavigator provides navigator) {
         ProStateProvider(onOpenPaywall = { navController.navigate(Paywall) { launchSingleTop = true } }) {
             NavHost(navController = navController, startDestination = Flights, modifier = modifier) {
@@ -220,6 +247,27 @@ fun FlyTrackNavHost(
                 }
                 composable<Paywall> {
                     PaywallRoute(onBack = { navigator.back() })
+                }
+                // P4: radar, terminal maps, Gift Pro.
+                composable<Radar> { entry ->
+                    val route = entry.toRoute<Radar>()
+                    RadarRoute(iata = route.iata, lat = route.lat?.toDoubleOrNull(), lon = route.lon?.toDoubleOrNull(), onBack = { navigator.back() })
+                }
+                composable<TerminalMap> { entry ->
+                    val route = entry.toRoute<TerminalMap>()
+                    TerminalMapRoute(
+                        iata = route.iata,
+                        gate = route.gate,
+                        belt = route.belt,
+                        flightId = route.flightId,
+                        onBack = { navigator.back() },
+                    )
+                }
+                composable<RedeemGift> { entry ->
+                    RedeemGiftRoute(prefillCode = entry.toRoute<RedeemGift>().prefillCode, onBack = { navigator.back() })
+                }
+                composable<MyGifts> {
+                    MyGiftsRoute(onBack = { navigator.back() })
                 }
                 composable<GmailImport> {
                     GmailImportRoute(

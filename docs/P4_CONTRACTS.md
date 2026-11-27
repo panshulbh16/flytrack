@@ -124,3 +124,42 @@ There are two modes:
 | android-p4 | `feature/radar`, `feature/tripit`, `feature/gift`, `feature/terminalmap`; minimal wiring edits |
 | ios-p4 | the same four features on iOS |
 | i18n | Hindi for all new strings |
+
+## 7. Backend implementation notes (for the app areas)
+
+These pin down details the sections above leave open. Names match migrations 31–33.
+
+* **Radar.** `GET /functions/v1/radar?...` with the user JWT. Besides the listed errors: `unauthorized` 401, `bad_input` 400 (bad mode / coordinates / IATA), `not_found` 404 (unknown airport), `feed_error` 502 (the feed failed; show the same friendly empty state and retry on the next 10 s tick). Ground mode centres on the airport's exact coordinates (public data, not rounded); proximity rounds to 0.05° before anything else. `radius_km` is 5 (ground) or 75 (proximity). Aircraft without a callsign have `callsign: ""`; `flight` is present only when matched (format `"6E2341"`, no space). `alt_ft` is 0 on the ground; `vrate_fpm` and `reg` may be absent. A cache hit still counts against the 60 / 10 min quota.
+* **TripIt.** `tripit-connect`, `tripit-sync` and `tripit-disconnect` are `POST` with the user JWT. `tripit-sync` returns `{segments, added, existing, not_found, skipped, errors}`. Errors: `pro_required` 402, `not_connected` 409, `tripit_revoked` 409 (the user revoked access in TripIt: offer "Connect again"), `tripit_error` 502, `not_configured` 503 (no consumer key yet: hide or disable the row). `tripit-disconnect` works without Pro. `tripit-callback` redirects to `heygate://tripit/connected`, or `heygate://tripit/failed?error=denied|expired|tripit_error|not_configured|internal`. `tripit_status()` also returns `last_error` (`tripit_revoked` | `tripit_error` | null). A first sync starts in the background right after connecting; flights a user archived are never brought back by a sync.
+* **Gifts.** `redeem_gift` returns `{pro_until, days}` on success, otherwise `{error}` with one of `invalid_code`, `already_redeemed`, `voided`, `own_gift`, `rate_limited` (10 failures in the last hour), `lifetime_pro` (the caller already has Pro without an end; the code is not used up). Input is normalised (case, spaces, dashes). `my_gifts()` items: `{code, product_id, days, status, created_at, redeemed_at}`, newest first. After a purchase the code appears in `my_gifts()` once RevenueCat's webhook has arrived (usually seconds): poll `my_gifts()` briefly after the purchase completes. Redeemed gift time is kept by billing when a subscription later expires or is refunded; after a refund (or a TRANSFER away) the gift's days run from the refund (or from redemption), so a cheap gift never preserves refunded subscription time.
+
+## 8. Status (27 Nov 2026)
+
+**Built**
+* **Backend:** radar (`positions.ts`, `radar`, `radar_quota`), TripIt (`oauth1.ts`, which reproduces the RFC 5849 vectors; `tripit-*` functions; hourly cron), Gift Pro (one code per transaction, refunds void unused codes, gift time can't survive a refund of the plan underneath it).
+* **Apps:** Android and iOS screens for all four features.
+* **Hindi:** Android app 1209/1209 strings, wear 23/23, iOS catalogs.
+
+**Verified here**
+
+| Check | Result |
+|---|---|
+| Deno tests | 292 passed |
+| SQL suite | all files pass |
+| `node --test scripts/build-terminal-maps.test.mjs` | 20 passed |
+| Android app tests | 1059 passed |
+| Android wear tests | 17 passed |
+| `assembleDebug` (app + wear) | succeeds |
+| iOS | **not compiled** |
+
+**Not done here**
+* **Terminal-map data is not generated.** overpass-api.de resets every connection from this sandbox. Run `node scripts/build-terminal-maps.mjs` on a machine with normal internet, then commit `data/terminal-maps/*.geojson` and the asset copies. Until then the apps show "Terminal map not available yet".
+* **No live tests against the external services.** Nothing was tried against real TripIt / OpenSky / ADS-B Exchange; only fixtures were used.
+
+**Before enabling**
+* **TripIt:**
+  * Set `TRIPIT_CONSUMER_KEY` / `TRIPIT_CONSUMER_SECRET`.
+  * **Fix the login CSRF first.** TripIt sends no `oauth_verifier`, so a stranger's authorize link could import the victim's trips into the stranger's account. The fix is for the callback to hand back a nonce, and for the app's authenticated call to finish the exchange.
+  * Add a 30–60 s cooldown on manual sync.
+* **Radar:** buy a commercial feed licence, then set `RADAR_FEED=opensky|adsbx`, its credentials, and `RADAR_FEED_LICENSED=true`.
+* **Gift products:** create `heygate_gift_year` (₹4,999) and `heygate_gift_trip` (₹99) as consumables, not attached to the `pro` entitlement.

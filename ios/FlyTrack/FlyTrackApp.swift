@@ -125,7 +125,10 @@ final class AppShell: ObservableObject {
     let widgets = WidgetPublisher()
     // P3 search / social / watch (docs/P3_CONTRACTS.md A3, B5, B6, B9, B10, B12, B13).
     let p3: P3Center
+    // P4: radar, TripIt, Gift Pro, terminal maps (docs/P4_CONTRACTS.md).
+    let p4: P4Center
     private var p3Changes: AnyCancellable?
+    private var p4Changes: AnyCancellable?
     private var crewModeChanges: AnyCancellable?
 
     @Published var session: SessionState = .loading
@@ -166,6 +169,7 @@ final class AppShell: ObservableObject {
         forecast = LiveForecast(backend: wave2)
         intel = LiveFlightIntel(backend: wave2)
         p3 = P3Center(stack: stack, flights: flights, backend: wave2, familyGrant: familyGrant)
+        p4 = P4Center(stack: stack, auth: auth, backend: wave2, billing: billing)
         travelTimes = DeviceTravelTimes()
         leaveReminders = LocalLeaveReminders()
         let receipts = PushReceipts(sender: LivePushAck(stack: stack))
@@ -219,6 +223,7 @@ final class AppShell: ObservableObject {
         }
         // Screens observe the shell; crew mode and the family's Pro live in `p3`.
         p3Changes = p3.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }
+        p4Changes = p4.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }
         // P3 B12: turning crew mode on cancels pending when-to-leave reminders at once; turning it off re-plans them.
         crewModeChanges = p3.$crewMode.removeDuplicates().dropFirst().sink { [weak self] _ in
             Task { @MainActor in await self?.resyncLeaveReminders() }
@@ -296,6 +301,18 @@ final class AppShell: ObservableObject {
         // heygate://family?code=ABCDEFGH from a family invite (P3 B13).
         if url.host?.lowercased() == "family" {
             path.append(Route.family(familyInviteCode(fromURL: url)))
+            return
+        }
+        // heygate://tripit/connected or /failed?error=... when a browser handed TripIt's redirect to the app
+        // (P4 section 2); ASWebAuthenticationSession normally catches it itself. Settings holds the TripIt row.
+        if parseTripItCallback(url) != nil {
+            p4.pendingTripItCallback = url
+            if !p4.settingsVisible { path.append(Route.settings) }
+            return
+        }
+        // heygate://gift?code=ABCD-EFGH-JKMN from a gift message (P4 section 3).
+        if url.host?.lowercased() == "gift" {
+            path.append(Route.redeemGift(giftCode(fromURL: url)))
             return
         }
         if url.host == "import" || url.path == "/import" {
@@ -385,6 +402,15 @@ enum Route: Hashable {
     case friendCompare(String, String?)
     /// P3 B13: family sharing, with the code from an invite link when there is one.
     case family(String?)
+    /// P4 section 1: ground radar at an airport, planes near me, or planes near a flight.
+    case radar(RadarTarget)
+    /// P4 section 4: an airport's terminal map, with the gate / belt / terminal to highlight.
+    case terminalMap(TerminalMapRequest)
+    /// P4 section 3: "Redeem a gift code", with the code from a gift link when there is one.
+    case redeemGift(String?)
+    case myGifts
+    /// P4 section 3: the paywall on its Gift Pro tab.
+    case giftPro
 }
 
 struct RootView: View {
@@ -428,6 +454,16 @@ struct RootView: View {
                         FriendCompareScreen(shell: shell, friendId: id, friendName: name)
                     case .family(let code):
                         FamilyScreen(shell: shell, prefillCode: code)
+                    case .radar(let target):
+                        RadarScreen(shell: shell, target: target)
+                    case .terminalMap(let request):
+                        TerminalMapScreen(shell: shell, request: request)
+                    case .redeemGift(let code):
+                        RedeemGiftScreen(shell: shell, prefill: code)
+                    case .myGifts:
+                        MyGiftsScreen(shell: shell)
+                    case .giftPro:
+                        PaywallScreen(shell: shell, initialTab: .gift)
                     }
                 }
         }

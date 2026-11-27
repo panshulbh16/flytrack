@@ -96,6 +96,8 @@ import app.flytrack.feature.flights.ui.flightDateText
 import app.flytrack.feature.flights.ui.flightInfoLabel
 import app.flytrack.feature.flights.ui.minutesAmountText
 import app.flytrack.feature.map.FlightMapButton
+import app.flytrack.feature.flights.presentation.FlightField
+import app.flytrack.feature.terminalmap.AirportMapButtons
 import app.flytrack.feature.map.ProgressSourceRow
 import app.flytrack.ui.components.ErrorState
 import app.flytrack.ui.components.FlyTrackTopBar
@@ -266,8 +268,29 @@ private fun DetailContent(
             LittleNumbers(detail)
         }
         Section { FlightMapButton(detail.card.flightId) } // map: opens the offline map sheet
-        Section { EndpointBlock(stringResource(R.string.flights_departure), detail.departure) }
-        Section { EndpointBlock(stringResource(R.string.flights_arrival), detail.arrival) }
+        Section {
+            EndpointBlock(stringResource(R.string.flights_departure), detail.departure)
+            // P4: terminal map (gate highlighted) and ground radar of the departure airport.
+            AirportMapButtons(
+                iata = detail.departure.code,
+                gate = detail.departure.info.firstOrNull { it.field == FlightField.DEP_GATE }?.value,
+                belt = null,
+                flightId = detail.card.flightId,
+                showGroundRadar = true,
+                modifier = Modifier.padding(top = 12.dp),
+            )
+        }
+        Section {
+            EndpointBlock(stringResource(R.string.flights_arrival), detail.arrival)
+            AirportMapButtons(
+                iata = detail.arrival.code,
+                gate = detail.arrival.info.firstOrNull { it.field == FlightField.ARR_GATE }?.value,
+                belt = detail.arrival.info.firstOrNull { it.field == FlightField.BAGGAGE_BELT }?.value,
+                flightId = detail.card.flightId,
+                showGroundRadar = true,
+                modifier = Modifier.padding(top = 12.dp),
+            )
+        }
         // P3 intelligence: delay prediction / usual gate / taxi times (Pro), connections (Pro) and the
         // timeline. Each draws its own hairline, and nothing when it has nothing to show.
         FlightPredictionBlock(detail.card.flightId)

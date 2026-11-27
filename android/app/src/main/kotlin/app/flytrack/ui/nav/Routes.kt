@@ -77,3 +77,22 @@ data class FriendPassport(val friendId: String, val friendName: String? = null)
 /** P3 B13: family sharing; [prefillCode] when a family code came from outside. */
 @Serializable
 data class Family(val prefillCode: String? = null)
+
+/**
+ * P4 radar. [iata] = ground radar of that airport; [lat]/[lon] = planes around that point (the user's
+ * flight; decimal strings, as navigation arguments); neither = "Planes near me" (coarse location, asked on tap).
+ */
+@Serializable
+data class Radar(val iata: String? = null, val lat: String? = null, val lon: String? = null)
+
+/** P4 terminal map of [iata] from the bundled OpenStreetMap extract; [gate]/[belt] are highlighted when known. */
+@Serializable
+data class TerminalMap(val iata: String, val gate: String? = null, val belt: String? = null, val flightId: String? = null)
+
+/** P4 "Redeem a gift code"; [prefillCode] when the code came from outside. */
+@Serializable
+data class RedeemGift(val prefillCode: String? = null)
+
+/** P4 "My gifts": the Gift Pro codes the user bought. */
+@Serializable
+data object MyGifts

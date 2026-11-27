@@ -48,6 +48,18 @@ interface AppNavigator {
 
     /** P3 B13: family sharing. */
     fun openFamily(prefillCode: String? = null) = Unit
+
+    /** P4 radar: [iata] = ground radar; [lat]/[lon] = around a point; all null = planes near me. */
+    fun openRadar(iata: String?, lat: Double? = null, lon: Double? = null) = Unit
+
+    /** P4 terminal map of [iata], highlighting [gate] / [belt] when known. */
+    fun openTerminalMap(iata: String, gate: String? = null, belt: String? = null, flightId: String? = null) = Unit
+
+    /** P4 "Redeem a gift code". */
+    fun openRedeemGift(prefillCode: String? = null) = Unit
+
+    /** P4 "My gifts". */
+    fun openMyGifts() = Unit
     fun back()
 }
 

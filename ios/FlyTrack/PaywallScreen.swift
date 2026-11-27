@@ -5,7 +5,10 @@ import SwiftUI
 /// key (or with no products yet) the screen says "Pro coming soon" and the rest of the app keeps working.
 struct PaywallScreen: View {
     @ObservedObject var shell: AppShell
+    /// P4 section 3: Settings → "Gift Pro to someone" opens the Gift Pro tab.
+    var initialTab: PaywallTab = .forMe
     @State private var store: PaywallStore?
+    @State private var tab: PaywallTab?
     @Environment(\.openURL) private var openURL
 
     var body: some View {
@@ -17,7 +20,15 @@ struct PaywallScreen: View {
                         .accessibilityAddTraits(.isHeader)
                     Text(String(localized: "Know before the airline tells you."))
                         .font(FlyFont.serifItalic(20, relativeTo: .title3))
-                    if let store {
+                    // P4 section 3: buy Pro for yourself, or a gift code for someone else.
+                    Picker(String(localized: "Pro for"), selection: Binding(get: { tab ?? initialTab }, set: { tab = $0 })) {
+                        Text(String(localized: "Pro for me")).tag(PaywallTab.forMe)
+                        Text(String(localized: "Gift Pro")).tag(PaywallTab.gift)
+                    }
+                    .pickerStyle(.segmented)
+                    if (tab ?? initialTab) == .gift {
+                        GiftProTab(shell: shell)
+                    } else if let store {
                         if store.state.pro.isPro { ProStatusView(state: store.state.pro) }
                         benefits
                         content(store)

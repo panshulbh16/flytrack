@@ -8841,6 +8841,1368 @@
           }
         }
       }
+    },
+    "Ground radar · %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ग्राउंड रडार · %@"
+          }
+        }
+      }
+    },
+    "Planes near me" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मेरे आसपास के विमान"
+          }
+        }
+      }
+    },
+    "Planes nearby" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आसपास के विमान"
+          }
+        }
+      }
+    },
+    "Planes near you" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपके आसपास के विमान"
+          }
+        }
+      }
+    },
+    "See the planes within 75 km of you. HeyGate uses your approximate location, only while this screen is open, and never stores it." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अपने 75 किमी के दायरे के विमान देखें। HeyGate आपकी अनुमानित लोकेशन सिर्फ़ तभी इस्तेमाल करता है जब यह स्क्रीन खुली हो, और इसे कभी सेव नहीं करता।"
+          }
+        }
+      }
+    },
+    "Show planes near me" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मेरे आसपास के विमान दिखाएँ"
+          }
+        }
+      }
+    },
+    "Finding where you are…" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपकी लोकेशन ढूँढ रहे हैं…"
+          }
+        }
+      }
+    },
+    "Looking for planes…" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "विमान ढूँढ रहे हैं…"
+          }
+        }
+      }
+    },
+    "Radar is coming soon" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रडार जल्द आ रहा है"
+          }
+        }
+      }
+    },
+    "Live plane positions need a licensed data feed. We're setting it up, so check back soon." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "विमानों की लाइव पोज़िशन के लिए लाइसेंस वाली डेटा फ़ीड चाहिए। हम इसे सेट कर रहे हैं, थोड़े दिनों में फिर देखें।"
+          }
+        }
+      }
+    },
+    "Radar is part of Pro" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रडार Pro का हिस्सा है"
+          }
+        }
+      }
+    },
+    "Live planes around airports and near you come with HeyGate Pro." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "एयरपोर्ट के आसपास और आपके आसपास के लाइव विमान HeyGate Pro के साथ मिलते हैं।"
+          }
+        }
+      }
+    },
+    "See the planes on the ground at your airport and in the sky near you, updated every 10 seconds." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अपने एयरपोर्ट पर ज़मीन पर खड़े और अपने आसपास आसमान में उड़ते विमान देखें, हर 10 सेकंड में अपडेट।"
+          }
+        }
+      }
+    },
+    "Location is off for HeyGate" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HeyGate के लिए लोकेशन बंद है"
+          }
+        }
+      }
+    },
+    "To see planes near you, allow HeyGate to use your location while the app is open. Approximate location is enough." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आसपास के विमान देखने के लिए HeyGate को ऐप खुला रहने पर अपनी लोकेशन इस्तेमाल करने दें। अनुमानित लोकेशन काफ़ी है।"
+          }
+        }
+      }
+    },
+    "Couldn't find where you are" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपकी लोकेशन नहीं मिल सकी"
+          }
+        }
+      }
+    },
+    "Your phone didn't give a location. Check that Location Services are on and try again." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपके फ़ोन से लोकेशन नहीं मिली। देखें कि लोकेशन सर्विसेज़ चालू हैं, फिर से कोशिश करें।"
+          }
+        }
+      }
+    },
+    "Airport not found" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "एयरपोर्ट नहीं मिला"
+          }
+        }
+      }
+    },
+    "We don't have this airport's position yet." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "हमारे पास अभी इस एयरपोर्ट की लोकेशन नहीं है।"
+          }
+        }
+      }
+    },
+    "You're offline" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आप ऑफ़लाइन हैं"
+          }
+        }
+      }
+    },
+    "Radar needs a connection. It comes back by itself when you're online." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रडार के लिए इंटरनेट चाहिए। ऑनलाइन होते ही यह अपने-आप वापस आ जाएगा।"
+          }
+        }
+      }
+    },
+    "Radar didn't load" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रडार लोड नहीं हो सका"
+          }
+        }
+      }
+    },
+    "We'll try again in a moment." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "हम थोड़ी देर में फिर से कोशिश करेंगे।"
+          }
+        }
+      }
+    },
+    "This build has no server keys." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इस बिल्ड में सर्वर कीज़ नहीं हैं।"
+          }
+        }
+      }
+    },
+    "No planes on the ground here right now." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अभी यहाँ ज़मीन पर कोई विमान नहीं है।"
+          }
+        }
+      }
+    },
+    "No planes in the sky nearby right now." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अभी आसपास आसमान में कोई विमान नहीं है।"
+          }
+        }
+      }
+    },
+    "Track %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ट्रैक करें"
+          }
+        }
+      }
+    },
+    "On the ground · %lld kt · %@ km away" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ज़मीन पर · %1$lld नॉट · %2$@ किमी दूर"
+          }
+        }
+      }
+    },
+    "%@ ft · %lld kt · %@ km away" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ फ़ुट · %2$lld नॉट · %3$@ किमी दूर"
+          }
+        }
+      }
+    },
+    "Updated %@. Refreshes every 10 seconds while this screen is open." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अपडेट: %@। यह स्क्रीन खुली रहने तक हर 10 सेकंड में रिफ़्रेश होता है।"
+          }
+        }
+      }
+    },
+    "Offline. Showing the last planes seen." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ऑफ़लाइन। आख़िरी बार दिखे विमान दिखा रहे हैं।"
+          }
+        }
+      }
+    },
+    "Pausing updates for a minute." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "एक मिनट के लिए अपडेट रोक रहे हैं।"
+          }
+        }
+      }
+    },
+    "Live data paused. Trying again…" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "लाइव डेटा रुका हुआ है। फिर से कोशिश कर रहे हैं…"
+          }
+        }
+      }
+    },
+    "Planes near this flight" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इस फ़्लाइट के आसपास के विमान"
+          }
+        }
+      }
+    },
+    "Terminal map · %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "टर्मिनल का नक्शा · %@"
+          }
+        }
+      }
+    },
+    "Radar and TripIt" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रडार और TripIt"
+          }
+        }
+      }
+    },
+    "Redeem a gift code" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "गिफ़्ट कोड रिडीम करें"
+          }
+        }
+      }
+    },
+    "My gifts" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मेरे गिफ़्ट"
+          }
+        }
+      }
+    },
+    "Gift Pro to someone" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "किसी को Pro गिफ़्ट करें"
+          }
+        }
+      }
+    },
+    "Gifts" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "गिफ़्ट"
+          }
+        }
+      }
+    },
+    "Disconnect TripIt?" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TripIt डिस्कनेक्ट करें?"
+          }
+        }
+      }
+    },
+    "Disconnect" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "डिस्कनेक्ट करें"
+          }
+        }
+      }
+    },
+    "Flights already added stay in your list. New TripIt trips won't be added any more." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पहले से जोड़ी गई फ़्लाइट्स आपकी लिस्ट में रहेंगी। TripIt की नई ट्रिप्स अब नहीं जुड़ेंगी।"
+          }
+        }
+      }
+    },
+    "Connect TripIt" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TripIt कनेक्ट करें"
+          }
+        }
+      }
+    },
+    "TripIt sync is coming soon." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TripIt सिंक जल्द आ रहा है।"
+          }
+        }
+      }
+    },
+    "Connect TripIt (Pro)" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TripIt कनेक्ट करें (Pro)"
+          }
+        }
+      }
+    },
+    "Flights in your TripIt trips are added to HeyGate by themselves." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपकी TripIt ट्रिप्स की फ़्लाइट्स अपने-आप HeyGate में जुड़ जाती हैं।"
+          }
+        }
+      }
+    },
+    "Flights in your TripIt trips are added to HeyGate by themselves, every hour." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपकी TripIt ट्रिप्स की फ़्लाइट्स हर घंटे अपने-आप HeyGate में जुड़ जाती हैं।"
+          }
+        }
+      }
+    },
+    "Connected to TripIt" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TripIt से कनेक्टेड"
+          }
+        }
+      }
+    },
+    "TripIt access was removed. Connect again to keep your trips in sync." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TripIt का ऐक्सेस हटा दिया गया। अपनी ट्रिप्स सिंक रखने के लिए फिर से कनेक्ट करें।"
+          }
+        }
+      }
+    },
+    "Connect again" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "फिर से कनेक्ट करें"
+          }
+        }
+      }
+    },
+    "Syncing…" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सिंक हो रहा है…"
+          }
+        }
+      }
+    },
+    "Sync now" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अभी सिंक करें"
+          }
+        }
+      }
+    },
+    "Disconnect TripIt" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TripIt डिस्कनेक्ट करें"
+          }
+        }
+      }
+    },
+    "First sync running…" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पहला सिंक चल रहा है…"
+          }
+        }
+      }
+    },
+    "Last synced %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आख़िरी सिंक: %@"
+          }
+        }
+      }
+    },
+    "TripIt is connected. Your trips are being added." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TripIt कनेक्ट हो गया। आपकी ट्रिप्स जोड़ी जा रही हैं।"
+          }
+        }
+      }
+    },
+    "Up to date. No new flights in TripIt." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सब अप-टू-डेट है। TripIt में कोई नई फ़्लाइट नहीं।"
+          }
+        }
+      }
+    },
+    "Added %lld flights from TripIt." : {
+      "localizations" : {
+        "hi" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "TripIt से %lld फ़्लाइट जोड़ी गई।"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "TripIt से %lld फ़्लाइट्स जोड़ी गईं।"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "TripIt is disconnected." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TripIt डिस्कनेक्ट हो गया।"
+          }
+        }
+      }
+    },
+    "TripIt wasn't connected because access was not allowed." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TripIt कनेक्ट नहीं हुआ, क्योंकि ऐक्सेस की अनुमति नहीं दी गई।"
+          }
+        }
+      }
+    },
+    "That took too long. Please connect again." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इसमें बहुत देर लग गई। कृपया फिर से कनेक्ट करें।"
+          }
+        }
+      }
+    },
+    "TripIt isn't answering right now. Please try again later." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TripIt से अभी जवाब नहीं आ रहा। कृपया बाद में फिर से कोशिश करें।"
+          }
+        }
+      }
+    },
+    "TripIt sync is part of Pro. You can still disconnect TripIt." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TripIt सिंक Pro का हिस्सा है। आप TripIt को फिर भी डिस्कनेक्ट कर सकते हैं।"
+          }
+        }
+      }
+    },
+    "Give someone HeyGate Pro" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "किसी को HeyGate Pro दें"
+          }
+        }
+      }
+    },
+    "Pay once and send them a code. A gift never renews and doesn't change your own plan." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "एक बार पेमेंट करें और उन्हें कोड भेजें। गिफ़्ट कभी रिन्यू नहीं होता और आपके अपने प्लान पर कोई असर नहीं पड़ता।"
+          }
+        }
+      }
+    },
+    "Redeem a code" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कोड रिडीम करें"
+          }
+        }
+      }
+    },
+    "Gifts coming soon" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "गिफ़्ट जल्द आ रहे हैं"
+          }
+        }
+      }
+    },
+    "You can't buy a gift in this version yet." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इस वर्ज़न में अभी गिफ़्ट नहीं ख़रीदा जा सकता।"
+          }
+        }
+      }
+    },
+    "Couldn't load the gifts" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "गिफ़्ट लोड नहीं हो सके"
+          }
+        }
+      }
+    },
+    "Getting your code…" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपका कोड आ रहा है…"
+          }
+        }
+      }
+    },
+    "Buy gift" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "गिफ़्ट ख़रीदें"
+          }
+        }
+      }
+    },
+    "Your gift code" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपका गिफ़्ट कोड"
+          }
+        }
+      }
+    },
+    "WhatsApp" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WhatsApp"
+          }
+        }
+      }
+    },
+    "Copy" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कॉपी करें"
+          }
+        }
+      }
+    },
+    "%@ once · does not renew" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ एक बार · रिन्यू नहीं होता"
+          }
+        }
+      }
+    },
+    "1 year of Pro" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 साल का Pro"
+          }
+        }
+      }
+    },
+    "Pro for a trip (7 days)" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "एक ट्रिप के लिए Pro (7 दिन)"
+          }
+        }
+      }
+    },
+    "HeyGate Pro gift" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HeyGate Pro गिफ़्ट"
+          }
+        }
+      }
+    },
+    "Pro for %lld days. Share it with the person it's for." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld दिन के लिए Pro। इसे उसी के साथ शेयर करें जिसके लिए यह है।"
+          }
+        }
+      }
+    },
+    "Maine aapko HeyGate Pro gift kiya hai! Code: %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मैंने आपको HeyGate Pro गिफ़्ट किया है! कोड: %@"
+          }
+        }
+      }
+    },
+    "I've gifted you HeyGate Pro! Code: %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I've gifted you HeyGate Pro! Code: %@"
+          }
+        }
+      }
+    },
+    "Redeem it in HeyGate: Settings → Redeem a gift code. %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HeyGate में रिडीम करें: सेटिंग्स → गिफ़्ट कोड रिडीम करें। %@"
+          }
+        }
+      }
+    },
+    "Purchase cancelled." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ख़रीदारी रद्द हो गई।"
+          }
+        }
+      }
+    },
+    "Payment pending. Your code appears in My gifts once the App Store confirms it." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पेमेंट बाकी है। App Store की पुष्टि होते ही आपका कोड “मेरे गिफ़्ट” में दिखेगा।"
+          }
+        }
+      }
+    },
+    "Thanks! Your code is on its way and will appear in My gifts in a minute." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "धन्यवाद! आपका कोड आ रहा है और एक मिनट में “मेरे गिफ़्ट” में दिखेगा।"
+          }
+        }
+      }
+    },
+    "XXXX-XXXX-XXXX" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "XXXX-XXXX-XXXX"
+          }
+        }
+      }
+    },
+    "Gift code" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "गिफ़्ट कोड"
+          }
+        }
+      }
+    },
+    "Redeem" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रिडीम करें"
+          }
+        }
+      }
+    },
+    "Enter the 12-character code from your gift message. Pro starts at once and adds to any Pro you already have." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अपने गिफ़्ट मैसेज का 12 अक्षरों वाला कोड डालें। Pro तुरंत शुरू हो जाता है और आपके पहले से मौजूद Pro में जुड़ जाता है।"
+          }
+        }
+      }
+    },
+    "Pro is on! It now runs until %@." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pro चालू हो गया! अब यह %@ तक चलेगा।"
+          }
+        }
+      }
+    },
+    "Pro is on for %lld more days." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pro अब %lld दिन और चालू रहेगा।"
+          }
+        }
+      }
+    },
+    "That code isn't right. Check it and try again." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "यह कोड सही नहीं है। इसे जाँचें और फिर से कोशिश करें।"
+          }
+        }
+      }
+    },
+    "This code has already been used." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "यह कोड पहले ही इस्तेमाल हो चुका है।"
+          }
+        }
+      }
+    },
+    "This gift was refunded, so the code no longer works." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इस गिफ़्ट का रिफ़ंड हो चुका है, इसलिए कोड अब काम नहीं करता।"
+          }
+        }
+      }
+    },
+    "That's your own gift. Send it to someone instead." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "यह आपका अपना गिफ़्ट है। इसे किसी और को भेजें।"
+          }
+        }
+      }
+    },
+    "Too many tries. Please wait an hour and try again." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बहुत ज़्यादा कोशिशें हो गईं। कृपया एक घंटा रुककर फिर से कोशिश करें।"
+          }
+        }
+      }
+    },
+    "You already have Pro with no end date. Keep the code for someone else." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपके पास पहले से बिना आख़िरी तारीख वाला Pro है। यह कोड किसी और के लिए रख लें।"
+          }
+        }
+      }
+    },
+    "Your gifts didn't load. Pull to try again." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपके गिफ़्ट लोड नहीं हुए। फिर से कोशिश करने के लिए नीचे खींचें।"
+          }
+        }
+      }
+    },
+    "No gifts yet. Gift Pro to a friend or family member from the Pro screen." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अभी कोई गिफ़्ट नहीं। Pro स्क्रीन से किसी दोस्त या घरवाले को Pro गिफ़्ट करें।"
+          }
+        }
+      }
+    },
+    "Not used yet" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अभी इस्तेमाल नहीं हुए"
+          }
+        }
+      }
+    },
+    "Used or refunded" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इस्तेमाल हुए या रिफ़ंड हुए"
+          }
+        }
+      }
+    },
+    "Bought %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ को ख़रीदा"
+          }
+        }
+      }
+    },
+    "Redeemed on %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ को रिडीम हुआ"
+          }
+        }
+      }
+    },
+    "Redeemed" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रिडीम हो गया"
+          }
+        }
+      }
+    },
+    "Refunded. The code no longer works." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रिफ़ंड हो गया। कोड अब काम नहीं करता।"
+          }
+        }
+      }
+    },
+    "Terminal maps are part of Pro" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "टर्मिनल के नक्शे Pro का हिस्सा हैं"
+          }
+        }
+      }
+    },
+    "Gates, food, toilets and lounges at the airport, even offline." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "एयरपोर्ट पर गेट, खाना, टॉयलेट और लाउंज, ऑफ़लाइन भी।"
+          }
+        }
+      }
+    },
+    "Find your gate, food, toilets, lounges and ATMs at the airport, even offline." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "एयरपोर्ट पर अपना गेट, खाना, टॉयलेट, लाउंज और ATM ढूँढें, ऑफ़लाइन भी।"
+          }
+        }
+      }
+    },
+    "Terminal map not available yet" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "टर्मिनल का नक्शा अभी उपलब्ध नहीं है"
+          }
+        }
+      }
+    },
+    "We don't have a map of %@ yet. Maps come from OpenStreetMap and more airports are on the way." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "हमारे पास अभी %@ का नक्शा नहीं है। नक्शे OpenStreetMap से आते हैं और जल्द और एयरपोर्ट जुड़ेंगे।"
+          }
+        }
+      }
+    },
+    "Map of %@ terminals" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ के टर्मिनलों का नक्शा"
+          }
+        }
+      }
+    },
+    "Search food, toilets, lounges…" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "खाना, टॉयलेट, लाउंज खोजें…"
+          }
+        }
+      }
+    },
+    "No places are mapped inside this terminal yet." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इस टर्मिनल के अंदर अभी कोई जगह नक्शे पर नहीं है।"
+          }
+        }
+      }
+    },
+    "Nothing matches your search." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपकी खोज से कुछ नहीं मिला।"
+          }
+        }
+      }
+    },
+    "Level %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "लेवल %@"
+          }
+        }
+      }
+    },
+    "Places in the terminal" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "टर्मिनल में जगहें"
+          }
+        }
+      }
+    },
+    "Map data © OpenStreetMap contributors, available under the Open Database License (ODbL). Works offline." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मैप डेटा © OpenStreetMap contributors, Open Database License (ODbL) के तहत उपलब्ध। ऑफ़लाइन भी चलता है।"
+          }
+        }
+      }
+    },
+    "Gate %@ isn't on this map yet." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "गेट %@ अभी इस नक्शे पर नहीं है।"
+          }
+        }
+      }
+    },
+    "Your gate %@ is marked on the map." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपका गेट %@ नक्शे पर मार्क किया गया है।"
+          }
+        }
+      }
+    },
+    "Belt %@. The baggage area isn't on this map yet." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बेल्ट %@। बैगेज एरिया अभी इस नक्शे पर नहीं है।"
+          }
+        }
+      }
+    },
+    "Belt %@: the baggage area is marked on the map." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बेल्ट %@: बैगेज एरिया नक्शे पर मार्क किया गया है।"
+          }
+        }
+      }
+    },
+    "Your gate shows here once it's announced." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "गेट की घोषणा होते ही यहाँ दिखेगा।"
+          }
+        }
+      }
+    },
+    "Food and drink" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "खाना-पीना"
+          }
+        }
+      }
+    },
+    "Toilets" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "टॉयलेट"
+          }
+        }
+      }
+    },
+    "Lounges" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "लाउंज"
+          }
+        }
+      }
+    },
+    "ATM and money" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ATM और पैसे"
+          }
+        }
+      }
+    },
+    "Prayer room" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "प्रार्थना कक्ष"
+          }
+        }
+      }
+    },
+    "Pharmacy" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "फ़ार्मेसी"
+          }
+        }
+      }
+    },
+    "Phone charging" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "फ़ोन चार्जिंग"
+          }
+        }
+      }
+    },
+    "Shops" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "दुकानें"
+          }
+        }
+      }
+    },
+    "Baggage claim" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बैगेज क्लेम"
+          }
+        }
+      }
+    },
+    "Pro for" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pro किसके लिए"
+          }
+        }
+      }
+    },
+    "Pro for me" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मेरे लिए Pro"
+          }
+        }
+      }
+    },
+    "Gift Pro" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pro गिफ़्ट करें"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

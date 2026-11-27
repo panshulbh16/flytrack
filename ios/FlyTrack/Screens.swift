@@ -33,6 +33,12 @@ struct FlightsScreen: View {
             ToolbarItem(placement: .topBarLeading) {
                 Button(String(localized: "Friends"), systemImage: "person.2") { shell.path.append(Route.friends) }
             }
+            // P4 section 1: "Planes near me" from the flight list (in the overflow menu).
+            ToolbarItem(placement: .secondaryAction) {
+                Button(String(localized: "Planes near me"), systemImage: "dot.radiowaves.left.and.right") {
+                    shell.path.append(Route.radar(.nearMe))
+                }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button(String(localized: "Add flight")) { shell.path.append(Route.add(AddFlightPrefill())) }
                     .buttonStyle(.glassProminent)
@@ -342,6 +348,8 @@ struct DetailScreen: View {
                         }
                         endpoint(String(localized: "Departure"), detail.departure)
                         endpoint(String(localized: "Arrival"), detail.arrival)
+                        // P4: terminal maps and ground radar for both airports, planes near the flight.
+                        P4AirportLinksView(shell: shell, flightId: flightId, revision: detail.card.asOf)
                         if let reason = detail.delayReason {
                             Text(reason).font(FlyFont.sans(14, relativeTo: .footnote))
                         }
@@ -843,6 +851,8 @@ struct SettingsScreen: View {
                     // P3: crew mode, Passport sharing, family, calendar import.
                     P3SettingsSection(shell: shell)
                         .listRowBackground(FlyColor.paperRaised)
+                    // P4: planes near me, TripIt, gift codes.
+                    P4SettingsSection(shell: shell)
                     Section(String(localized: "Ticket reading")) {
                         Toggle(String(localized: "Allow cloud reading when the phone cannot read the ticket"), isOn: Binding(
                             get: { store.state.cloudConsent },
@@ -882,6 +892,9 @@ struct SettingsScreen: View {
             .scrollContentBackground(.hidden)
         }
         .navigationTitle(String(localized: "Settings"))
+        // P4 section 2: a `heygate://tripit/...` link while Settings is on top refreshes it in place.
+        .onAppear { shell.p4.settingsVisible = true }
+        .onDisappear { shell.p4.settingsVisible = false }
         .task {
             if store == nil {
                 let model = SettingsModel(

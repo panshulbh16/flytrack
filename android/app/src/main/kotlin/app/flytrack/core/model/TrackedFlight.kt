@@ -29,7 +29,10 @@ enum class TrackSource(val wire: String) {
     EMAIL("email"),
 
     /** Added from a device-calendar suggestion (P3 A3). */
-    CALENDAR("calendar");
+    CALENDAR("calendar"),
+
+    /** Added by TripIt sync (P4 section 2); the server inserts these rows. */
+    TRIPIT("tripit");
 
     companion object {
         fun fromWire(value: String?): TrackSource = entries.firstOrNull { it.wire == value } ?: MANUAL

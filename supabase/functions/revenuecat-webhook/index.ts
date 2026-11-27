@@ -1,6 +1,8 @@
 // POST from RevenueCat (verify_jwt = false). Authorization must equal REVENUECAT_WEBHOOK_AUTH.
 // Idempotent by event.id (billing_events). With REVENUECAT_SECRET_API_KEY set, every event re-fetches
 // the subscriber and applies the current state; otherwise the state is derived from the event.
+// Gift products (docs/P4_CONTRACTS.md section 3) create one gift code per store transaction, or void it on a
+// refund, and never change the purchaser's plan; redeemed gift time is kept by both paths.
 import { handleRevenueCatWebhook, revenueCatApi, SupabaseBillingStore } from "../_shared/billing.ts";
 import { json, log } from "../_shared/http.ts";
 import { serviceClient } from "../_shared/supabase-repo.ts";

@@ -1,0 +1,13 @@
+{
+  "center": { "lat": 28.55, "lon": 77.1 },
+  "radius_km": 75,
+  "aircraft": [
+    { "icao24": "800c1b", "callsign": "IGO2341 ", "reg": "VT-IZS", "lat": 28.62, "lon": 77.21, "alt_ft": 12437, "gs_kts": 281, "track_deg": 272, "on_ground": false, "vrate_fpm": 1408, "seen_at": "2026-11-27T10:00:04.000Z", "flight": "6E2341" },
+    { "icao24": "800ABC", "callsign": "AIC101", "lat": 28.56, "lon": 77.11, "alt_ft": 0, "gs_kts": 12, "track_deg": -90, "on_ground": true, "seen_at": "2026-11-27T10:00:02.000Z" },
+    { "icao24": "800def", "callsign": "", "lat": 28.9, "lon": 77.5, "alt_ft": 35000, "gs_kts": 455, "track_deg": 400, "on_ground": false, "vrate_fpm": -50, "seen_at": "2026-11-27T10:00:01.000Z" },
+    { "icao24": "800fff", "callsign": "", "reg": "VT-ABC", "lat": 28.7, "lon": 77.3, "alt_ft": 8000, "gs_kts": 230, "track_deg": 10, "on_ground": false, "vrate_fpm": -1200, "seen_at": "2026-11-27T10:00:00.000Z" },
+    { "icao24": "deadbe", "callsign": "NOPOS", "lat": null, "lon": null, "alt_ft": 1000, "gs_kts": 100, "track_deg": 0, "on_ground": false, "seen_at": "2026-11-27T10:00:00.000Z" }
+  ],
+  "feed": "opensky",
+  "as_of": "2026-11-27T10:00:05.123Z"
+}

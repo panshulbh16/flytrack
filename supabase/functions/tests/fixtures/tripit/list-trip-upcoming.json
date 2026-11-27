@@ -1,0 +1,98 @@
+{
+  "timestamp": "1795770000",
+  "num_bytes": "4211",
+  "Trip": [
+    {
+      "id": "301234567",
+      "relative_url": "/trip/show/id/301234567",
+      "start_date": "2026-12-01",
+      "end_date": "2026-12-05",
+      "display_name": "Mumbai, December 2026",
+      "is_private": "false",
+      "primary_location": "Mumbai, India"
+    },
+    {
+      "id": "301234999",
+      "start_date": "2026-12-20",
+      "end_date": "2026-12-22",
+      "display_name": "Goa",
+      "primary_location": "Goa, India"
+    }
+  ],
+  "AirObject": [
+    {
+      "id": "2001",
+      "trip_id": "301234567",
+      "display_name": "DEL to BOM",
+      "Segment": [
+        {
+          "StartDateTime": { "date": "2026-12-01", "time": "06:10:00", "timezone": "Asia/Kolkata", "utc_offset": "+05:30" },
+          "EndDateTime": { "date": "2026-12-01", "time": "08:25:00", "timezone": "Asia/Kolkata", "utc_offset": "+05:30" },
+          "start_airport_code": "DEL",
+          "start_city_name": "New Delhi",
+          "end_airport_code": "BOM",
+          "end_city_name": "Mumbai",
+          "marketing_airline": "IndiGo",
+          "marketing_airline_code": "6E",
+          "marketing_flight_number": "2341",
+          "aircraft": "320",
+          "id": "9001"
+        },
+        {
+          "StartDateTime": { "date": "2026-12-05", "time": "21:00:00", "timezone": "Asia/Kolkata", "utc_offset": "+05:30" },
+          "start_airport_code": "BOM",
+          "end_airport_code": "DEL",
+          "marketing_airline": "Air India",
+          "marketing_airline_code": "UA",
+          "marketing_flight_number": "8562",
+          "operating_airline": "Air India",
+          "operating_airline_code": "AI",
+          "operating_flight_number": "0864",
+          "id": "9002"
+        }
+      ]
+    },
+    {
+      "id": "2002",
+      "trip_id": "301234999",
+      "Segment": {
+        "StartDateTime": { "date": "2026-12-20", "time": "10:00:00", "timezone": "Asia/Kolkata" },
+        "start_airport_code": "BOM",
+        "end_airport_code": "GOX",
+        "marketing_airline_code": "QP",
+        "marketing_flight_number": "1101",
+        "id": "9003"
+      }
+    },
+    {
+      "id": "2003",
+      "trip_id": "301234999",
+      "Segment": [
+        {
+          "StartDateTime": { "date": "2026-12-22", "time": "18:00:00" },
+          "start_airport_code": "GOX",
+          "end_airport_code": "BOM",
+          "marketing_airline": "Some charter",
+          "id": "9004"
+        },
+        {
+          "StartDateTime": { "date": "2026-12-22" },
+          "start_airport_code": "GOX",
+          "end_airport_code": "BOM",
+          "marketing_airline_code": "QP",
+          "marketing_flight_number": "1102",
+          "id": "9005"
+        },
+        {
+          "StartDateTime": { "date": "2026-12-01", "time": "06:10:00" },
+          "start_airport_code": "DEL",
+          "end_airport_code": "BOM",
+          "marketing_airline_code": "6E",
+          "marketing_flight_number": "2341",
+          "id": "9006"
+        }
+      ]
+    }
+  ],
+  "LodgingObject": { "id": "3001", "trip_id": "301234567", "display_name": "Hotel" }
+}

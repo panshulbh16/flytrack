@@ -1,0 +1,14 @@
+{
+  "ac": [
+    {"hex": "800c2f", "type": "adsb_icao", "flight": "IGO5318 ", "r": "VT-IZK", "t": "A20N", "alt_baro": "ground", "gs": 12.4, "track": 140.2, "lat": 19.0896, "lon": 72.8656, "seen_pos": 1.2, "seen": 0.4},
+    {"hex": "~2b1c03", "type": "tisb_trackfile", "lat": 19.0910, "lon": 72.8700, "alt_baro": "ground", "seen_pos": 3.0},
+    {"hex": "8006ea", "flight": "AXB1144", "r": "vt-axh", "alt_baro": 3250, "gs": 168, "track": 268.9, "baro_rate": -704, "lat": 19.1200, "lon": 72.9100, "seen_pos": 0.5},
+    {"hex": "80011a", "flight": "SEJ8169", "alt_baro": 37000, "gs": 455.1, "true_heading": 12.0, "lat": 21.8, "lon": 73.2, "seen_pos": 2.0},
+    {"hex": "nolat", "flight": "XXX1"}
+  ],
+  "msg": "No error",
+  "now": 1795770000000,
+  "total": 5,
+  "ctime": 1795770000123,
+  "ptime": 12
+}

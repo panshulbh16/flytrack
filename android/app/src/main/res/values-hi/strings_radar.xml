@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hindi translation of values/strings_radar.xml. -->
+<resources>
+    <string name="radar_title_ground">ग्राउंड रडार · %1$s</string>
+    <string name="radar_title_near_me">मेरे पास के विमान</string>
+    <string name="radar_title_around">आपकी फ़्लाइट के आसपास के विमान</string>
+    <string name="radar_action_ground">ग्राउंड रडार</string>
+    <string name="radar_action_near_me">मेरे पास के विमान</string>
+    <string name="radar_settings_near_me_message">आपसे 75 कि.मी. के अंदर लाइव विमान</string>
+    <string name="radar_cd_map">%1$d विमानों वाला रडार मैप</string>
+
+    <string name="radar_location_title">अपने आसपास के विमान देखें</string>
+    <string name="radar_location_message">HeyGate सिर्फ़ आपकी अनुमानित लोकेशन इस्तेमाल करता है, लगभग 5 कि.मी. तक राउंड करके, और सिर्फ़ तब तक जब तक यह स्क्रीन खुली है।</string>
+    <string name="radar_location_action">मेरी लोकेशन इस्तेमाल करें</string>
+    <string name="radar_location_denied_title">लोकेशन की अनुमति नहीं है</string>
+    <string name="radar_location_denied_message">अपने पास के विमान देखने के लिए फ़ोन की सेटिंग्स में HeyGate को अनुमानित लोकेशन की अनुमति दें।</string>
+    <string name="radar_location_open_settings">सेटिंग्स खोलें</string>
+    <string name="radar_location_off_title">लोकेशन बंद है</string>
+    <string name="radar_location_off_message">फ़ोन की क्विक सेटिंग्स में लोकेशन चालू करें, फिर से कोशिश करें।</string>
+    <string name="radar_location_unavailable_title">आपकी लोकेशन नहीं मिली</string>
+    <string name="radar_location_unavailable_message">आपके फ़ोन ने समय पर लोकेशन नहीं बताई। थोड़ी देर में फिर से कोशिश करें।</string>
+    <string name="radar_locating">आपका इलाका ढूँढ रहे हैं…</string>
+    <string name="radar_loading">विमान ढूँढ रहे हैं…</string>
+
+    <string name="radar_coming_soon_title">रडार जल्द आ रहा है</string>
+    <string name="radar_coming_soon_message">विमानों की लाइव पोज़िशन जल्द ही यहाँ दिखेंगी। आपकी फ़्लाइट्स और अलर्ट पहले की तरह काम करते रहेंगे।</string>
+    <string name="radar_unknown_airport_title">इस एयरपोर्ट के लिए रडार नहीं है</string>
+    <string name="radar_unknown_airport_message">हमें अभी नहीं पता कि %1$s कहाँ है।</string>
+    <string name="radar_failed_title">रडार लोड नहीं हुआ</string>
+    <string name="radar_failed_message">हमारी तरफ़ से कुछ गड़बड़ हो गई। थोड़ी देर में फिर से कोशिश करें।</string>
+
+    <string name="radar_pro_title">रडार HeyGate Pro का हिस्सा है</string>
+    <string name="radar_pro_message">अपने एयरपोर्ट पर टैक्सी करते विमान और अपने ऊपर से उड़ते प्लेन लाइव देखें।</string>
+    <string name="radar_pro_locked_crew">रडार के लिए HeyGate Pro चाहिए।</string>
+
+    <plurals name="radar_count_ground">
+        <item quantity="one">ज़मीन पर %1$d विमान</item>
+        <item quantity="other">ज़मीन पर %1$d विमान</item>
+    </plurals>
+    <plurals name="radar_count_near">
+        <item quantity="one">%2$d कि.मी. के अंदर %1$d विमान</item>
+        <item quantity="other">%2$d कि.मी. के अंदर %1$d विमान</item>
+    </plurals>
+    <string name="radar_empty_ground">अभी ज़मीन पर कोई विमान नहीं है।</string>
+    <string name="radar_empty_near">अभी %1$d कि.मी. के अंदर कोई विमान नहीं है।</string>
+    <string name="radar_refresh_note">हर 10 सेकंड में रिफ़्रेश होता है</string>
+    <string name="radar_notice_offline">आप ऑफ़लाइन हैं। आखिरी पोज़िशन दिखाई जा रही हैं।</string>
+    <string name="radar_notice_feed">इस बार पोज़िशन अपडेट नहीं हुईं। फिर से कोशिश कर रहे हैं…</string>
+    <string name="radar_notice_slowed">एक मिनट के लिए कम बार रिफ़्रेश हो रहा है।</string>
+
+    <string name="radar_on_ground">ज़मीन पर</string>
+    <string name="radar_altitude_ft">%1$s फ़ीट</string>
+    <string name="radar_speed_kts">%1$d नॉट</string>
+    <string name="radar_distance_km">%1$s कि.मी. दूर</string>
+    <string name="radar_trend_climbing">ऊपर जा रहा है</string>
+    <string name="radar_trend_descending">नीचे आ रहा है</string>
+    <string name="radar_trend_level">एक ही ऊँचाई पर</string>
+    <string name="radar_cd_row">%1$s, %2$s, %3$s, %4$s</string>
+    <string name="radar_selected">चुना गया</string>
+</resources>

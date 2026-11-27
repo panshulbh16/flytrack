@@ -44,6 +44,9 @@ import app.flytrack.core.push.PushContract
 import app.flytrack.data.repo.Appearance
 import app.flytrack.feature.billing.ui.ProSettingsSection
 import app.flytrack.feature.calendar.CalendarSettingsSection
+import app.flytrack.feature.gift.GiftSettingsRows
+import app.flytrack.feature.radar.PlanesNearMeRow
+import app.flytrack.feature.tripit.TripItSettingsSection
 import app.flytrack.feature.social.SocialSettingsSection
 import app.flytrack.feature.friends.Wave2SettingsRows
 import app.flytrack.feature.flights.presentation.AlertGroup
@@ -112,6 +115,13 @@ fun SettingsRoute(onBack: () -> Unit, viewModel: SettingsViewModel = hiltViewMod
             HairlineDivider()
             Spacer(Modifier.height(16.dp))
             CalendarSettingsSection()
+            // P4: TripIt sync, planes near me, gift codes.
+            Spacer(Modifier.height(12.dp))
+            HairlineDivider()
+            Spacer(Modifier.height(16.dp))
+            TripItSettingsSection()
+            PlanesNearMeRow()
+            GiftSettingsRows()
         },
         alertExtrasSection = { AlertPrefsSection() },
     )

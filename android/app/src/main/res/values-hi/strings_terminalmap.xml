@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hindi translation of values/strings_terminalmap.xml. The OpenStreetMap attribution is not translated. -->
+<resources>
+    <string name="terminalmap_title">%1$s टर्मिनल मैप</string>
+    <string name="terminalmap_action_open">टर्मिनल मैप</string>
+    <string name="terminalmap_not_available_title">टर्मिनल मैप अभी उपलब्ध नहीं है</string>
+    <string name="terminalmap_not_available_message">हमारे पास अभी %1$s का मैप नहीं है। और एयरपोर्ट जल्द आ रहे हैं।</string>
+    <string name="terminalmap_offline_note">ऑफ़लाइन भी काम करता है</string>
+    <string name="terminalmap_cd_map">%1$s के टर्मिनलों का मैप</string>
+
+    <string name="terminalmap_your_gate">आपका गेट %1$s</string>
+    <string name="terminalmap_gate_not_on_map">गेट %1$s अभी इस मैप पर नहीं है।</string>
+    <string name="terminalmap_gate_unknown">गेट घोषित होते ही आपका गेट यहाँ दिखाया जाएगा।</string>
+    <string name="terminalmap_belt">बैगेज बेल्ट %1$s</string>
+    <string name="terminalmap_belt_area">मैप पर बैगेज बेल्ट हाइलाइट किए गए हैं।</string>
+
+    <string name="terminalmap_section_places">जगहें</string>
+    <string name="terminalmap_search_label">खाना, टॉयलेट, लाउंज खोजें…</string>
+    <string name="terminalmap_search_clear">खोज साफ़ करें</string>
+    <string name="terminalmap_no_places">यहाँ अभी कोई जगह मैप नहीं की गई है।</string>
+    <string name="terminalmap_no_match">\"%1$s\" से कुछ भी मेल नहीं खाता।</string>
+    <string name="terminalmap_level">लेवल %1$s</string>
+    <string name="terminalmap_metres_from_gate">आपके गेट से लगभग %1$d मी.</string>
+    <string name="terminalmap_show_on_map">मैप पर दिखाएँ</string>
+
+    <string name="terminalmap_kind_food">खाना</string>
+    <string name="terminalmap_kind_toilets">टॉयलेट</string>
+    <string name="terminalmap_kind_lounge">लाउंज</string>
+    <string name="terminalmap_kind_atm">ATM</string>
+    <string name="terminalmap_kind_prayer_room">प्रार्थना कक्ष</string>
+    <string name="terminalmap_kind_pharmacy">फ़ार्मेसी</string>
+    <string name="terminalmap_kind_charging">चार्जिंग</string>
+    <string name="terminalmap_kind_shop">दुकान</string>
+
+    <string name="terminalmap_pro_title">टर्मिनल मैप HeyGate Pro का हिस्सा हैं</string>
+    <string name="terminalmap_pro_message">अपना गेट, खाना, टॉयलेट और लाउंज ढूँढें, ऑफ़लाइन भी।</string>
+    <string name="terminalmap_pro_locked_crew">टर्मिनल मैप के लिए HeyGate Pro चाहिए।</string>
+</resources>

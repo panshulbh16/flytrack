@@ -58,3 +58,19 @@ verify_jwt = false # P3 B8: public airport page data (web/airports); counts and 
 
 [functions.global-report]
 verify_jwt = false # P3 B11: public yearly report (web/report); anonymous aggregates with k-anonymity
+
+# ---------- P4 (docs/P4_CONTRACTS.md) ----------
+[functions.radar]
+verify_jwt = true # P4 section 1: Pro only; RADAR_FEED (none|opensky|adsbx) + RADAR_FEED_LICENSED=true; 60 req / 10 min
+
+[functions.tripit-connect]
+verify_jwt = true # P4 section 2: Pro; returns the TripIt authorize_url (TRIPIT_CONSUMER_KEY / TRIPIT_CONSUMER_SECRET)
+
+[functions.tripit-callback]
+verify_jwt = false # TripIt redirects the browser here: the single-use, 30-minute request token is the only key
+
+[functions.tripit-sync]
+verify_jwt = false # checked in the function: user JWT ("Sync now", Pro) or x-cron-secret (hourly pg_cron)
+
+[functions.tripit-disconnect]
+verify_jwt = true # deletes the caller's connection; allowed without Pro

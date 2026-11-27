@@ -49,6 +49,13 @@ import app.flytrack.feature.billing.BillingContract
 import app.flytrack.feature.billing.PlanKind
 import app.flytrack.feature.billing.ProSource
 import app.flytrack.feature.billing.ProState
+import app.flytrack.feature.gift.GiftShopPane
+import app.flytrack.feature.gift.GiftTabRequest
+import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.Tab
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import app.flytrack.ui.components.ErrorState
 import app.flytrack.ui.components.FlyTrackTopBar
 import app.flytrack.ui.components.HairlineDivider
@@ -75,6 +82,9 @@ fun PaywallRoute(onBack: () -> Unit, viewModel: PaywallViewModel = hiltViewModel
         onRestore = viewModel::restore,
         onRetry = viewModel::retry,
         onMessageShown = viewModel::messageShown,
+        // P4 Gift Pro: a second tab that sells gift codes (feature/gift). Hidden in crew mode.
+        giftTab = if (LocalUpsellsHidden.current) null else { { GiftShopPane() } },
+        startOnGiftTab = remember { GiftTabRequest.consume() },
     )
 }
 
@@ -87,7 +97,11 @@ fun PaywallScreen(
     onRestore: () -> Unit,
     onRetry: () -> Unit,
     onMessageShown: () -> Unit,
+    /** P4: content of the "Gift Pro" tab; null = no tabs. Stateful, so previews leave it out. */
+    giftTab: (@Composable () -> Unit)? = null,
+    startOnGiftTab: Boolean = false,
 ) {
+    var giftSelected by rememberSaveable { mutableStateOf(startOnGiftTab && giftTab != null) }
     val snackbars = remember { SnackbarHostState() }
     val messageText = state.message?.let { paywallMessageTextFor(it) }
     LaunchedEffect(state.message) {
@@ -107,6 +121,19 @@ fun PaywallScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp),
         ) {
+            if (giftTab != null) {
+                PrimaryTabRow(selectedTabIndex = if (giftSelected) 1 else 0, containerColor = MaterialTheme.colorScheme.background) {
+                    Tab(selected = !giftSelected, onClick = { giftSelected = false }, text = { Text(stringResource(R.string.gift_tab_pro)) })
+                    Tab(selected = giftSelected, onClick = { giftSelected = true }, text = { Text(stringResource(R.string.gift_tab_gift)) })
+                }
+                Spacer(Modifier.height(16.dp))
+                if (giftSelected) {
+                    giftTab()
+                    LegalLinks()
+                    Spacer(Modifier.height(24.dp))
+                    return@Column
+                }
+            }
             Text(
                 text = stringResource(R.string.billing_paywall_title),
                 style = MaterialTheme.typography.displaySmall,
