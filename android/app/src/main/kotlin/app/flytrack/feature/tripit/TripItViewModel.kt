@@ -34,6 +34,12 @@ sealed interface TripItRowState {
 enum class TripItMessage {
     CONNECTED, CONNECT_DENIED, CONNECT_EXPIRED, CONNECT_FAILED, TRIPIT_DOWN,
     SYNCED_NOTHING_NEW, OFFLINE, FAILED, DISCONNECTED, REVOKED, NOT_CONNECTED,
+
+    /** `not_your_link`: the TripIt link was started from another HeyGate account; nothing was connected. */
+    NOT_YOUR_LINK,
+
+    /** `cooldown`: "Sync now" was used less than a minute ago; [TripItUiState.cooldownSeconds] says how long. */
+    SYNC_COOLDOWN,
 }
 
 /** A result to show after a sync: how many flights were added. */
@@ -45,6 +51,8 @@ data class TripItUiState(
     val isSyncing: Boolean = false,
     val isDisconnecting: Boolean = false,
     val message: TripItMessage? = null,
+    /** With [TripItMessage.SYNC_COOLDOWN]: seconds until "Sync now" works again. */
+    val cooldownSeconds: Int? = null,
     val syncNotice: TripItSyncNotice? = null,
     /** One-shot: open this TripIt page in a Custom Tab, then call [TripItViewModel.authorizeOpened]. */
     val openUrl: String? = null,
@@ -132,7 +140,11 @@ class TripItViewModel internal constructor(
                 TripItResult.TripItDown -> state.update { it.copy(isSyncing = false, message = TripItMessage.TRIPIT_DOWN) }
                 TripItResult.NotOffered, TripItResult.BackendNotConfigured -> state.update { it.copy(isSyncing = false, row = TripItRowState.Hidden) }
                 TripItResult.Offline -> state.update { it.copy(isSyncing = false, message = TripItMessage.OFFLINE) }
-                is TripItResult.Failed -> state.update { it.copy(isSyncing = false, message = TripItMessage.FAILED) }
+                is TripItResult.Cooldown -> state.update {
+                    it.copy(isSyncing = false, message = TripItMessage.SYNC_COOLDOWN, cooldownSeconds = result.retryAfterSeconds)
+                }
+                is TripItResult.Failed, TripItResult.NotYourLink, TripItResult.Expired, TripItResult.Denied ->
+                    state.update { it.copy(isSyncing = false, message = TripItMessage.FAILED) }
             }
         }
     }
@@ -150,22 +162,14 @@ class TripItViewModel internal constructor(
         }
     }
 
-    fun messageShown() = state.update { it.copy(message = null) }
+    fun messageShown() = state.update { it.copy(message = null, cooldownSeconds = null) }
 
     fun syncNoticeShown() = state.update { it.copy(syncNotice = null) }
 
     private fun onLink(link: TripItLink) {
         when (link) {
-            TripItLink.Connected -> {
-                state.update { it.copy(message = TripItMessage.CONNECTED) }
-                refresh()
-                // The server starts the first sync in the background right after connecting.
-                viewModelScope.launch {
-                    delay(firstSyncWait)
-                    flights.refresh()
-                    refresh()
-                }
-            }
+            TripItLink.Connected -> connected()
+            is TripItLink.Code -> complete(link.code)
             is TripItLink.Failed -> state.update {
                 it.copy(
                     message = when (link.reason) {
@@ -179,7 +183,45 @@ class TripItViewModel internal constructor(
         }
     }
 
+    /**
+     * `heygate://tripit/callback?code=...`: finish the connect as the signed-in user. The server exchanges the
+     * token only when this account started the link; the code is single use either way.
+     */
+    private fun complete(code: String) {
+        state.update { it.copy(isConnecting = true, message = null, syncNotice = null) }
+        viewModelScope.launch {
+            val result = tripIt.complete(code)
+            state.update { it.copy(isConnecting = false) }
+            when (result) {
+                is TripItResult.Ok -> connected()
+                else -> state.update { completeFailure(result)?.let { m -> it.copy(message = m) } ?: it.copy(row = TripItRowState.Hidden) }
+            }
+        }
+    }
+
+    private fun connected() {
+        state.update { it.copy(message = TripItMessage.CONNECTED) }
+        refresh()
+        // The server starts the first sync in the background right after connecting.
+        viewModelScope.launch {
+            delay(firstSyncWait)
+            flights.refresh()
+            refresh()
+        }
+    }
+
     companion object {
+        /** The message for a failed `tripit-complete`; null when the TripIt row should be hidden instead. */
+        fun completeFailure(result: TripItResult<*>): TripItMessage? = when (result) {
+            TripItResult.NotYourLink -> TripItMessage.NOT_YOUR_LINK
+            TripItResult.Expired -> TripItMessage.CONNECT_EXPIRED
+            TripItResult.Denied -> TripItMessage.CONNECT_DENIED
+            TripItResult.TripItDown -> TripItMessage.TRIPIT_DOWN
+            TripItResult.Offline -> TripItMessage.OFFLINE
+            TripItResult.NotOffered, TripItResult.BackendNotConfigured -> null
+            else -> TripItMessage.CONNECT_FAILED
+        }
+
         fun rowFor(status: TripItStatus): TripItRowState =
             if (!status.connected) {
                 TripItRowState.Disconnected

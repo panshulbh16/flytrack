@@ -71,7 +71,8 @@
                 <data android:mimeType="image/*" />
                 <data android:mimeType="text/plain" />
             </intent-filter>
-            <!-- P4 TripIt: tripit-callback redirects to heygate://tripit/connected or heygate://tripit/failed?error=... -->
+            <!-- P4 TripIt: tripit-callback redirects to heygate://tripit/callback?code=... (finished with tripit-complete), or
+                 heygate://tripit/failed?error=...; heygate://tripit/connected is still handled for compatibility. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />

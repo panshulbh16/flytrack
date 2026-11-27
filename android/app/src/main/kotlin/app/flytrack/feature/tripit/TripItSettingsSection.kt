@@ -181,6 +181,9 @@ fun TripItSectionContent(
                 notice.added.takeIf { it > 0 }?.let { pluralStringResource(R.plurals.tripit_msg_added, it, it) },
                 notice.notFound.takeIf { it > 0 }?.let { pluralStringResource(R.plurals.tripit_msg_not_found, it, it) },
             ).joinToString(" · ")
+            state.message == TripItMessage.SYNC_COOLDOWN -> (state.cooldownSeconds ?: 60).let {
+                pluralStringResource(R.plurals.tripit_msg_cooldown, it, it)
+            }
             else -> state.message?.let { tripItMessageText(it) }
         }
         if (message != null) {
@@ -216,5 +219,8 @@ private fun tripItMessageText(message: TripItMessage): String = stringResource(
         TripItMessage.DISCONNECTED -> R.string.tripit_msg_disconnected
         TripItMessage.REVOKED -> R.string.tripit_msg_revoked
         TripItMessage.NOT_CONNECTED -> R.string.tripit_msg_not_connected
+        TripItMessage.NOT_YOUR_LINK -> R.string.tripit_msg_not_your_link
+        // shown with its seconds above; this is the fallback text
+        TripItMessage.SYNC_COOLDOWN -> R.string.tripit_msg_cooldown_generic
     },
 )

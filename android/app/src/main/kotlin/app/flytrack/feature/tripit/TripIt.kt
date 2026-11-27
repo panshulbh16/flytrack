@@ -21,10 +21,19 @@ object TripItContract {
     const val FUNCTION_SYNC = "tripit-sync"
     const val FUNCTION_DISCONNECT = "tripit-disconnect"
 
+    /** POST {code}: finishes the connect for the signed-in user (login CSRF fix, migration 35). */
+    const val FUNCTION_COMPLETE = "tripit-complete"
+
     const val SCHEME = "heygate"
     const val HOST = "tripit"
     const val PATH_CONNECTED = "/connected"
     const val PATH_FAILED = "/failed"
+
+    /** `heygate://tripit/callback?code=...`: the one-time code tripit-callback hands the app. */
+    const val PATH_CALLBACK = "/callback"
+
+    /** tripit-callback's code: 32 random bytes, base64url without padding. */
+    val CODE_PATTERN = Regex("^[A-Za-z0-9_-]{43}$")
 }
 
 /** `last_error` of `tripit_status()`. */
@@ -56,6 +65,18 @@ sealed interface TripItResult<out T> {
     /** `tripit_revoked` (409): the user revoked access in TripIt; offer "Connect again". */
     data object Revoked : TripItResult<Nothing>
 
+    /** `tripit-complete` `not_your_link` (403): the TripIt link was started from another HeyGate account. */
+    data object NotYourLink : TripItResult<Nothing>
+
+    /** `tripit-complete` `expired` (410): the code is unknown, used or older than 10 minutes. */
+    data object Expired : TripItResult<Nothing>
+
+    /** `tripit-complete` `denied` (409): TripIt refused the token exchange (the user did not allow access). */
+    data object Denied : TripItResult<Nothing>
+
+    /** `tripit-sync` `cooldown` (429): "Sync now" works again after [retryAfterSeconds]. */
+    data class Cooldown(val retryAfterSeconds: Int) : TripItResult<Nothing>
+
     /** `tripit_error` (502): TripIt itself failed. */
     data object TripItDown : TripItResult<Nothing>
 
@@ -72,7 +93,14 @@ sealed interface TripItResult<out T> {
 
 /** What the callback redirect said. */
 sealed interface TripItLink {
+    /** Legacy redirect (before the login CSRF fix): the server already connected. */
     data object Connected : TripItLink
+
+    /** `heygate://tripit/callback?code=...`: the app finishes with `tripit-complete` as the signed-in user. */
+    data class Code(val code: String) : TripItLink {
+        override fun toString(): String = "Code(***)" // a live one-time secret: never logged
+    }
+
     data class Failed(val reason: TripItLinkError) : TripItLink
 }
 
@@ -90,6 +118,9 @@ private data class StatusDto(
     @SerialName("last_sync_at") val lastSyncAt: String? = null,
     @SerialName("last_error") val lastError: String? = null,
 )
+
+@Serializable
+private data class CompleteDto(val code: String)
 
 @Serializable
 private data class ConnectDto(@SerialName("authorize_url") val authorizeUrl: String? = null)
@@ -125,9 +156,16 @@ object TripItParser {
         return uri.scheme.equals("https", ignoreCase = true) && (host == "tripit.com" || host.endsWith(".tripit.com"))
     }
 
-    /** Maps an error answer's `error` code. */
-    fun <T> refused(code: String?): TripItResult<T> = when (code) {
+    /**
+     * Maps an error answer's `error` code. [message] is the body's `message`; for `cooldown` it is
+     * `retry_after_s=<n>` (the server also sends `retry_after_s`, which the shared function error DTO drops).
+     */
+    fun <T> refused(code: String?, message: String? = null): TripItResult<T> = when (code) {
         "pro_required" -> TripItResult.ProRequired
+        "not_your_link" -> TripItResult.NotYourLink
+        "expired" -> TripItResult.Expired
+        "denied" -> TripItResult.Denied
+        "cooldown" -> TripItResult.Cooldown(retryAfterSeconds(message))
         "not_connected" -> TripItResult.NotConnected
         "tripit_revoked" -> TripItResult.Revoked
         "tripit_error" -> TripItResult.TripItDown
@@ -135,7 +173,19 @@ object TripItParser {
         else -> TripItResult.Failed("tripit: ${code ?: "http error"}")
     }
 
-    /** `heygate://tripit/connected` or `heygate://tripit/failed?error=...`; null for anything else. */
+    /** Seconds from a cooldown answer's `message` ("retry_after_s=42"), clamped to 1..60; 60 when unreadable. */
+    fun retryAfterSeconds(message: String?): Int =
+        message?.let { Regex("retry_after_s=(\\d{1,6})").find(it)?.groupValues?.get(1)?.toIntOrNull() }
+            ?.coerceIn(1, 60) ?: 60
+
+    /** The body of `tripit-complete`: `{"code":"..."}`. */
+    fun completeBody(code: String): String =
+        TripItJson.encodeToString(CompleteDto.serializer(), CompleteDto(code))
+
+    /**
+     * `heygate://tripit/callback?code=...`, `heygate://tripit/connected` or `heygate://tripit/failed?error=...`;
+     * null for anything else. A callback without a well-formed code reads as a failed connect.
+     */
     fun link(uri: String?): TripItLink? {
         if (uri.isNullOrBlank()) return null
         val parsed = runCatching { URI(uri) }.getOrNull() ?: return null
@@ -143,6 +193,10 @@ object TripItParser {
         if (!parsed.host.equals(TripItContract.HOST, ignoreCase = true)) return null
         return when (parsed.path?.trimEnd('/')) {
             TripItContract.PATH_CONNECTED -> TripItLink.Connected
+            TripItContract.PATH_CALLBACK -> queryParam(parsed.rawQuery, "code")
+                ?.takeIf { TripItContract.CODE_PATTERN.matches(it) }
+                ?.let { TripItLink.Code(it) }
+                ?: TripItLink.Failed(TripItLinkError.INTERNAL)
             TripItContract.PATH_FAILED -> TripItLink.Failed(
                 when (queryParam(parsed.rawQuery, "error")) {
                     "denied" -> TripItLinkError.DENIED

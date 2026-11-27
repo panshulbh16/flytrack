@@ -27,6 +27,12 @@
     <string name="tripit_msg_disconnected">TripIt disconnected. Flights already added stay in your list.</string>
     <string name="tripit_msg_revoked">TripIt access was turned off. Connect again to sync.</string>
     <string name="tripit_msg_not_connected">TripIt isn\'t connected.</string>
+    <string name="tripit_msg_not_your_link">This TripIt link was started from another account. Nothing was connected. Tap Connect TripIt to start again.</string>
+    <string name="tripit_msg_cooldown_generic">You just synced. Try again in a minute.</string>
+    <plurals name="tripit_msg_cooldown">
+        <item quantity="one">You just synced. Try again in %1$d second.</item>
+        <item quantity="other">You just synced. Try again in %1$d seconds.</item>
+    </plurals>
     <plurals name="tripit_msg_added">
         <item quantity="one">%1$d flight added from TripIt</item>
         <item quantity="other">%1$d flights added from TripIt</item>

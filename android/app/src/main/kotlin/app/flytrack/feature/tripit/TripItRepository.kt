@@ -11,6 +11,9 @@ interface TripItRepository {
 
     /** The TripIt page to open in a browser / Custom Tab. */
     suspend fun connect(): TripItResult<String>
+
+    /** `tripit-complete` with the code from `heygate://tripit/callback?code=...`, as the signed-in user. */
+    suspend fun complete(code: String): TripItResult<Unit>
     suspend fun sync(): TripItResult<TripItSyncSummary>
     suspend fun disconnect(): TripItResult<Unit>
 }
@@ -26,6 +29,9 @@ class SupabaseTripItRepository @Inject constructor(
     override suspend fun connect(): TripItResult<String> =
         caller.call { _, _ -> TripItParser.authorizeUrl(backend.invokeFunction(TripItContract.FUNCTION_CONNECT, "{}")) }.toTripIt()
 
+    override suspend fun complete(code: String): TripItResult<Unit> =
+        caller.call { _, _ -> backend.invokeFunction(TripItContract.FUNCTION_COMPLETE, TripItParser.completeBody(code)); Unit }.toTripIt()
+
     override suspend fun sync(): TripItResult<TripItSyncSummary> =
         caller.call { _, _ -> TripItParser.syncSummary(backend.invokeFunction(TripItContract.FUNCTION_SYNC, "{}")) }.toTripIt()
 
@@ -37,6 +43,6 @@ internal fun <T> RemoteResult<T>.toTripIt(): TripItResult<T> = when (this) {
     is RemoteResult.Ok -> TripItResult.Ok(value)
     RemoteResult.Offline -> TripItResult.Offline
     RemoteResult.NotConfigured -> TripItResult.BackendNotConfigured
-    is RemoteResult.Refused -> TripItParser.refused(code)
+    is RemoteResult.Refused -> TripItParser.refused(code, message)
     is RemoteResult.Failed -> TripItResult.Failed(message)
 }
