@@ -69,6 +69,11 @@ android {
         buildConfig = true
     }
 
+    // Screenshot previews (app.flytrack.preview) run Compose on Robolectric and need the merged resources.
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
+
     // MigrationTestHelper reads Room's exported schemas from the test APK's assets.
     sourceSets {
         getByName("androidTest").assets.srcDir("$projectDir/schemas")
@@ -144,6 +149,15 @@ dependencies {
     testImplementation(libs.turbine)
     testImplementation(libs.ktor.client.mock)
     testImplementation(libs.room.testing)
+    // Screenshot previews of the real screens on the JVM (app.flytrack.preview.ScreenPreviewTest).
+    testImplementation(platform(libs.compose.bom))
+    testImplementation(libs.compose.ui.test.junit4)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.roborazzi)
+    testImplementation(libs.roborazzi.compose)
+    testImplementation(libs.roborazzi.junit.rule)
+    testImplementation(libs.mockito.core)
+    debugImplementation(libs.compose.ui.test.manifest)
 
     androidTestImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.runner)
