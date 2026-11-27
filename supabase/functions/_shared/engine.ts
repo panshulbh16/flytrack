@@ -95,7 +95,7 @@ export function snapshotToPatch(s: FlightSnapshot, provider: string): Partial<Fl
  * Providers sometimes drop a field they sent before (gate → null). Keep the last known
  * gate/terminal/belt/tail so the card doesn't flicker, unless the flight was cancelled.
  */
-function mergeSticky(prev: FlightSnapshot | null, next: FlightSnapshot): FlightSnapshot {
+export function mergeSticky(prev: FlightSnapshot | null, next: FlightSnapshot): FlightSnapshot {
   if (!prev || next.status === "cancelled") return next;
   const out = { ...next };
   for (const k of ["depTerminal", "depGate", "arrTerminal", "baggageBelt", "aircraftReg", "aircraftModel", "schedDep", "schedArr"] as const) {
@@ -114,10 +114,10 @@ export function isStaleSnapshot(existing: FlightRow, snap: FlightSnapshot): bool
   return Date.parse(snap.providerUpdatedAt) < Date.parse(existing.provider_updated_at);
 }
 
-const isInboundOnly = (r: FlightRow, now: Date) =>
+export const isInboundOnly = (r: FlightRow, now: Date) =>
   r.tracker_count === 0 && r.inbound_watch_until != null && Date.parse(r.inbound_watch_until) > now.getTime();
 
-const hasProInterest = (r: FlightRow, now: Date) =>
+export const hasProInterest = (r: FlightRow, now: Date) =>
   r.pro_tracker_count > 0 || (r.inbound_watch_until != null && Date.parse(r.inbound_watch_until) > now.getTime());
 
 function isNearFlight(r: FlightRow, now: Date): boolean {

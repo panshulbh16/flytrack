@@ -136,9 +136,10 @@ Migrations are numbered **21–30**, and the old ones are never edited. Every ne
 * Body: `{ "dep": "DEL", "arr": "BOM"?, "date": "2026-11-28", "airline": "6E"? }`.
 * It returns that day's departures from the airport, filtered by `arr` and `airline`.
 * Provider method `getAirportDepartures(iata, fromLocal, toLocal)`: AeroDataBox `GET /flights/airports/iata/{iata}/{from}/{to}`, in 12-hour windows, with codeshares removed.
-* Results are cached in `route_search_cache(dep, date, payload, fetched_at)` for 6 h.
+* Results are cached in `route_search_cache(dep, date, payload, fetched_at)` for 6 h. The cache holds the whole airport-day; `arr` and `airline` are applied when it is read.
 * Each call costs **2** units of the search quota.
-* Response: `{ "flights": [<search-flight row shape>] }`, so the apps reuse the add-flight result list.
+* Only legs that match `arr` and `airline` are written, and a cache miss does not write them one by one. New legs (and legs nobody tracks) go in as one bulk upsert plus one bulk `flight_status_history` insert — the same columns `ingest` stores for a flight-number search of a flight with no trackers, so there is nothing to alert. A leg somebody already tracks, or that has a Live Activity, still goes through `ingest` (exactly-once delay, gate and cancellation alerts). That ingest does not block the response: the row returned for it already shows the fresh snapshot, and the write finishes in the background.
+* Response: `{ "flights": [<search-flight row shape>] }`, so the apps reuse the add-flight result list. Each item is a stored `flights` row (real `id`) the app can track.
 * Add-flight gets a "By route" tab with from/to airport pickers (the bundled airports list) and a date.
 
 ### B6. Past flight search (free)
